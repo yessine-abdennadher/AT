@@ -1,0 +1,772 @@
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import { User } from "../models/User.js";
+import { Activity } from "../models/Activity.js";
+import { City } from "../models/City.js";
+import { Category } from "../models/Category.js";
+
+dotenv.config();
+
+const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || "mongodb://localhost:27017/activitytn_db";
+
+// Liste des utilisateurs de démo
+const demoUsers = [
+  {
+    name: "Administrateur ActivityTN",
+    email: "admin@activitytn.tn",
+    password: "Admin123456!",
+    role: "admin",
+    city: "صفاقس (Sfax)",
+    bio: "Gestionnaire système et modérateur officiel de la plateforme ActivityTN.",
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
+  },
+  {
+    name: "Le Moulin Cafe & Lounge",
+    email: "partner.moulin@activitytn.tn",
+    password: "Partner123456!",
+    role: "partner",
+    establishmentName: "Le Moulin Cafe & Lounge",
+    city: "صفاقس (Sfax)",
+    bio: "Espace café gourmand, lounge convivial et organisation de soirées acoustiques.",
+    avatar: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&q=80&w=200",
+  },
+  {
+    name: "Youssef Sfaxi",
+    email: "user.sfax@activitytn.tn",
+    password: "User123456!",
+    role: "user",
+    city: "صفاقس (Sfax)",
+    bio: "Passionné d'activités outdoor, de sorties entre amis et de bons cafés à Sfax.",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200",
+  },
+];
+
+// Liste des activités de démonstration à insérer (EXCLUSIVEMENT SFAX avec FR, AR, EN)
+const demoActivities = [
+  {
+    name: "Mall of Sfax",
+    nameAr: "مول صفاقس",
+    nameFr: "Mall of Sfax",
+    nameEn: "Mall of Sfax",
+    category: "fun",
+    type: "activity",
+    city: "Sfax",
+    cityAr: "صفاقس",
+    cityFr: "Sfax",
+    cityEn: "Sfax",
+    locationName: "طريق تونس كم 9، ساقية الزيت، صفاقس",
+    locationNameAr: "طريق تونس كم 9، ساقية الزيت، صفاقس",
+    locationNameFr: "Route de Tunis Km 9, Sakiet Ezzit, Sfax",
+    locationNameEn: "Tunis Road Km 9, Sakiet Ezzit, Sfax",
+    address: "Route de Tunis Km 9, Sakiet Ezzit, Sfax",
+    description: "أكبر مركز تجاري وترفيهي في صفاقس! تجارب تسوق، مطاعم عالمية ومحلية، سينما، فضاء ألعاب بولينغ وترفيه عائلي متكامل.",
+    descriptionAr: "أكبر مركز تجاري وترفيهي في صفاقس! تجارب تسوق، مطاعم عالمية ومحلية، سينما، فضاء ألعاب بولينغ وترفيه عائلي متكامل.",
+    descriptionFr: "Le plus grand centre commercial et de loisirs à Sfax ! Boutiques internationales, food court, cinéma Pathé, bowling et loisirs familiaux complets.",
+    descriptionEn: "The premier shopping and entertainment center in Sfax! International retail, food court, Pathé cinema, bowling and family fun.",
+    price: 15,
+    currency: "TND",
+    rating: 4.9,
+    reviewsCount: 480,
+    distanceKm: 4.8,
+    imageUrl: "https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=800&q=80",
+    badge: "Populaire",
+    badgeAr: "الأكثر شعبية",
+    badgeFr: "Populaire",
+    badgeEn: "Popular",
+    coordinates: { latitude: 34.7925, longitude: 10.7712 },
+    isPopular: true,
+    isFeatured: true,
+    translations: {
+      ar: {
+        name: "مول صفاقس",
+        description: "أكبر مركز تجاري وترفيهي في صفاقس! تجارب تسوق، مطاعم عالمية ومحلية، سينما، فضاء ألعاب بولينغ وترفيه عائلي متكامل.",
+        locationName: "طريق تونس كم 9، ساقية الزيت، صفاقس",
+        city: "صفاقس",
+        badge: "الأكثر شعبية",
+      },
+      fr: {
+        name: "Mall of Sfax",
+        description: "Le plus grand centre commercial et de loisirs à Sfax ! Boutiques internationales, food court, cinéma Pathé, bowling et loisirs familiaux complets.",
+        locationName: "Route de Tunis Km 9, Sakiet Ezzit, Sfax",
+        city: "Sfax",
+        badge: "Populaire",
+      },
+      en: {
+        name: "Mall of Sfax",
+        description: "The premier shopping and entertainment center in Sfax! International retail, food court, Pathé cinema, bowling and family fun.",
+        locationName: "Tunis Road Km 9, Sakiet Ezzit, Sfax",
+        city: "Sfax",
+        badge: "Popular",
+      },
+    },
+  },
+  {
+    name: "دار زمان - Dar Zmen",
+    nameAr: "دار زمان",
+    nameFr: "Dar Zmen",
+    nameEn: "Dar Zmen Heritage Cafe",
+    category: "food",
+    type: "cafe",
+    city: "Sfax",
+    cityAr: "صفاقس",
+    cityFr: "Sfax",
+    cityEn: "Sfax",
+    locationName: "طريق تنيور كم 1.5، بيكفيل، صفاقس",
+    locationNameAr: "طريق تنيور كم 1.5، بيكفيل، صفاقس",
+    locationNameFr: "Route Téniour Km 1.5, Picville, Sfax",
+    locationNameEn: "Teniour Road Km 1.5, Picville, Sfax",
+    address: "Route Téniour Km 1.5, Picville, Sfax",
+    description: "أجواء تونسية أصيلة وديكور تراثي ساحر بقلب صفاقس. قهوة عربي بالزهر، شاي باللوز، حلويات صفاقسية تقليدية، وشيشة في قعدة هادئة.",
+    descriptionAr: "أجواء تونسية أصيلة وديكور تراثي ساحر بقلب صفاقس. قهوة عربي بالزهر، شاي باللوز، حلويات صفاقسية تقليدية، وشيشة في قعدة هادئة.",
+    descriptionFr: "Ambiance tunisienne authentique et décor traditionnel au cœur de Sfax. Café turc à la fleur d'oranger, thé aux amandes, pâtisseries sfaxiennes et chicha.",
+    descriptionEn: "Authentic Tunisian heritage lounge in the heart of Sfax. Traditional Arabic coffee, almond tea, authentic Sfaxian sweets, and relaxing shisha.",
+    price: 12,
+    currency: "TND",
+    rating: 4.8,
+    reviewsCount: 310,
+    distanceKm: 1.6,
+    imageUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80",
+    badge: "10-30 DT",
+    badgeAr: "تراث وأصالة",
+    badgeFr: "Traditionnel",
+    badgeEn: "Heritage",
+    coordinates: { latitude: 34.7523, longitude: 10.7485 },
+    isPopular: true,
+    isFeatured: true,
+    translations: {
+      ar: {
+        name: "دار زمان",
+        description: "أجواء تونسية أصيلة وديكور تراثي ساحر بقلب صفاقس. قهوة عربي بالزهر، شاي باللوز، حلويات صفاقسية تقليدية، وشيشة في قعدة هادئة.",
+        locationName: "طريق تنيور كم 1.5، بيكفيل، صفاقس",
+        city: "صفاقس",
+        badge: "تراث وأصالة",
+      },
+      fr: {
+        name: "Dar Zmen",
+        description: "Ambiance tunisienne authentique et décor traditionnel au cœur de Sfax. Café turc à la fleur d'oranger, thé aux amandes, pâtisseries sfaxiennes et chicha.",
+        locationName: "Route Téniour Km 1.5, Picville, Sfax",
+        city: "Sfax",
+        badge: "Traditionnel",
+      },
+      en: {
+        name: "Dar Zmen Heritage Cafe",
+        description: "Authentic Tunisian heritage lounge in the heart of Sfax. Traditional Arabic coffee, almond tea, authentic Sfaxian sweets, and relaxing shisha.",
+        locationName: "Teniour Road Km 1.5, Picville, Sfax",
+        city: "Sfax",
+        badge: "Heritage",
+      },
+    },
+  },
+  {
+    name: "مقهى الديوان - أسوار المدينة العتيقة",
+    nameAr: "مقهى الديوان - أسوار المدينة العتيقة",
+    nameFr: "Café Diwan - Remparts de la Médina",
+    nameEn: "Cafe Diwan - Historic Medina Walls",
+    category: "food",
+    type: "cafe",
+    city: "Sfax",
+    cityAr: "صفاقس",
+    cityFr: "Sfax",
+    cityEn: "Sfax",
+    locationName: "باب الديوان، المدينة العتيقة، صفاقس",
+    locationNameAr: "باب الديوان، المدينة العتيقة، صفاقس",
+    locationNameFr: "Bab Diwan, Médina de Sfax",
+    locationNameEn: "Bab Diwan, Sfax Medina",
+    address: "Bab Diwan, Médina de Sfax",
+    description: "جلسة تراثية فوق أسوار المدينة العتيقة بصفاقس وإطلالة بانورامية ساحرة على باب الديوان وميناء صفاقس مع نسيم البحر.",
+    descriptionAr: "جلسة تراثية فوق أسوار المدينة العتيقة بصفاقس وإطلالة بانورامية ساحرة على باب الديوان وميناء صفاقس مع نسيم البحر.",
+    descriptionFr: "Terrasse panoramique perchée sur les remparts de la Médina de Sfax. Vue imprenable sur Bab Diwan et le port maritime avec brise marine.",
+    descriptionEn: "Panoramic historic rooftop set atop the ancient Medina ramparts of Sfax. Breathtaking view overlooking Bab Diwan square and the sea port.",
+    price: 10,
+    currency: "TND",
+    rating: 4.7,
+    reviewsCount: 260,
+    distanceKm: 0.9,
+    imageUrl: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
+    badge: "Vue Mer",
+    badgeAr: "إطلالة بحر",
+    badgeFr: "Vue Mer",
+    badgeEn: "Sea View",
+    coordinates: { latitude: 34.7358, longitude: 10.7612 },
+    isPopular: true,
+    isFeatured: true,
+    translations: {
+      ar: {
+        name: "مقهى الديوان - أسوار المدينة العتيقة",
+        description: "جلسة تراثية فوق أسوار المدينة العتيقة بصفاقس وإطلالة بانورامية ساحرة على باب الديوان وميناء صفاقس مع نسيم البحر.",
+        locationName: "باب الديوان، المدينة العتيقة، صفاقس",
+        city: "صفاقس",
+        badge: "إطلالة بحر",
+      },
+      fr: {
+        name: "Café Diwan - Remparts de la Médina",
+        description: "Terrasse panoramique perchée sur les remparts de la Médina de Sfax. Vue imprenable sur Bab Diwan et le port maritime avec brise marine.",
+        locationName: "Bab Diwan, Médina de Sfax",
+        city: "Sfax",
+        badge: "Vue Mer",
+      },
+      en: {
+        name: "Cafe Diwan - Historic Medina Walls",
+        description: "Panoramic historic rooftop set atop the ancient Medina ramparts of Sfax. Breathtaking view overlooking Bab Diwan square and the sea port.",
+        locationName: "Bab Diwan, Sfax Medina",
+        city: "Sfax",
+        badge: "Sea View",
+      },
+    },
+  },
+  {
+    name: "Escape Room Sfax",
+    nameAr: "غرفة الهروب صفاقس",
+    nameFr: "Escape Room Sfax",
+    nameEn: "Escape Room Sfax",
+    category: "fun",
+    type: "activity",
+    city: "Sfax",
+    cityAr: "صفاقس",
+    cityFr: "Sfax",
+    cityEn: "Sfax",
+    locationName: "طريق الأفران كم 3، صفاقس",
+    locationNameAr: "طريق الأفران كم 3، صفاقس",
+    locationNameFr: "Route Afrane Km 3, Sfax",
+    locationNameEn: "Afrane Road Km 3, Sfax",
+    address: "Route Afrane Km 3, Sfax",
+    description: "تجربة فريدة من نوعها مع أصحابك! حل الألغاز واهرب من الغرفة المظلمة قبل ما يوفى الوقت. أنشطة مليئة بالتحدي والتسلية.",
+    descriptionAr: "تجربة فريدة من نوعها مع أصحابك! حل الألغاز واهرب من الغرفة المظلمة قبل ما يوفى الوقت. أنشطة مليئة بالتحدي والتسلية.",
+    descriptionFr: "Une expérience d'immersion palpitante entre amis ! Résolvez les énigmes et évadez-vous en moins de 60 minutes avec adrénaline garantie.",
+    descriptionEn: "Thrilling real-life room escape game with your friends! Solve puzzles, crack clues, and beat the 60-minute countdown.",
+    price: 25,
+    currency: "TND",
+    rating: 4.8,
+    reviewsCount: 142,
+    distanceKm: 2.4,
+    imageUrl: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80",
+    badge: "10-30 DT",
+    badgeAr: "مغامرة وتحدي",
+    badgeFr: "Défi d'équipe",
+    badgeEn: "Team Challenge",
+    coordinates: { latitude: 34.7340, longitude: 10.7320 },
+    isPopular: true,
+    isFeatured: true,
+    translations: {
+      ar: {
+        name: "غرفة الهروب صفاقس",
+        description: "تجربة فريدة من نوعها مع أصحابك! حل الألغاز واهرب من الغرفة المظلمة قبل ما يوفى الوقت. أنشطة مليئة بالتحدي والتسلية.",
+        locationName: "طريق الأفران كم 3، صفاقس",
+        city: "صفاقس",
+        badge: "مغامرة وتحدي",
+      },
+      fr: {
+        name: "Escape Room Sfax",
+        description: "Une expérience d'immersion palpitante entre amis ! Résolvez les énigmes et évadez-vous en moins de 60 minutes avec adrénaline garantie.",
+        locationName: "Route Afrane Km 3, Sfax",
+        city: "Sfax",
+        badge: "Défi d'équipe",
+      },
+      en: {
+        name: "Escape Room Sfax",
+        description: "Thrilling real-life room escape game with your friends! Solve puzzles, crack clues, and beat the 60-minute countdown.",
+        locationName: "Afrane Road Km 3, Sfax",
+        city: "Sfax",
+        badge: "Team Challenge",
+      },
+    },
+  },
+  {
+    name: "Bowling & Loisirs Mall of Sfax",
+    nameAr: "بولينغ وألعاب مول صفاقس",
+    nameFr: "Bowling & Loisirs Mall of Sfax",
+    nameEn: "Bowling & Arcade Mall of Sfax",
+    category: "fun",
+    type: "activity",
+    city: "Sfax",
+    cityAr: "صفاقس",
+    cityFr: "Sfax",
+    cityEn: "Sfax",
+    locationName: "مول أوف صفاقس، طريق تونس كم 9",
+    locationNameAr: "مول أوف صفاقس، طريق تونس كم 9",
+    locationNameFr: "Mall of Sfax, Route de Tunis Km 9, Sakiet Ezzit",
+    locationNameEn: "Mall of Sfax, Tunis Road Km 9, Sakiet Ezzit",
+    address: "Mall of Sfax, Route de Tunis Km 9, Sakiet Ezzit",
+    description: "مسارات بولينغ عصرية، بلياردو، وألعاب أركيد تفاعلية لقضاء أحلى الأوقات التنافسية مع أصحابك وعائلتك داخل مول أوف صفاقس.",
+    descriptionAr: "مسارات بولينغ عصرية، بلياردو، وألعاب أركيد تفاعلية لقضاء أحلى الأوقات التنافسية مع أصحابك وعائلتك داخل مول أوف صفاقس.",
+    descriptionFr: "Pistes de bowling dernier cri, billard et jeux d'arcade interactifs pour une soirée festive et compétitive au Mall of Sfax.",
+    descriptionEn: "State-of-the-art bowling lanes, pool tables, and modern interactive arcade games for high-energy fun inside Mall of Sfax.",
+    price: 18,
+    currency: "TND",
+    rating: 4.8,
+    reviewsCount: 195,
+    distanceKm: 4.9,
+    imageUrl: "https://images.unsplash.com/photo-1538388149866-71294d1f0b54?auto=format&fit=crop&w=800&q=80",
+    badge: "10-30 DT",
+    badgeAr: "مرح وتحدي",
+    badgeFr: "Loisirs Fun",
+    badgeEn: "Arcade & Fun",
+    coordinates: { latitude: 34.7932, longitude: 10.7716 },
+    isPopular: true,
+    isFeatured: false,
+    translations: {
+      ar: {
+        name: "بولينغ وألعاب مول صفاقس",
+        description: "مسارات بولينغ عصرية، بلياردو، وألعاب أركيد تفاعلية لقضاء أحلى الأوقات التنافسية مع أصحابك وعائلتك داخل مول أوف صفاقس.",
+        locationName: "مول أوف صفاقس، طريق تونس كم 9",
+        city: "صفاقس",
+        badge: "مرح وتحدي",
+      },
+      fr: {
+        name: "Bowling & Loisirs Mall of Sfax",
+        description: "Pistes de bowling dernier cri, billard et jeux d'arcade interactifs pour une soirée festive et compétitive au Mall of Sfax.",
+        locationName: "Mall of Sfax, Route de Tunis Km 9, Sakiet Ezzit",
+        city: "Sfax",
+        badge: "Loisirs Fun",
+      },
+      en: {
+        name: "Bowling & Arcade Mall of Sfax",
+        description: "State-of-the-art bowling lanes, pool tables, and modern interactive arcade games for high-energy fun inside Mall of Sfax.",
+        locationName: "Mall of Sfax, Tunis Road Km 9, Sakiet Ezzit",
+        city: "Sfax",
+        badge: "Arcade & Fun",
+      },
+    },
+  },
+  {
+    name: "المسرح البلدي وباب بحر صفاقس",
+    nameAr: "المسرح البلدي وباب بحر صفاقس",
+    nameFr: "Théâtre Municipal & Bab Bhar Sfax",
+    nameEn: "Municipal Theatre & Bab Bhar Sfax",
+    category: "creative",
+    type: "activity",
+    city: "Sfax",
+    cityAr: "صفاقس",
+    cityFr: "Sfax",
+    cityEn: "Sfax",
+    locationName: "شارع الهادي شاكر، باب بحر، صفاقس",
+    locationNameAr: "شارع الهادي شاكر، باب بحر، صفاقس",
+    locationNameFr: "Avenue Hédi Chaker, Bab Bhar, Sfax",
+    locationNameEn: "Hedi Chaker Avenue, Bab Bhar, Sfax",
+    address: "Avenue Hédi Chaker, Bab Bhar, Sfax",
+    description: "قلب مدينة صفاقس التراثي والمعماري. حضور عروض مسرحية وموسيقية ومعارض فنية في صرح معماري تاريخي فريد.",
+    descriptionAr: "قلب مدينة صفاقس التراثي والمعماري. حضور عروض مسرحية وموسيقية ومعارض فنية في صرح معماري تاريخي فريد.",
+    descriptionFr: "Cœur architectural et culturel de Sfax. Spectacles théâtraux, concerts en direct et expositions artistiques au cœur de Bab Bhar.",
+    descriptionEn: "The cultural and architectural heart of Sfax. Theatrical performances, musical concerts, and art exhibits in a majestic historical landmark.",
+    price: 10,
+    currency: "TND",
+    rating: 4.6,
+    reviewsCount: 180,
+    distanceKm: 0.6,
+    imageUrl: "https://images.unsplash.com/photo-1507676184212-d03ab07a01bf?auto=format&fit=crop&w=800&q=80",
+    badge: "ثقافة",
+    badgeAr: "فن وثقافة",
+    badgeFr: "Culture & Art",
+    badgeEn: "Culture & Art",
+    coordinates: { latitude: 34.7397, longitude: 10.7632 },
+    isPopular: false,
+    isFeatured: true,
+    translations: {
+      ar: {
+        name: "المسرح البلدي وباب بحر صفاقس",
+        description: "قلب مدينة صفاقس التراثي والمعماري. حضور عروض مسرحية وموسيقية ومعارض فنية في صرح معماري تاريخي فريد.",
+        locationName: "شارع الهادي شاكر، باب بحر، صفاقس",
+        city: "صفاقس",
+        badge: "فن وثقافة",
+      },
+      fr: {
+        name: "Théâtre Municipal & Bab Bhar Sfax",
+        description: "Cœur architectural et culturel de Sfax. Spectacles théâtraux, concerts en direct et expositions artistiques au cœur de Bab Bhar.",
+        locationName: "Avenue Hédi Chaker, Bab Bhar, Sfax",
+        city: "Sfax",
+        badge: "Culture & Art",
+      },
+      en: {
+        name: "Municipal Theatre & Bab Bhar Sfax",
+        description: "The cultural and architectural heart of Sfax. Theatrical performances, musical concerts, and art exhibits in a majestic historical landmark.",
+        locationName: "Hedi Chaker Avenue, Bab Bhar, Sfax",
+        city: "Sfax",
+        badge: "Culture & Art",
+      },
+    },
+  },
+  {
+    name: "Le Moulin Cafe & Lounge",
+    nameAr: "لو مولان كافيه ولاونج",
+    nameFr: "Le Moulin Cafe & Lounge",
+    nameEn: "Le Moulin Cafe & Lounge",
+    category: "food",
+    type: "cafe",
+    city: "Sfax",
+    cityAr: "صفاقس",
+    cityFr: "Sfax",
+    cityEn: "Sfax",
+    locationName: "طريق قرمدة كم 2، صفاقس",
+    locationNameAr: "طريق قرمدة كم 2، صفاقس",
+    locationNameFr: "Route Gremda Km 2, Sfax",
+    locationNameEn: "Gremda Road Km 2, Sfax",
+    address: "Route Gremda Km 2, Sfax",
+    description: "كافيه لاونج راقي، قهوة فاخرة، ساندويتشات وحلويات عصرية في ديكور هادئ ومريح للمذاكرة أو لقاء الأصحاب.",
+    descriptionAr: "كافيه لاونج راقي، قهوة فاخرة، ساندويتشات وحلويات عصرية في ديكور هادئ ومريح للمذاكرة أو لقاء الأصحاب.",
+    descriptionFr: "Lounge élégant et cosy avec café de spécialité, brunchs gourmands et ambiance musicale feutrée pour se retrouver entre amis.",
+    descriptionEn: "Chic modern lounge offering specialty coffee, delightful desserts, and light bites in a relaxing musical ambiance on Gremda Road.",
+    price: 14,
+    currency: "TND",
+    rating: 4.7,
+    reviewsCount: 220,
+    distanceKm: 2.1,
+    imageUrl: "https://images.unsplash.com/photo-1554118811-1e0d58224f24?auto=format&fit=crop&w=800&q=80",
+    badge: "Lounge",
+    badgeAr: "أجواء عصرية",
+    badgeFr: "Lounge Cosy",
+    badgeEn: "Cozy Lounge",
+    coordinates: { latitude: 34.7480, longitude: 10.7510 },
+    isPopular: false,
+    isFeatured: false,
+    translations: {
+      ar: {
+        name: "لو مولان كافيه ولاونج",
+        description: "كافيه لاونج راقي، قهوة فاخرة، ساندويتشات وحلويات عصرية في ديكور هادئ ومريح للمذاكرة أو لقاء الأصحاب.",
+        locationName: "طريق قرمدة كم 2، صفاقس",
+        city: "صفاقس",
+        badge: "أجواء عصرية",
+      },
+      fr: {
+        name: "Le Moulin Cafe & Lounge",
+        description: "Lounge élégant et cosy avec café de spécialité, brunchs gourmands et ambiance musicale feutrée pour se retrouver entre amis.",
+        locationName: "Route Gremda Km 2, Sfax",
+        city: "Sfax",
+        badge: "Lounge Cosy",
+      },
+      en: {
+        name: "Le Moulin Cafe & Lounge",
+        description: "Chic modern lounge offering specialty coffee, delightful desserts, and light bites in a relaxing musical ambiance on Gremda Road.",
+        locationName: "Gremda Road Km 2, Sfax",
+        city: "Sfax",
+        badge: "Cozy Lounge",
+      },
+    },
+  },
+  {
+    name: "شاطئ الشفار - Chaffar Beach",
+    nameAr: "شاطئ الشفار - صفاقس",
+    nameFr: "Plage de Chaffar Sfax",
+    nameEn: "Chaffar Beach Sfax",
+    category: "outdoor",
+    type: "activity",
+    city: "Sfax",
+    cityAr: "صفاقس",
+    cityFr: "Sfax",
+    cityEn: "Sfax",
+    locationName: "المحرس / الشفار، صفاقس الجنوبية",
+    locationNameAr: "المحرس / الشفار، صفاقس الجنوبية",
+    locationNameFr: "Plage Chaffar, Mahres, Sfax",
+    locationNameEn: "Chaffar Beach, Mahres, Sfax",
+    address: "Plage Chaffar, Sfax",
+    description: "الشاطئ الرملي الأجمل في ولاية صفاقس. مثالي للنزهات العائلية، السباحة، كرة الطائرة الشاطئية، والاستمتاع بغروب الشمس.",
+    descriptionAr: "الشاطئ الرملي الأجمل في ولاية صفاقس. مثالي للنزهات العائلية، السباحة، كرة الطائرة الشاطئية، والاستمتاع بغروب الشمس.",
+    descriptionFr: "La plus belle plage de sable fin de la région de Sfax. Idéale pour les baignades estivales, pique-niques en famille et couchers de soleil.",
+    descriptionEn: "The premier sandy coastline in the Sfax region. Perfect for family picnics, beach volleyball, relaxing swims, and stunning sunsets.",
+    price: 0,
+    currency: "TND",
+    rating: 4.6,
+    reviewsCount: 390,
+    distanceKm: 24.0,
+    imageUrl: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+    badge: "مجاني",
+    badgeAr: "دخول مجاني",
+    badgeFr: "Accès Gratuit",
+    badgeEn: "Free Access",
+    coordinates: { latitude: 34.5422, longitude: 10.5833 },
+    isPopular: true,
+    isFeatured: false,
+    translations: {
+      ar: {
+        name: "شاطئ الشفار - صفاقس",
+        description: "الشاطئ الرملي الأجمل في ولاية صفاقس. مثالي للنزهات العائلية، السباحة، كرة الطائرة الشاطئية، والاستمتاع بغروب الشمس.",
+        locationName: "المحرس / الشفار، صفاقس الجنوبية",
+        city: "صفاقس",
+        badge: "دخول مجاني",
+      },
+      fr: {
+        name: "Plage de Chaffar Sfax",
+        description: "La plus belle plage de sable fin de la région de Sfax. Idéale pour les baignades estivales, pique-niques en famille et couchers de soleil.",
+        locationName: "Plage Chaffar, Mahres, Sfax",
+        city: "Sfax",
+        badge: "Accès Gratuit",
+      },
+      en: {
+        name: "Chaffar Beach Sfax",
+        description: "The premier sandy coastline in the Sfax region. Perfect for family picnics, beach volleyball, relaxing swims, and stunning sunsets.",
+        locationName: "Chaffar Beach, Mahres, Sfax",
+        city: "Sfax",
+        badge: "Free Access",
+      },
+    },
+  },
+];
+
+// Liste des villes de Tunisie (Scalable & Administrable dynamiquement)
+const demoCities = [
+  {
+    slug: "sfax",
+    name: "Sfax",
+    nameAr: "صفاقس",
+    nameFr: "Sfax",
+    nameEn: "Sfax",
+    coords: { latitude: 34.74056, longitude: 10.76028 },
+    isActive: true,
+    badge: "المدينة الحالية",
+    badgeAr: "المدينة الحالية",
+    badgeFr: "Ville Active",
+    badgeEn: "Active City",
+    coverImage: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80",
+    order: 1,
+  },
+  {
+    slug: "tunis",
+    name: "Tunis",
+    nameAr: "تونس العاصمة",
+    nameFr: "Tunis",
+    nameEn: "Tunis",
+    coords: { latitude: 36.8065, longitude: 10.1815 },
+    isActive: false,
+    badge: "قريباً",
+    badgeAr: "قريباً",
+    badgeFr: "Bientôt",
+    badgeEn: "Coming Soon",
+    coverImage: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
+    order: 2,
+  },
+  {
+    slug: "sousse",
+    name: "Sousse",
+    nameAr: "سوسة",
+    nameFr: "Sousse",
+    nameEn: "Sousse",
+    coords: { latitude: 35.8256, longitude: 10.63699 },
+    isActive: false,
+    badge: "قريباً",
+    badgeAr: "قريباً",
+    badgeFr: "Bientôt",
+    badgeEn: "Coming Soon",
+    coverImage: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+    order: 3,
+  },
+  {
+    slug: "monastir",
+    name: "Monastir",
+    nameAr: "المنستير",
+    nameFr: "Monastir",
+    nameEn: "Monastir",
+    coords: { latitude: 35.7779, longitude: 10.8262 },
+    isActive: false,
+    badge: "قريباً",
+    badgeAr: "قريباً",
+    badgeFr: "Bientôt",
+    badgeEn: "Coming Soon",
+    coverImage: "https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=800&q=80",
+    order: 4,
+  },
+  {
+    slug: "bizerte",
+    name: "Bizerte",
+    nameAr: "بنزرت",
+    nameFr: "Bizerte",
+    nameEn: "Bizerte",
+    coords: { latitude: 37.2744, longitude: 9.8739 },
+    isActive: false,
+    badge: "قريباً",
+    badgeAr: "قريباً",
+    badgeFr: "Bientôt",
+    badgeEn: "Coming Soon",
+    coverImage: "https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80",
+    order: 5,
+  },
+  {
+    slug: "hammamet",
+    name: "Hammamet",
+    nameAr: "الحمامات",
+    nameFr: "Hammamet",
+    nameEn: "Hammamet",
+    coords: { latitude: 36.4, longitude: 10.61 },
+    isActive: false,
+    badge: "قريباً",
+    badgeAr: "قريباً",
+    badgeFr: "Bientôt",
+    badgeEn: "Coming Soon",
+    coverImage: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80",
+    order: 6,
+  },
+  {
+    slug: "djerba",
+    name: "Djerba",
+    nameAr: "جربة",
+    nameFr: "Djerba",
+    nameEn: "Djerba",
+    coords: { latitude: 33.8075, longitude: 10.8451 },
+    isActive: false,
+    badge: "قريباً",
+    badgeAr: "قريباً",
+    badgeFr: "Bientôt",
+    badgeEn: "Coming Soon",
+    coverImage: "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=800&q=80",
+    order: 7,
+  },
+];
+
+// Liste des catégories d'activités (Scalable & Administrable dynamiquement)
+const demoCategories = [
+  {
+    slug: "fun",
+    name: "ترفيه",
+    nameAr: "ترفيه",
+    nameFr: "Divertissement",
+    nameEn: "Entertainment",
+    icon: "game-controller-outline",
+    color: "#FF4B5C",
+    order: 1,
+    isActive: true,
+  },
+  {
+    slug: "sport",
+    name: "رياضة",
+    nameAr: "رياضة",
+    nameFr: "Sport & Fitness",
+    nameEn: "Sports & Fitness",
+    icon: "fitness-outline",
+    color: "#3B82F6",
+    order: 2,
+    isActive: true,
+  },
+  {
+    slug: "couple",
+    name: "كوبل",
+    nameAr: "كوبل",
+    nameFr: "En Couple",
+    nameEn: "Couples",
+    icon: "heart-outline",
+    color: "#EC4899",
+    order: 3,
+    isActive: true,
+  },
+  {
+    slug: "friends",
+    name: "صحاب",
+    nameAr: "صحاب",
+    nameFr: "Entre Amis",
+    nameEn: "Friends",
+    icon: "people-outline",
+    color: "#8B5CF6",
+    order: 4,
+    isActive: true,
+  },
+  {
+    slug: "outdoor",
+    name: "هواء طلق",
+    nameAr: "هواء طلق",
+    nameFr: "Plein Air & Mer",
+    nameEn: "Outdoors & Beach",
+    icon: "leaf-outline",
+    color: "#10B981",
+    order: 5,
+    isActive: true,
+  },
+  {
+    slug: "food",
+    name: "أكل ومقاهي",
+    nameAr: "أكل ومقاهي",
+    nameFr: "Cafés & Restos",
+    nameEn: "Cafes & Food",
+    icon: "restaurant-outline",
+    color: "#F59E0B",
+    order: 6,
+    isActive: true,
+  },
+  {
+    slug: "creative",
+    name: "ثقافة وإبداع",
+    nameAr: "ثقافة وإبداع",
+    nameFr: "Culture & Créatif",
+    nameEn: "Culture & Creative",
+    icon: "color-palette-outline",
+    color: "#6366F1",
+    order: 7,
+    isActive: true,
+  },
+];
+
+const seedDatabase = async () => {
+  try {
+    console.log("🔌 [Seeder] Connexion à MongoDB...");
+    await mongoose.connect(MONGO_URI);
+    console.log("✅ [Seeder] Connecté à MongoDB.");
+
+    // 1. Seeding des utilisateurs
+    console.log("\n👤 [Seeder] Initialisation des utilisateurs...");
+    const createdUsersMap = {};
+
+    for (const userData of demoUsers) {
+      let user = await User.findOne({ email: userData.email });
+      if (!user) {
+        user = await User.create(userData);
+        console.log(`✨ [Seeder] Utilisateur créé : ${userData.email} [Rôle: ${userData.role}]`);
+      } else {
+        console.log(`ℹ️ [Seeder] L'utilisateur ${userData.email} existe déjà.`);
+      }
+      createdUsersMap[userData.role] = user;
+    }
+
+    const adminUser = createdUsersMap["admin"];
+    const partnerUser = createdUsersMap["partner"];
+
+    // 2. Seeding des Villes dynamiques
+    console.log("\n🏙️ [Seeder] Initialisation & synchronisation des Villes...");
+    for (const cityData of demoCities) {
+      await City.findOneAndUpdate({ slug: cityData.slug }, cityData, { upsert: true, new: true });
+      console.log(`✨ [Seeder] Ville synchronisée : ${cityData.name} (${cityData.isActive ? "Active" : "Bientôt"})`);
+    }
+
+    // 3. Seeding des Catégories dynamiques
+    console.log("\n🏷️ [Seeder] Initialisation & synchronisation des Catégories...");
+    for (const catData of demoCategories) {
+      await Category.findOneAndUpdate({ slug: catData.slug }, catData, { upsert: true, new: true });
+      console.log(`✨ [Seeder] Catégorie synchronisée : ${catData.slug} -> ${catData.nameFr}`);
+    }
+
+    // 4. Nettoyage : Suppression des activités hors Sfax pour le lancement exclusif
+    console.log("\n🧹 [Seeder] Suppression des activités hors de Sfax (exclusivité Sfax)...");
+    const deleteResult = await Activity.deleteMany({ city: { $ne: "Sfax" } });
+    console.log(`🗑️ [Seeder] ${deleteResult.deletedCount} activités hors Sfax supprimées.`);
+
+    // 5. Seeding des activités de Sfax avec support multilingue (FR, AR, EN)
+    console.log("\n📍 [Seeder] Initialisation & synchronisation des activités de Sfax [FR / AR / EN]...");
+    for (const actData of demoActivities) {
+      const owner = (actData.type === "cafe" || actData.city === "Sfax") ? partnerUser : adminUser;
+
+      const existingActivity = await Activity.findOne({ name: actData.name, city: "Sfax" });
+      if (!existingActivity) {
+        await Activity.create({
+          ...actData,
+          createdBy: owner._id,
+        });
+        console.log(`✨ [Seeder] Activité ajoutée : "${actData.nameFr}" / "${actData.nameAr}" [Sfax]`);
+      } else {
+        await Activity.findByIdAndUpdate(existingActivity._id, {
+          ...actData,
+          createdBy: owner._id,
+        });
+        console.log(`🔄 [Seeder] Activité synchronisée : "${actData.nameFr}" / "${actData.nameAr}" [Sfax]`);
+      }
+    }
+
+    console.log("\n🎉 [Seeder] Seeding Sfax, Villes & Catégories exécuté avec succès !");
+    console.log("===============================================================");
+    console.log("👑 Admin     : admin@activitytn.tn / Admin123456!");
+    console.log("☕ Partner   : partner.moulin@activitytn.tn / Partner123456!");
+    console.log("👤 User      : user.sfax@activitytn.tn / User123456!");
+    console.log("===============================================================\n");
+
+    process.exit(0);
+  } catch (error) {
+    console.error("❌ [Seeder] Erreur lors du seeding :", error);
+    process.exit(1);
+  }
+};
+
+seedDatabase();
