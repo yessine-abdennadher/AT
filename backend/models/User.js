@@ -58,7 +58,7 @@ const userSchema = new mongoose.Schema(
     },
     partnerTier: {
       type: String,
-      enum: ["standard", "pro"],
+      enum: ["standard", "pro", "premium"],
       default: "standard",
     },
     refreshTokens: [

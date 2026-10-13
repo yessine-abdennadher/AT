@@ -199,6 +199,7 @@ const activitySchema = new mongoose.Schema(
     events: [
       {
         title: { type: String, required: true },
+        image: { type: String, default: "" },
         date: { type: String, default: "" },
         time: { type: String, default: "" },
         description: { type: String, default: "" },
@@ -208,7 +209,9 @@ const activitySchema = new mongoose.Schema(
     ],
     promotion: {
       isPromo: { type: Boolean, default: false },
+      promoType: { type: String, enum: ["all", "item"], default: "all" },
       discountPercent: { type: Number, default: 0 },
+      targetItem: { type: String, default: "" },
       promoLabel: { type: String, default: "" },
       validUntil: { type: String, default: "" },
     },

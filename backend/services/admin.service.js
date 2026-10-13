@@ -295,8 +295,8 @@ export const deleteActivityByAdmin = async (activityId) => {
  * Modifier le niveau / tier d'un partenaire (standard ou pro)
  */
 export const updatePartnerTier = async (userId, tier) => {
-  if (!["standard", "pro"].includes(tier)) {
-    const error = new Error("Tier invalide. Valeurs autorisées : standard, pro");
+  if (!["standard", "pro", "premium"].includes(tier)) {
+    const error = new Error("Tier invalide. Valeurs autorisées : standard, pro, premium");
     error.statusCode = 400;
     throw error;
   }

@@ -304,15 +304,17 @@ export const updateActivityPromotion = async (activityId, userId, promoData) => 
   }
 
   const creator = await User.findById(userId);
-  if (!creator || creator.partnerTier !== "pro") {
-    const error = new Error("Fonctionnalité réservée aux Partenaires Pro : contactez l'administration pour passer Pro.");
+  if (!creator || !["pro", "premium"].includes(creator.partnerTier)) {
+    const error = new Error("Fonctionnalité réservée aux Partenaires Pro ou Premium : contactez l'administration.");
     error.statusCode = 403;
     throw error;
   }
 
   activity.promotion = {
     isPromo: Boolean(promoData.isPromo),
+    promoType: promoData.promoType === "item" ? "item" : "all",
     discountPercent: Number(promoData.discountPercent) || 0,
+    targetItem: promoData.targetItem || "",
     promoLabel: promoData.promoLabel || "",
     validUntil: promoData.validUntil || "",
   };
@@ -376,8 +378,8 @@ export const addActivityEvent = async (activityId, userId, eventData) => {
   }
 
   const creator = await User.findById(userId);
-  if (!creator || creator.partnerTier !== "pro") {
-    const error = new Error("Fonctionnalité réservée aux Partenaires Pro : contactez l'administration pour passer Pro.");
+  if (!creator || !["pro", "premium"].includes(creator.partnerTier)) {
+    const error = new Error("Fonctionnalité réservée aux Partenaires Premium ou Pro : contactez l'administration pour activer l'option.");
     error.statusCode = 403;
     throw error;
   }
@@ -390,6 +392,7 @@ export const addActivityEvent = async (activityId, userId, eventData) => {
 
   activity.events.push({
     title: eventData.title,
+    image: eventData.image || "",
     date: eventData.date || "",
     time: eventData.time || "",
     description: eventData.description || "",
