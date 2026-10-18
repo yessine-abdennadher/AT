@@ -89,12 +89,15 @@ export const deleteActivity = async (req, res, next) => {
 // @access  Public
 export const getRecommendations = async (req, res, next) => {
   try {
-    const { filters = {}, sortBy = "rating" } = req.body;
-    const scoredActivities = await activityService.getRecommendations(filters, sortBy);
+    const { filters = {}, sortBy = "rating", page, limit } = req.body;
+    const result = await activityService.getRecommendations(filters, sortBy, { page, limit });
     res.json({
       success: true,
-      count: scoredActivities.length,
-      activities: scoredActivities,
+      count: result.activities.length,
+      activities: result.activities,
+      page: result.page,
+      limit: result.limit,
+      hasMore: result.hasMore,
     });
   } catch (error) {
     next(error);

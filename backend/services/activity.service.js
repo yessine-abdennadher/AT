@@ -4,6 +4,43 @@ import { User } from "../models/User.js";
 import { Review } from "../models/Review.js";
 import { createNotification } from "./notification.service.js";
 
+export const MAX_REACTIONS_PER_REVIEW = 50;
+const SUPPORTED_REACTIONS = ["like", "love", "haha", "wow", "sad", "angry"];
+
+export const buildReactionTogglePipeline = ({ userId, type, userName = "Utilisateur", userAvatar = "", now = new Date() }) => {
+  const reactionType = SUPPORTED_REACTIONS.includes(type) ? type : "like";
+  const newReaction = {
+    _id: new mongoose.Types.ObjectId(), user: userId, userName, userAvatar,
+    type: reactionType, createdAt: now, updatedAt: now,
+  };
+  return [{
+    $set: {
+      reactions: {
+        $let: {
+          vars: {
+            current: { $ifNull: ["$reactions", []] },
+            mine: { $filter: { input: { $ifNull: ["$reactions", []] }, as: "reaction", cond: { $eq: ["$$reaction.user", userId] } } },
+            newReaction,
+          },
+          in: {
+            $cond: [
+              { $gt: [{ $size: "$$mine" }, 0] },
+              {
+                $cond: [
+                  { $eq: [{ $arrayElemAt: ["$$mine.type", 0] }, reactionType] },
+                  { $filter: { input: "$$current", as: "reaction", cond: { $ne: ["$$reaction.user", userId] } } },
+                  { $map: { input: "$$current", as: "reaction", in: { $cond: [{ $eq: ["$$reaction.user", userId] }, { $mergeObjects: ["$$reaction", { type: reactionType, userName, userAvatar, updatedAt: now }] }, "$$reaction"] } } },
+                ],
+              },
+              { $cond: [{ $lt: [{ $size: "$$current" }, MAX_REACTIONS_PER_REVIEW] }, { $concatArrays: ["$$current", ["$$newReaction"]] }, "$$current"] },
+            ],
+          },
+        },
+      },
+    },
+  }];
+};
+
 // Helper: Recalcul de la note moyenne et du nombre d'avis depuis la collection Review
 const recalculateActivityRating = async (activityId) => {
   const stats = await Review.aggregate([
@@ -32,6 +69,42 @@ const recalculateActivityRating = async (activityId) => {
 const escapeRegex = (text) => {
   if (typeof text !== "string") return "";
   return text.trim().replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
+};
+
+export const getRecommendationWindow = ({ page = 1, limit = 20 } = {}) => {
+  const pageNum = Math.max(1, Number.parseInt(page, 10) || 1);
+  const limitNum = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 20));
+  return { page: pageNum, limit: limitNum, candidateLimit: limitNum * 10 };
+};
+
+export const buildRecommendationQuery = (filters = {}) => {
+  const query = {};
+  if (typeof filters.city === "string" && filters.city.trim()) {
+    query.city = { $regex: escapeRegex(filters.city), $options: "i" };
+  }
+  const possibleMatches = [];
+  if (filters.category) possibleMatches.push({ category: filters.category });
+  if (filters.budgetMax !== undefined && Number.isFinite(Number(filters.budgetMax))) {
+    possibleMatches.push({ price: { $lte: Number(filters.budgetMax) } });
+  } else if (filters.budget) {
+    possibleMatches.push({ $or: [{ priceTag: filters.budget }, { badge: filters.budget }] });
+  }
+  if (filters.durationMin !== undefined || filters.durationMax !== undefined) {
+    const duration = {};
+    if (Number.isFinite(Number(filters.durationMin))) duration.$gte = Number(filters.durationMin);
+    if (Number.isFinite(Number(filters.durationMax))) duration.$lte = Number(filters.durationMax);
+    if (Object.keys(duration).length) possibleMatches.push({ durationMinutes: duration });
+  } else if (filters.duration) possibleMatches.push({ duration: filters.duration });
+  if (filters.distanceMax !== undefined && Number.isFinite(Number(filters.distanceMax))) {
+    possibleMatches.push({ distanceKm: { $lte: Number(filters.distanceMax) } });
+  } else if (filters.distance) possibleMatches.push({ distance: filters.distance });
+  if (filters.group) possibleMatches.push({ suitableFor: filters.group });
+  if (filters.situation === "powercut") possibleMatches.push({ $or: [{ hasPowerBackup: true }, { isIndoor: false }] });
+  if (filters.situation === "hot") possibleMatches.push({ $or: [{ hasAirConditioning: true }, { category: "outdoor" }] });
+  if (filters.situation === "rain") possibleMatches.push({ isIndoor: true });
+  if (filters.situation === "open_now") possibleMatches.push({ isOpenNow: { $ne: false } });
+  if (possibleMatches.length) query.$and = [{ $or: possibleMatches }];
+  return query;
 };
 
 /**
@@ -463,9 +536,12 @@ export const deleteActivity = async (id, user) => {
 /**
  * Algorithme de Recommandations intelligentes
  */
-export const getRecommendations = async (filters = {}, sortBy = "rating") => {
-  const activities = await Activity.find({})
+export const getRecommendations = async (filters = {}, sortBy = "rating", pagination = {}) => {
+  const { page, limit, candidateLimit } = getRecommendationWindow(pagination);
+  const activities = await Activity.find(buildRecommendationQuery(filters))
     .populate("createdBy", "name role establishmentName")
+    .sort({ rating: -1, _id: 1 })
+    .limit(candidateLimit)
     .lean();
 
   const scoredActivities = activities
@@ -529,18 +605,26 @@ export const getRecommendations = async (filters = {}, sortBy = "rating") => {
 
       return { activity, score };
     })
-    .filter((item) => item.score > 0 || Object.keys(filters).length === 0)
+    .filter((item) => item.score > 0 || Object.keys(filters).length === 0 || Boolean(filters.city))
     .sort((a, b) => {
-      if (sortBy === "price") return (a.activity.price ?? 0) - (b.activity.price ?? 0);
-      if (sortBy === "distance") return (a.activity.distanceKm ?? 0) - (b.activity.distanceKm ?? 0);
-      return b.score - a.score || (b.activity.rating ?? 0) - (a.activity.rating ?? 0);
+      let primary;
+      if (sortBy === "price") primary = (a.activity.price ?? 0) - (b.activity.price ?? 0);
+      else if (sortBy === "distance") primary = (a.activity.distanceKm ?? 0) - (b.activity.distanceKm ?? 0);
+      else primary = b.score - a.score || (b.activity.rating ?? 0) - (a.activity.rating ?? 0);
+      return primary || String(a.activity._id).localeCompare(String(b.activity._id));
     })
     .map((item) => ({
       ...item.activity,
       matchScore: item.score,
     }));
 
-  return scoredActivities;
+  const offset = (page - 1) * limit;
+  return {
+    activities: scoredActivities.slice(offset, offset + limit),
+    page,
+    limit,
+    hasMore: scoredActivities.length > offset + limit || activities.length === candidateLimit,
+  };
 };
 
 /**
@@ -740,9 +824,6 @@ export const deleteReview = async (activityId, reviewId, userAuth) => {
  * Réagir à un avis (Facebook reaction) sur la collection Review
  */
 export const reactToReview = async (activityId, reviewId, reactionType, userAuth) => {
-  const validTypes = ["like", "love", "haha", "wow", "sad", "angry"];
-  const type = validTypes.includes(reactionType) ? reactionType : "like";
-
   const review = await Review.findOne({ _id: reviewId, activity: activityId });
   if (!review) {
     const error = new Error("Avis introuvable.");
@@ -750,44 +831,21 @@ export const reactToReview = async (activityId, reviewId, reactionType, userAuth
     throw error;
   }
 
-  review.reactions = review.reactions || [];
-  const userIdStr = userAuth._id ? userAuth._id.toString() : userAuth.id ? userAuth.id.toString() : String(userAuth);
-  const existingIndex = review.reactions.findIndex(
-    (r) => r.user && r.user.toString() === userIdStr
+  const userId = userAuth._id || userAuth.id || userAuth;
+  const updatedReview = await Review.findOneAndUpdate(
+    { _id: reviewId, activity: activityId },
+    buildReactionTogglePipeline({ userId: new mongoose.Types.ObjectId(userId), type: reactionType, userName: userAuth.name || "Utilisateur", userAvatar: userAuth.avatar || "" }),
+    { new: true }
   );
-
-  let userReaction = null;
-
-  if (existingIndex > -1) {
-    if (review.reactions[existingIndex].type === type) {
-      // Toggle OFF
-      review.reactions.splice(existingIndex, 1);
-    } else {
-      // Switch reaction type
-      review.reactions[existingIndex].type = type;
-      if (userAuth.name) review.reactions[existingIndex].userName = userAuth.name;
-      if (userAuth.avatar) review.reactions[existingIndex].userAvatar = userAuth.avatar;
-      userReaction = type;
-    }
-  } else {
-    // New reaction
-    review.reactions.push({
-      user: userIdStr,
-      userName: userAuth.name || "Utilisateur",
-      userAvatar: userAuth.avatar || "",
-      type,
-    });
-    userReaction = type;
-  }
-
-  await review.save();
+  const persistedReaction = updatedReview.reactions.find((reaction) => reaction.user.toString() === userId.toString());
+  const userReaction = persistedReaction?.type || null;
   const reviews = await Review.find({ activity: activityId }).sort({ createdAt: -1 });
 
   return {
     reviewId,
     userReaction,
-    reactionsCount: review.reactions.length,
-    reactions: review.reactions,
+    reactionsCount: updatedReview.reactions.length,
+    reactions: updatedReview.reactions,
     reviews,
   };
 };

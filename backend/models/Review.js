@@ -62,6 +62,10 @@ const reviewSchema = new mongoose.Schema(
     reactions: {
       type: [reactionSchema],
       default: [],
+      validate: {
+        validator: (reactions) => reactions.length <= 50,
+        message: "Un avis ne peut pas avoir plus de 50 réactions.",
+      },
     },
   },
   {
