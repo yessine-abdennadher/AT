@@ -1,0 +1,3 @@
+[submodule "activitytn"]
+	path = activitytn
+	url = https://github.com/yessine-abdennadher/activityFrontend.git
