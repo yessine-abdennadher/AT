@@ -7,6 +7,20 @@
 
 Le rôle `admin` ne peut pas être choisi par l'inscription publique. Il doit être attribué de manière contrôlée en base de données.
 
+## Organisation des services métier
+
+Les contrôleurs historiques continuent d'importer `services/activity.service.js`, qui sert de façade de compatibilité. Les implémentations sont séparées par domaine :
+
+- `activity.service.js` : catalogue et CRUD des activités.
+- `activity-recommendation.service.js` : filtres, sélection bornée des candidats et classement.
+- `activity-favorite.service.js` : favoris utilisateur.
+- `activity-review.service.js` : avis, notes et réactions.
+- `activity-partner.service.js` : statistiques partenaire, promotions et événements.
+- `activity-power.service.js` : mode énergie et signalements communautaires.
+- `activity.utils.js` : utilitaires partagés du domaine Activité.
+
+La façade évite une migration simultanée des contrôleurs; chaque domaine peut désormais être testé et modifié sans concentrer sa logique dans un seul module.
+
 ## Routes principales
 
 - `GET /api/activities` : liste publique, filtres `type`, `city`, `category`.
