@@ -37,6 +37,11 @@ const chatSessionSchema = new mongoose.Schema(
       required: true,
       unique: true,
     },
+    sessionTokenHash: {
+      type: String,
+      required: true,
+      select: false,
+    },
     roleContext: {
       type: String,
       enum: ["rh", "manager", "collaborateur", "anonyme"],
@@ -48,7 +53,11 @@ const chatSessionSchema = new mongoose.Schema(
       default: false,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+    toJSON: { transform: (_doc, ret) => { delete ret.sessionTokenHash; return ret; } },
+    toObject: { transform: (_doc, ret) => { delete ret.sessionTokenHash; return ret; } },
+  }
 );
 
 export const ChatSession = mongoose.model("ChatSession", chatSessionSchema);

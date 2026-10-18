@@ -1,12 +1,22 @@
-import { randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { ChatSession } from "../models/ChatSession.js";
 
 const MAX_MESSAGES_PER_SESSION = 200;
+const hashSessionToken = (token) => createHash("sha256").update(token).digest("hex");
+
+const publicSession = (session) => {
+  if (!session) return session;
+  const result = typeof session.toObject === "function" ? session.toObject() : { ...session };
+  delete result.sessionTokenHash;
+  return result;
+};
 
 export const createChatSessionStore = ({ ChatSessionModel = ChatSession } = {}) => ({
-  createChatSession: async ({ roleContext = "anonyme", userId = null } = {}) =>
-    ChatSessionModel.create({
+  createChatSession: async ({ roleContext = "anonyme", userId = null } = {}) => {
+    const sessionToken = randomBytes(32).toString("base64url");
+    const session = await ChatSessionModel.create({
       sessionId: randomUUID(),
+      sessionTokenHash: hashSessionToken(sessionToken),
       userId,
       roleContext,
       messages: [
@@ -16,11 +26,13 @@ export const createChatSessionStore = ({ ChatSessionModel = ChatSession } = {}) 
           suggestions: ["Trouver une activité", "Voir les restaurants"],
         },
       ],
-    }),
+    });
+    return { session: publicSession(session), sessionToken };
+  },
 
-  appendChatExchange: async ({ sessionId, userText, botMessage }) =>
+  appendChatExchange: async ({ sessionId, sessionToken, userText, botMessage }) =>
     ChatSessionModel.findOneAndUpdate(
-      { sessionId },
+      { sessionId, sessionTokenHash: hashSessionToken(sessionToken) },
       {
         $push: {
           messages: {
@@ -35,7 +47,8 @@ export const createChatSessionStore = ({ ChatSessionModel = ChatSession } = {}) 
       { new: true, runValidators: true }
     ),
 
-  getChatSession: (sessionId) => ChatSessionModel.findOne({ sessionId }),
+  getChatSession: (sessionId, sessionToken) =>
+    ChatSessionModel.findOne({ sessionId, sessionTokenHash: hashSessionToken(sessionToken) }),
 });
 
 const chatSessionStore = createChatSessionStore();

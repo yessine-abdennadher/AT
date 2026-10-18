@@ -1,19 +1,22 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 
 const storeModule = await import("../services/chatSession.service.js").catch(() => ({}));
 
-test("session creation generates an unguessable server-side ID and ignores caller-selected IDs", async () => {
+test("session creation returns a separate bearer token and stores only its SHA-256 digest", async () => {
   assert.equal(typeof storeModule.createChatSessionStore, "function");
   let created;
   const store = storeModule.createChatSessionStore({
-    ChatSessionModel: { create: async (value) => (created = value) },
+    ChatSessionModel: { create: async (value) => (created = { ...value }) },
   });
 
-  const session = await store.createChatSession({ roleContext: "anonyme", userId: null });
+  const { session, sessionToken } = await store.createChatSession({ roleContext: "anonyme", userId: null });
 
   assert.match(session.sessionId, /^[0-9a-f-]{36}$/i);
-  assert.equal(created.sessionId, session.sessionId);
+  assert.match(sessionToken, /^[A-Za-z0-9_-]{43}$/);
+  assert.equal(created.sessionTokenHash, createHash("sha256").update(sessionToken).digest("hex"));
+  assert.equal(JSON.stringify(session).includes(sessionToken), false);
   assert.equal(Object.hasOwn(created, "requestedSessionId"), false);
 });
 
@@ -27,9 +30,12 @@ test("chat exchanges append atomically and retain at most 200 messages", async (
   });
   const botMessage = { sender: "bot", text: "Réponse", suggestions: [] };
 
-  await store.appendChatExchange({ sessionId: "capability", userText: "Question", botMessage });
+  await store.appendChatExchange({ sessionId: "capability", sessionToken: "token", userText: "Question", botMessage });
 
-  assert.deepEqual(call[0], { sessionId: "capability" });
+  assert.deepEqual(call[0], {
+    sessionId: "capability",
+    sessionTokenHash: createHash("sha256").update("token").digest("hex"),
+  });
   assert.deepEqual(call[1].$push.messages.$each, [
     { sender: "user", text: "Question" },
     botMessage,
@@ -38,7 +44,7 @@ test("chat exchanges append atomically and retain at most 200 messages", async (
   assert.deepEqual(call[2], { new: true, runValidators: true });
 });
 
-test("chat session lookup uses the unguessable session capability", async () => {
+test("chat session lookup requires the bearer token digest as well as the session ID", async () => {
   assert.equal(typeof storeModule.createChatSessionStore, "function");
   let query;
   const expected = { sessionId: "capability" };
@@ -46,6 +52,9 @@ test("chat session lookup uses the unguessable session capability", async () => 
     ChatSessionModel: { findOne: async (filter) => (query = filter, expected) },
   });
 
-  assert.equal(await store.getChatSession("capability"), expected);
-  assert.deepEqual(query, { sessionId: "capability" });
+  assert.equal(await store.getChatSession("capability", "token"), expected);
+  assert.deepEqual(query, {
+    sessionId: "capability",
+    sessionTokenHash: createHash("sha256").update("token").digest("hex"),
+  });
 });
