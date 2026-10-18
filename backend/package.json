@@ -9,7 +9,7 @@
     "dev": "nodemon server.js",
     "seed": "node seeders/seedActivityTN.js",
     "seed:users": "node seeders/seedUsers.js",
-    "test": "node tests/verify-production.test.js && node tests/admin.test.js && node tests/partner.test.js && node tests/telemetry.test.js && node tests/admin-diagnostics.test.js && node tests/notification.test.js"
+    "test": "node --test tests/rate-limit-store.test.js tests/rate-limit-middleware.test.js tests/chat-session.test.js tests/chat-controller.test.js tests/recommendations.test.js tests/review-reactions.test.js tests/activity-approval-audit.test.js tests/runtime-config.test.js tests/health.test.js && node tests/verify-production.test.js && node tests/admin.test.js && node tests/partner.test.js && node tests/telemetry.test.js && node tests/admin-diagnostics.test.js && node tests/notification.test.js"
   },
   "keywords": [
     "activitytn",

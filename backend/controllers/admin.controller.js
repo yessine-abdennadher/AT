@@ -88,7 +88,7 @@ export const getActivitiesForModeration = async (req, res, next) => {
 export const setActivityApproval = async (req, res, next) => {
   try {
     const { isApproved } = req.body;
-    const activity = await adminService.toggleActivityApproval(req.params.id, isApproved);
+    const activity = await adminService.toggleActivityApproval(req.params.id, isApproved, req.user._id);
     res.json({
       success: true,
       message: `Activité ${activity.isApproved ? "approuvée" : "mise en attente"} avec succès.`,

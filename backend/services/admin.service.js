@@ -3,6 +3,16 @@ import { User } from "../models/User.js";
 import { Activity } from "../models/Activity.js";
 import { Review } from "../models/Review.js";
 import { createNotification } from "./notification.service.js";
+import { ActivityApprovalAudit } from "../models/ActivityApprovalAudit.js";
+
+export const validateApprovalInput = (isApproved) => {
+  if (typeof isApproved !== "boolean") {
+    const error = new Error("Le statut d'approbation doit être un booléen.");
+    error.statusCode = 400;
+    throw error;
+  }
+  return isApproved;
+};
 
 /**
  * Calculer les KPI globaux de la plateforme en temps réel
@@ -202,18 +212,48 @@ export const getAdminActivities = async ({
 /**
  * Valider / Approuver ou désapprouver une activité
  */
-export const toggleActivityApproval = async (activityId, isApproved) => {
-  const activity = await Activity.findById(activityId);
+export const toggleActivityApproval = async (activityId, isApprovedInput, actorUserId) => {
+  const isApproved = validateApprovalInput(isApprovedInput);
+  if (!actorUserId) {
+    const error = new Error("L'administrateur authentifié est obligatoire pour tracer cette action.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const session = await mongoose.startSession();
+  let activity;
+  let transitioned = false;
+  try {
+    await session.withTransaction(async () => {
+      activity = await Activity.findById(activityId).session(session);
+      if (!activity) {
+        const error = new Error("Activité introuvable.");
+        error.statusCode = 404;
+        throw error;
+      }
+      const previousState = Boolean(activity.isApproved);
+      if (previousState === isApproved) return;
+      activity.isApproved = isApproved;
+      await activity.save({ session });
+      await ActivityApprovalAudit.create([{
+        activity: activity._id,
+        actor: actorUserId,
+        previousState,
+        nextState: isApproved,
+      }], { session });
+      transitioned = true;
+    });
+  } finally {
+    await session.endSession();
+  }
+
   if (!activity) {
     const error = new Error("Activité introuvable.");
     error.statusCode = 404;
     throw error;
   }
 
-  activity.isApproved = Boolean(isApproved);
-  await activity.save();
-
-  if (activity.isApproved) {
+  if (transitioned && activity.isApproved) {
     try {
       await createNotification({
         recipient: activity.createdBy || activity.partnerId || null,
