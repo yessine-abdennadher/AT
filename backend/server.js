@@ -35,6 +35,15 @@ connectDB().then(() => {
 
 const app = express();
 
+if (process.env.TRUST_PROXY_HOPS !== undefined) {
+  const rawProxyHops = process.env.TRUST_PROXY_HOPS.trim();
+  const proxyHops = Number(rawProxyHops);
+  if (!/^\d+$/.test(rawProxyHops) || !Number.isSafeInteger(proxyHops) || proxyHops > 5) {
+    throw new Error("TRUST_PROXY_HOPS doit être un entier compris entre 0 et 5.");
+  }
+  app.set("trust proxy", proxyHops);
+}
+
 // Security and Logging Middlewares
 app.use(
   helmet({

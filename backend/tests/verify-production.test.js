@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { authLimiter, chatLimiter } from "../middlewares/rateLimit.middleware.js";
+import { authLimiter, chatLimiter, createRateLimiter } from "../middlewares/rateLimit.middleware.js";
 import { errorHandler } from "../middlewares/error.middleware.js";
 import { Activity } from "../models/Activity.js";
 import { User } from "../models/User.js";
@@ -11,22 +11,39 @@ console.log("  [1/5] Test des Rate Limiters (protection brute-force)...");
 assert.equal(typeof authLimiter, "function", "authLimiter doit être une fonction middleware");
 assert.equal(typeof chatLimiter, "function", "chatLimiter doit être une fonction middleware");
 
+let requestCount = 0;
+const testAuthLimiter = createRateLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  now: () => 1_000,
+  incrementCounter: async () => ({ count: ++requestCount, resetAt: 901_000 }),
+});
+
 let authBlocked = false;
+let resolveLimitedRequest;
 const mockRes = {
   setHeader: () => {},
   status: (code) => {
     if (code === 429) authBlocked = true;
-    return { json: () => {} };
+    mockRes.statusCode = code;
+    return mockRes;
   },
+  json: () => resolveLimitedRequest?.(),
 };
-const mockReq = { ip: "192.168.1.99" };
+const mockReq = { ip: "192.168.1.99", method: "POST", baseUrl: "/api/auth", route: { path: "/login" } };
 // 30 requêtes autorisées
 for (let i = 0; i < 30; i++) {
-  authLimiter(mockReq, mockRes, () => {});
+  await new Promise((resolve) => {
+    resolveLimitedRequest = resolve;
+    testAuthLimiter(mockReq, mockRes, resolve);
+  });
 }
 assert.equal(authBlocked, false, "Les 30 premières requêtes doivent passer");
 // 31ème requête doit être bloquée
-authLimiter(mockReq, mockRes, () => {});
+await new Promise((resolve) => {
+  resolveLimitedRequest = resolve;
+  testAuthLimiter(mockReq, mockRes, resolve);
+});
 assert.equal(authBlocked, true, "La 31ème requête doit être bloquée avec code 429");
 console.log("    ✅ Rate limiter validé (limite 30 req / 15min respectée)");
 
