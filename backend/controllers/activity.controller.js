@@ -231,6 +231,7 @@ export const getPartnerActivities = async (req, res, next) => {
       count: result.activities.length,
       stats: result.stats,
       activities: result.activities,
+      partnerTier: req.user.partnerTier || 'standard',
     });
   } catch (error) {
     next(error);

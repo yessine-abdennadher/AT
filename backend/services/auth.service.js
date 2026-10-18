@@ -24,6 +24,7 @@ export const formatUserResponse = (user) => ({
   email: user.email,
   role: user.role,
   userType: user.userType,
+  partnerTier: user.partnerTier || "standard",
   establishmentName: user.establishmentName || "",
   avatar: user.avatar,
   bio: user.bio,
