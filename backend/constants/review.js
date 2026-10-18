@@ -1,0 +1,1 @@
+export const MAX_REACTIONS_PER_REVIEW = 50;

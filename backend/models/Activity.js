@@ -221,6 +221,18 @@ const activitySchema = new mongoose.Schema(
 
 // Indexations pour optimiser les performances des requêtes fréquentes et filtres
 activitySchema.index({ city: 1, category: 1, rating: -1 });
+activitySchema.index({ price: 1, rating: -1 });
+activitySchema.index({ durationMinutes: 1, rating: -1 });
+activitySchema.index({ distanceKm: 1, rating: -1 });
+activitySchema.index({ suitableFor: 1, rating: -1 });
+activitySchema.index({ hasPowerBackup: 1, rating: -1 });
+activitySchema.index({ isIndoor: 1, rating: -1 });
+activitySchema.index({ hasAirConditioning: 1, rating: -1 });
+activitySchema.index({ isOpenNow: 1, rating: -1 });
+activitySchema.index({ priceTag: 1, rating: -1 });
+activitySchema.index({ badge: 1, rating: -1 });
+activitySchema.index({ duration: 1, rating: -1 });
+activitySchema.index({ distance: 1, rating: -1 });
 activitySchema.index({ type: 1, isPopular: -1, isFeatured: -1 });
 activitySchema.index({ createdBy: 1 });
 activitySchema.index({

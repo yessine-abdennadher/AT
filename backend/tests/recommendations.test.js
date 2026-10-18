@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { buildRecommendationQuery, getRecommendationWindow } from "../services/activity.service.js";
+import { buildRecommendationQuery, getRecommendationWindow, getStableSurpriseScore } from "../services/activity.service.js";
 
 test("recommendation filters are translated to bounded candidate query clauses", () => {
   const query = buildRecommendationQuery({ category: "food", city: "Sfax.*", budgetMax: 40, situation: "open_now" });
@@ -10,6 +10,11 @@ test("recommendation filters are translated to bounded candidate query clauses",
     { price: { $lte: 40 } },
     { isOpenNow: { $ne: false } },
   ]);
+});
+
+test("surprise-me scores are repeatable for the same activity", () => {
+  assert.equal(getStableSurpriseScore("activity-42"), getStableSurpriseScore("activity-42"));
+  assert.ok(getStableSurpriseScore("activity-42") >= 0 && getStableSurpriseScore("activity-42") <= 4);
 });
 
 test("recommendation pagination is clamped and candidate retrieval is capped at ten pages", () => {

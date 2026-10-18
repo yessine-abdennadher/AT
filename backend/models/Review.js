@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { MAX_REACTIONS_PER_REVIEW } from "../constants/review.js";
 
 const reactionSchema = new mongoose.Schema(
   {
@@ -63,7 +64,7 @@ const reviewSchema = new mongoose.Schema(
       type: [reactionSchema],
       default: [],
       validate: {
-        validator: (reactions) => reactions.length <= 50,
+        validator: (reactions) => reactions.length <= MAX_REACTIONS_PER_REVIEW,
         message: "Un avis ne peut pas avoir plus de 50 réactions.",
       },
     },

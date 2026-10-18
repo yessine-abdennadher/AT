@@ -3,8 +3,9 @@ import { Activity } from "../models/Activity.js";
 import { User } from "../models/User.js";
 import { Review } from "../models/Review.js";
 import { createNotification } from "./notification.service.js";
+import { MAX_REACTIONS_PER_REVIEW } from "../constants/review.js";
 
-export const MAX_REACTIONS_PER_REVIEW = 50;
+export { MAX_REACTIONS_PER_REVIEW };
 const SUPPORTED_REACTIONS = ["like", "love", "haha", "wow", "sad", "angry"];
 
 export const buildReactionTogglePipeline = ({ userId, type, userName = "Utilisateur", userAvatar = "", now = new Date() }) => {
@@ -75,6 +76,12 @@ export const getRecommendationWindow = ({ page = 1, limit = 20 } = {}) => {
   const pageNum = Math.max(1, Number.parseInt(page, 10) || 1);
   const limitNum = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 20));
   return { page: pageNum, limit: limitNum, candidateLimit: limitNum * 10 };
+};
+
+export const getStableSurpriseScore = (id) => {
+  let hash = 0;
+  for (const character of String(id)) hash = (Math.imul(hash, 31) + character.charCodeAt(0)) | 0;
+  return Math.abs(hash) % 5;
 };
 
 export const buildRecommendationQuery = (filters = {}) => {
@@ -598,7 +605,7 @@ export const getRecommendations = async (filters = {}, sortBy = "rating", pagina
             if (activity.isOpenNow !== false) score += 4;
             break;
           case "surprise_me":
-            score += Math.floor(Math.random() * 5);
+            score += getStableSurpriseScore(activity._id);
             break;
         }
       }
