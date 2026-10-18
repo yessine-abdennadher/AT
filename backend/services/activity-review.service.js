@@ -57,7 +57,7 @@ const recalculateActivityRating = async (activityId) => {
 };
 
 export const getReviews = async (activityId) => {
-  const activity = await Activity.findById(activityId);
+  const activity = await Activity.findOne({ _id: activityId, isApproved: true });
   if (!activity) {
     const error = new Error("Activité introuvable.");
     error.statusCode = 404;
@@ -79,7 +79,7 @@ export const addReview = async (activityId, { rating, comment }, userAuth) => {
     error.statusCode = 400;
     throw error;
   }
-  const activity = await Activity.findById(activityId);
+  const activity = await Activity.findOne({ _id: activityId, isApproved: true });
   if (!activity) {
     const error = new Error("Activité introuvable.");
     error.statusCode = 404;

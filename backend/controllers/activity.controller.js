@@ -53,7 +53,7 @@ export const getActivity = async (req, res, next) => {
 // @access  Private (Admin / Partner)
 export const createActivity = async (req, res, next) => {
   try {
-    const activity = await activityService.createActivity(req.body, req.user.id);
+    const activity = await activityService.createActivity(req.body, req.user.id, req.user.role);
     res.status(201).json({ success: true, message: "Activité créée avec succès", activity });
   } catch (error) {
     next(error);

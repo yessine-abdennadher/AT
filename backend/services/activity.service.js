@@ -2,9 +2,8 @@ import { Activity } from "../models/Activity.js";
 import { User } from "../models/User.js";
 import { escapeRegex } from "./activity.utils.js";
 
-/** Public activity listing, basic CRUD and backwards-compatible service exports. */
-export const getAllActivities = async ({ type, city, category, search, page = 1, limit = 50 }) => {
-  const filter = {};
+const buildPublicActivityFilter = ({ type, city, category, search } = {}) => {
+  const filter = { isApproved: true };
   if (type) filter.type = type;
   if (city) filter.city = { $regex: escapeRegex(city), $options: "i" };
   if (category) filter.category = category;
@@ -18,6 +17,29 @@ export const getAllActivities = async ({ type, city, category, search, page = 1,
       { tags: { $in: [searchRegex] } },
     ];
   }
+  return filter;
+};
+
+const buildPublicActivityQuery = (id) => ({ _id: id, isApproved: true });
+
+const buildActivityCreationData = (data, userId, userRole) => ({
+  ...data,
+  locationName: data.locationName || data.address || `${data.city || "Tunisie"}`,
+  imageUrl: data.imageUrl || data.image || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
+  description: data.description || `Offre proposée par ${data.name || "l'établissement"}`,
+  // Every new activity enters moderation; approval is only changed by the dedicated admin flow.
+  isApproved: false,
+  createdBy: userId,
+});
+
+const buildActivityUpdateData = (data) => {
+  const { isApproved: _ignoredApproval, createdBy: _ignoredOwner, ...safeData } = data;
+  return safeData;
+};
+
+/** Public activity listing, basic CRUD and backwards-compatible service exports. */
+export const getAllActivities = async ({ type, city, category, search, page = 1, limit = 50 }) => {
+  const filter = buildPublicActivityFilter({ type, city, category, search });
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
   const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
   const skip = (pageNum - 1) * limitNum;
@@ -41,7 +63,7 @@ export const getAllActivities = async ({ type, city, category, search, page = 1,
 };
 
 export const getActivityById = async (id) => {
-  const activity = await Activity.findById(id).populate("createdBy", "name role establishmentName");
+  const activity = await Activity.findOne(buildPublicActivityQuery(id)).populate("createdBy", "name role establishmentName");
   if (!activity) {
     const error = new Error("Activité introuvable.");
     error.statusCode = 404;
@@ -50,16 +72,8 @@ export const getActivityById = async (id) => {
   return activity;
 };
 
-export const createActivity = async (data, userId) => {
-  const activityData = {
-    ...data,
-    locationName: data.locationName || data.address || `${data.city || "Tunisie"}`,
-    imageUrl: data.imageUrl || data.image || "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=800&q=80",
-    description: data.description || `Offre proposée par ${data.name || "l'établissement"}`,
-    isApproved: data.isApproved !== undefined ? data.isApproved : true,
-    createdBy: userId,
-  };
-  return Activity.create(activityData);
+export const createActivity = async (data, userId, userRole) => {
+  return Activity.create(buildActivityCreationData(data, userId, userRole));
 };
 
 export const updateActivity = async (id, data, user) => {
@@ -74,7 +88,7 @@ export const updateActivity = async (id, data, user) => {
     error.statusCode = 403;
     throw error;
   }
-  const updated = await Activity.findByIdAndUpdate(id, data, { new: true, runValidators: true });
+  const updated = await Activity.findByIdAndUpdate(id, buildActivityUpdateData(data), { new: true, runValidators: true });
   if (activity.createdBy) await User.findByIdAndUpdate(activity.createdBy, { lastActivityUpdate: new Date() });
   return updated;
 };
@@ -96,6 +110,12 @@ export const deleteActivity = async (id, user) => {
 };
 
 // Stable facade for existing controller imports; implementations live by domain.
+export {
+  buildPublicActivityFilter,
+  buildPublicActivityQuery,
+  buildActivityCreationData,
+  buildActivityUpdateData,
+};
 export {
   getRecommendations,
   getRecommendationWindow,

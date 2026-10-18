@@ -29,6 +29,12 @@ La façade évite une migration simultanée des contrôleurs; chaque domaine peu
 - `PUT /api/activities/:id` : admin uniquement.
 - `DELETE /api/activities/:id` : admin uniquement.
 
+### Modération des activités
+
+- Les listes, recommandations, détails et avis publics ne retournent que les activités avec `isApproved: true`.
+- Toute nouvelle activité reste en attente (`isApproved: false`), quel que soit le rôle et même si la requête tente d'envoyer `isApproved: true`.
+- Seule la route dédiée d'administration peut approuver une activité; la mise à jour générique ignore `isApproved` et `createdBy`.
+
 Les routes protégées attendent `Authorization: Bearer <token>`.
 
 ## Sécurité et exploitation

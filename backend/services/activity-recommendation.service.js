@@ -14,7 +14,7 @@ export const getStableSurpriseScore = (id) => {
 };
 
 export const buildRecommendationQuery = (filters = {}) => {
-  const query = {};
+  const query = { isApproved: true };
   if (typeof filters.city === "string" && filters.city.trim()) {
     query.city = { $regex: escapeRegex(filters.city), $options: "i" };
   }
