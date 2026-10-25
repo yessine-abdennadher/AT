@@ -41,21 +41,26 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreClick }) => {
             gap: '48px',
           }}
         >
-          {/* Colonne Gauche : Narration & Accroche Win */}
+          {/* Colonne Gauche : Narration & Accroche Tfarhida */}
           <div>
-            <div style={{ marginBottom: '18px' }}>
+            <div style={{ marginBottom: '18px', display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
               <span className="badge badge-primary">
-                <span
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: 'var(--color-tunisian-red)',
-                    display: 'inline-block',
-                  }}
-                />
                 <Sparkles size={14} color="var(--color-primary)" />
-                <span>Win · Vos sorties & loisirs en Tunisie</span>
+                <span>Tfarhida (تفرهيدة) · L'app N°1 des sorties en Tunisie</span>
+              </span>
+              <span
+                style={{
+                  fontSize: '0.825rem',
+                  fontFamily: 'var(--font-arabic)',
+                  fontWeight: 700,
+                  color: 'var(--color-purple-signature)',
+                  backgroundColor: 'var(--color-pale-purple)',
+                  padding: '4px 12px',
+                  borderRadius: 'var(--radius-full)',
+                  border: '1px solid rgba(124, 58, 237, 0.2)',
+                }}
+              >
+                شنوّة نعمل توّا؟ ⚡
               </span>
             </div>
 
@@ -72,7 +77,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreClick }) => {
               L’art de sortir et de s’évader en{' '}
               <span
                 style={{
-                  background: 'linear-gradient(135deg, #0284C7 0%, #0369A1 100%)',
+                  background: 'var(--color-primary-gradient)',
                   WebkitBackgroundClip: 'text',
                   WebkitTextFillColor: 'transparent',
                 }}
@@ -87,10 +92,10 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreClick }) => {
                 color: 'var(--text-secondary)',
                 lineHeight: 1.65,
                 maxWidth: '540px',
-                marginBottom: '32px',
+                marginBottom: '28px',
               }}
             >
-              Trouvez votre prochaine <strong>sortie</strong> à <strong>Sfax</strong> et partout en Tunisie : bowling, cafés historiques, plein air et ateliers créatifs, avec <strong>contact direct WhatsApp</strong> et vérification de la lumière en direct.
+              Trouvez votre prochaine <strong>sortie</strong> selon votre budget en Dinars (DT), votre temps et vos envies : bowling, cafés historiques, sorties mer et espaces climatisés, avec <strong>contact direct WhatsApp</strong> et vérification de la lumière en direct.
             </p>
 
             {/* Barre de Recherche Interactive */}
@@ -219,7 +224,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onExploreClick }) => {
             </div>
           </div>
 
-          {/* Colonne Droite : Orbe 3D Win Isolé */}
+          {/* Colonne Droite : Orbe 3D Tfarhida Isolé */}
           <div
             style={{
               position: 'relative',

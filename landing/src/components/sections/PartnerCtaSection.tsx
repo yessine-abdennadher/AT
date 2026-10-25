@@ -164,7 +164,7 @@ export const PartnerCtaSection: React.FC = () => {
               ) : (
                 <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                   <h3 style={{ color: '#FFFFFF', fontSize: '1.25rem', fontWeight: 700 }}>
-                    Rejoindre le réseau Win Pro
+                    Rejoindre le réseau Tfarhida Pro
                   </h3>
 
                   <div>

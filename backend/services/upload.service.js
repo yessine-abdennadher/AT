@@ -20,13 +20,13 @@ ensureUploadsDir();
 /**
  * Upload vers Cloudinary via API REST directe (ne nécessite pas de dépendance native externe)
  */
-async function uploadToCloudinary(base64Data, folder = "activitytn") {
-  const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
-  const apiKey = process.env.CLOUDINARY_API_KEY;
-  const apiSecret = process.env.CLOUDINARY_API_SECRET;
+async function uploadToCloudinary(base64Data, folder = "tfarhida") {
+  const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+  const apiKey = process.env.CLOUDINARY_API_KEY?.trim();
+  const apiSecret = process.env.CLOUDINARY_API_SECRET?.trim();
 
   if (!cloudName || !apiKey || !apiSecret) {
-    return null; // Cloudinary non configuré, basculement sur stockage local
+    return null; // Cloudinary non configuré
   }
 
   const timestamp = Math.round(Date.now() / 1000);
@@ -53,8 +53,14 @@ async function uploadToCloudinary(base64Data, folder = "activitytn") {
   }
 
   const result = await response.json();
+  let optimizedUrl = result.secure_url || result.url;
+  // Injection automatique de f_auto,q_auto pour compression intelligente et format moderne (WebP/AVIF)
+  if (optimizedUrl && optimizedUrl.includes("/upload/")) {
+    optimizedUrl = optimizedUrl.replace("/upload/", "/upload/f_auto,q_auto/");
+  }
+
   return {
-    url: result.secure_url || result.url,
+    url: optimizedUrl,
     publicId: result.public_id,
     provider: "cloudinary",
   };
@@ -127,19 +133,42 @@ export async function processImageUpload(data, reqHost, user) {
     throw error;
   }
 
-  // 1. Tenter l'upload Cloudinary si configuré
-  try {
-    const cloudinaryResult = await uploadToCloudinary(image, `activitytn/${folder}`);
-    if (cloudinaryResult) {
-      console.log(`[UploadService] ✅ Image uploadée sur Cloudinary par ${user.email}: ${cloudinaryResult.url}`);
-      return cloudinaryResult;
-    }
-  } catch (cloudErr) {
-    console.warn("[UploadService] Erreur Cloudinary, basculement local :", cloudErr.message);
+  const isProduction = process.env.NODE_ENV === "production";
+  const hasCloudinaryConfig = Boolean(
+    process.env.CLOUDINARY_CLOUD_NAME?.trim() &&
+    process.env.CLOUDINARY_API_KEY?.trim() &&
+    process.env.CLOUDINARY_API_SECRET?.trim()
+  );
+
+  if (isProduction && !hasCloudinaryConfig) {
+    const error = new Error("Le service Cloudinary est obligatoire en production mais n'est pas configuré.");
+    error.statusCode = 503;
+    throw error;
   }
 
-  // 2. Basculement sur stockage local sécurisé
+  // 1. Tenter l'upload Cloudinary si configuré
+  if (hasCloudinaryConfig) {
+    try {
+      const cloudinaryResult = await uploadToCloudinary(image, `tfarhida/${folder}`);
+      if (cloudinaryResult) {
+        console.log(`[UploadService] ✅ Image uploadée sur Cloudinary par ${user?.email || 'anonyme'}: ${cloudinaryResult.url}`);
+        return cloudinaryResult;
+      }
+      if (isProduction) {
+        const error = new Error("Échec de l'upload Cloudinary en production.");
+        error.statusCode = 502;
+        throw error;
+      }
+    } catch (cloudErr) {
+      if (isProduction) {
+        throw cloudErr;
+      }
+      console.warn("[UploadService] Erreur Cloudinary, basculement local :", cloudErr.message);
+    }
+  }
+
+  // 2. Basculement sur stockage local sécurisé en développement
   const localResult = await saveLocally(image, reqHost, folder);
-  console.log(`[UploadService] 💾 Image stockée localement par ${user.email}: ${localResult.url}`);
+  console.log(`[UploadService] 💾 Image stockée localement par ${user?.email || 'anonyme'}: ${localResult.url}`);
   return localResult;
 }

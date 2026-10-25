@@ -32,7 +32,7 @@ export const getPlatformStats = async () => {
     User.countDocuments({ role: "admin" }),
     Activity.countDocuments(),
     Activity.countDocuments({ isApproved: false }),
-    Review.countDocuments(),
+    Review.countDocuments({ status: { $in: ["approved", null] } }),
     Activity.aggregate([
       { $group: { _id: "$city", count: { $sum: 1 } } },
       { $sort: { count: -1 } },

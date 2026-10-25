@@ -66,12 +66,15 @@ export const MobileAppShowcase: React.FC = () => {
                   />
                 </div>
 
-                {/* En-tête de l'application */}
+                {/* En-tête de l'application Tfarhida */}
                 <div style={{ padding: '16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
-                    <p style={{ fontSize: '0.7rem', color: '#64748B', fontWeight: 600 }}>Bienvenue sur Win</p>
-                    <h4 style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--color-navy)' }}>
-                      Sfax, Tunisie
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <p style={{ fontSize: '0.75rem', color: 'var(--color-primary)', fontWeight: 800 }}>Tfarhida</p>
+                      <span style={{ fontSize: '0.65rem', fontFamily: 'var(--font-arabic)', color: 'var(--color-purple-signature)', fontWeight: 700 }}>تفرهيدة</span>
+                    </div>
+                    <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--color-navy)' }}>
+                      شنوّة نعمل توّا؟ ⚡
                     </h4>
                   </div>
                   <div
@@ -120,15 +123,15 @@ export const MobileAppShowcase: React.FC = () => {
                     />
                     <div style={{ padding: '10px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                        <Flame size={14} color="#FF4B5C" />
-                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#FF4B5C' }}>
-                          Offre Win du week-end
+                        <Flame size={14} color="#E11D48" />
+                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#E11D48' }}>
+                          Sortie phare Tfarhida
                         </span>
                       </div>
                       <p style={{ fontSize: '0.85rem', fontWeight: 800, color: 'var(--color-navy)' }}>
                         Bowling Mall of Sfax
                       </p>
-                      <p style={{ fontSize: '0.75rem', color: '#64748B' }}>25 DT · Terrain éclairé</p>
+                      <p style={{ fontSize: '0.75rem', color: '#64748B' }}>25 DT · 💡 Lumière garantie</p>
                     </div>
                   </div>
 
@@ -214,7 +217,7 @@ export const MobileAppShowcase: React.FC = () => {
                 marginBottom: '32px',
               }}
             >
-              <strong>Win</strong> a été conçu pour être ultra réactif et accessible aussi bien sur smartphone que sur ordinateur. Enregistrez vos favoris, recevez des alertes en temps réel sur les nouveaux événements et découvrez les perles rares de votre région.
+              <strong>Tfarhida (تفرهيدة)</strong> a été conçue pour être ultra réactive et accessible aussi bien sur smartphone que sur ordinateur. Enregistrez vos favoris, recevez des alertes en temps réel sur les nouveaux événements et découvrez les perles rares de votre région.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginBottom: '36px' }}>
@@ -276,7 +279,7 @@ export const MobileAppShowcase: React.FC = () => {
               className="btn btn-primary"
               style={{ padding: '14px 28px', fontSize: '1rem' }}
             >
-              <span>Tester la démo Win</span>
+              <span>Tester la démo Tfarhida</span>
               <ArrowUpRight size={18} />
             </a>
           </div>

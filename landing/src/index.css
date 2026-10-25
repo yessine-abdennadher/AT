@@ -1,30 +1,36 @@
 /* ==========================================================================
-   Win — Design Tokens & Core Styles (Palette officielle de l'application)
+   Tfarhida (تفرهيدة) — Design Tokens & Core Styles
+   Palette officielle de l'application mobile Tfarhida
    ========================================================================== */
 
 :root {
-  /* Palette Win (Cyan Saphir Méditerranéen & Bleu Ciel) */
+  /* Palette Tfarhida (Cyan Signature, Bleu Roi & Violet Signature) */
   --color-primary: #0284C7;
   --color-primary-hover: #0369A1;
   --color-primary-light: #38BDF8;
-  --color-primary-gradient: linear-gradient(135deg, #38BDF8 0%, #0284C7 50%, #0369A1 100%);
+  --color-cyan-glow: #00D2FF;
+  --color-royal-blue: #2563EB;
+  --color-purple-signature: #7C3AED;
+  --color-primary-gradient: linear-gradient(135deg, #00D2FF 0%, #2563EB 55%, #7C3AED 100%);
+  --color-header-gradient: linear-gradient(135deg, #E0F2FE 0%, #EDE9FE 50%, #F0FDF4 100%);
   
   --color-navy: #0B1528;
   --color-navy-dark: #070D18;
   --color-navy-card: #0E1E38;
   
   --color-pale-blue: #E0F2FE;
+  --color-pale-purple: #F3E8FF;
   --color-pale-blue-subtle: #F0F7FF;
   --color-off-white: #F8FAFC;
   
-  --color-tunisian-red: #FF4B5C;
+  --color-tunisian-red: #E11D48;
   --color-tunisian-red-light: #FFE4E6;
   --color-amber: #F59E0B;
   --color-amber-light: #FEF3C7;
   --color-emerald: #10B981;
   --color-emerald-light: #D1FAE5;
 
-  /* Surfaces & Backgrounds alignées avec App Mobile */
+  /* Surfaces & Backgrounds alignées avec App Mobile Tfarhida */
   --bg-main: #F0F7FF;
   --bg-secondary: #E0F2FE;
   --bg-card: #FFFFFF;
@@ -44,13 +50,14 @@
   --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-arabic: 'Noto Kufi Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
 
   /* Ombres & Effets */
   --shadow-sm: 0 1px 3px 0 rgba(2, 132, 199, 0.08);
   --shadow-md: 0 4px 6px -1px rgba(2, 132, 199, 0.1), 0 2px 4px -2px rgba(2, 132, 199, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(2, 132, 199, 0.12), 0 4px 6px -4px rgba(2, 132, 199, 0.08);
   --shadow-xl: 0 20px 25px -5px rgba(11, 21, 40, 0.12), 0 8px 10px -6px rgba(11, 21, 40, 0.08);
-  --shadow-glow: 0 0 28px rgba(56, 189, 248, 0.4);
+  --shadow-glow: 0 0 28px rgba(0, 210, 255, 0.45);
 
   /* Rayons de bordure */
   --radius-sm: 8px;

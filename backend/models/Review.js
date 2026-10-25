@@ -60,6 +60,14 @@ const reviewSchema = new mongoose.Schema(
       trim: true,
       maxlength: 1000,
     },
+    status: {
+      type: String,
+      enum: ["pending", "approved", "rejected"],
+      default: "pending",
+      index: true,
+    },
+    moderatedAt: { type: Date, default: null },
+    moderatedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User", default: null },
     reactions: {
       type: [reactionSchema],
       default: [],
@@ -78,5 +86,6 @@ const reviewSchema = new mongoose.Schema(
 
 // Index composite pour des requêtes de reviews ultra-rapides et triées par date
 reviewSchema.index({ activity: 1, createdAt: -1 });
+reviewSchema.index({ status: 1, createdAt: -1 });
 
 export const Review = mongoose.model("Review", reviewSchema);

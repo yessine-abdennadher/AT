@@ -131,7 +131,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({ activity, onClose 
           {/* Boutons d'Action Directe */}
           <div style={{ display: 'flex', gap: '12px' }}>
             <a
-              href={`https://wa.me/21620000000?text=${encodeURIComponent(`Bonjour, je souhaite réserver via Win : ${activity.name}`)}`}
+              href={`https://wa.me/21620000000?text=${encodeURIComponent(`Bonjour, je souhaite réserver via Tfarhida : ${activity.name}`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="btn btn-primary"

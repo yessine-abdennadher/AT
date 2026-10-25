@@ -34,14 +34,16 @@ const buildActivityCreationData = (data, userId, userRole) => ({
 
 const buildActivityUpdateData = (data) => {
   const { isApproved: _ignoredApproval, createdBy: _ignoredOwner, ...safeData } = data;
+  if (!safeData.imageUrl && safeData.image) {
+    safeData.imageUrl = safeData.image;
+  }
   return safeData;
 };
 
-/** Public activity listing, basic CRUD and backwards-compatible service exports. */
-export const getAllActivities = async ({ type, city, category, search, page = 1, limit = 50 }) => {
+export const getAllActivities = async ({ type, city, category, search, page = 1, limit = 20 }) => {
   const filter = buildPublicActivityFilter({ type, city, category, search });
   const pageNum = Math.max(1, parseInt(page, 10) || 1);
-  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 50));
+  const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
   const skip = (pageNum - 1) * limitNum;
   const { getElectricityAlertStatus } = await import("./systemSetting.service.js");
   const [total, activities, electricityAlertActive] = await Promise.all([
@@ -53,11 +55,14 @@ export const getAllActivities = async ({ type, city, category, search, page = 1,
       .limit(limitNum),
     getElectricityAlertStatus(),
   ]);
+  const totalPages = Math.ceil(total / limitNum) || 1;
+  const hasMore = pageNum < totalPages;
   return {
     activities,
     total,
     page: pageNum,
-    totalPages: Math.ceil(total / limitNum) || 1,
+    totalPages,
+    hasMore,
     electricityAlertActive,
   };
 };

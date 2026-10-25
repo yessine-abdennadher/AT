@@ -8,7 +8,7 @@ export const BentoPillars: React.FC = () => {
         {/* Titre de section */}
         <div style={{ textAlign: 'center', maxWidth: '680px', margin: '0 auto 52px' }}>
           <span className="badge badge-primary" style={{ marginBottom: '12px' }}>
-            Pourquoi choisir Win ?
+            Pourquoi choisir Tfarhida (تفرهيدة) ?
           </span>
           <h2
             style={{
@@ -21,7 +21,7 @@ export const BentoPillars: React.FC = () => {
             Conçu sur-mesure pour les réalités de la Tunisie
           </h2>
           <p style={{ fontSize: '1.05rem', color: 'var(--text-secondary)' }}>
-            Une expérience pensée pour vous éviter les mauvaises surprises et vous connecter instantanément aux gérants d'établissements.
+            L'assistant intelligent qui répond à la question culte : « شنوّة نعمل توّا؟ », vous évite les mauvaises surprises et vous connecte en direct aux gérants.
           </p>
         </div>
 
@@ -181,17 +181,17 @@ export const BentoPillars: React.FC = () => {
                 <Sparkles size={26} />
               </div>
               <h3 style={{ fontSize: '1.35rem', fontWeight: 800, marginBottom: '12px', color: 'var(--color-navy)' }}>
-                Recommandation selon budget & groupe
+                Assistant IA KharjaBot & Recommandations
               </h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', lineHeight: 1.6 }}>
-                Indiquez si vous sortez en couple, en famille ou entre amis, ainsi que votre budget (ex: &le; 20 DT). Notre algorithme filtre instantanément les meilleures adresses adaptées.
+                Discutez en Derja ou en Français avec l'Assistant Tfarhida. Indiquez votre budget en Dinars (ex: ≤ 20 DT), si vous êtes en couple ou entre amis : il vous trouve la sortie idéale en 3 secondes.
               </p>
             </div>
 
-            <div style={{ marginTop: '20px', display: 'flex', gap: '8px' }}>
-              <span className="badge badge-primary">Famille</span>
-              <span className="badge badge-emerald">&le; 30 DT</span>
-              <span className="badge badge-red">Soirée</span>
+            <div style={{ marginTop: '20px', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <span className="badge badge-primary">KharjaBot IA 🤖</span>
+              <span className="badge badge-emerald">&le; 20 DT</span>
+              <span className="badge badge-red">Derja & FR</span>
             </div>
           </div>
 

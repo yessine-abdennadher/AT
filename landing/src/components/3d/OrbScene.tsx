@@ -45,14 +45,14 @@ export const OrbScene: React.FC = () => {
 
   return (
     <group ref={groupRef}>
-      {/* Éclairage cyan méditerranéen Win */}
+      {/* Éclairage cyan méditerranéen Tfarhida */}
       <ambientLight intensity={0.9} />
       <directionalLight position={[10, 10, 5]} intensity={1.6} color="#FFFFFF" />
       <pointLight position={[-10, -10, -5]} intensity={1.5} color="#0284C7" />
       <pointLight position={[5, -5, 5]} intensity={0.9} color="#38BDF8" />
 
       <Float speed={2} rotationIntensity={0.4} floatIntensity={0.6}>
-        {/* Orbe Win facetté (Icosaèdre élégant) */}
+        {/* Orbe Tfarhida facetté (Icosaèdre élégant) */}
         <mesh ref={meshRef}>
           <icosahedronGeometry args={[1.5, 2]} />
           <meshStandardMaterial
@@ -75,7 +75,7 @@ export const OrbScene: React.FC = () => {
           />
         </mesh>
 
-        {/* Anneau orbital 1 (Cyan Céleste Win #38BDF8) */}
+        {/* Anneau orbital 1 (Cyan Céleste Tfarhida #38BDF8) */}
         <mesh ref={ring1Ref}>
           <torusGeometry args={[2.2, 0.025, 16, 100]} />
           <meshStandardMaterial color="#38BDF8" emissive="#0284C7" emissiveIntensity={0.7} />

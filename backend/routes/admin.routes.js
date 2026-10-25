@@ -11,6 +11,8 @@ import {
   getDiagnostics,
   changePartnerTier,
   changeGlobalElectricityMode,
+  getReviewsForAdmin,
+  setReviewStatus,
 } from "../controllers/admin.controller.js";
 import { protect, authorize } from "../middlewares/auth.middleware.js";
 
@@ -36,5 +38,7 @@ router.get("/activities", getActivitiesForModeration);
 router.patch("/activities/:id/approve", setActivityApproval);
 router.patch("/activities/:id/highlight", toggleHighlight);
 router.delete("/activities/:id", removeActivity);
+router.get("/reviews", getReviewsForAdmin);
+router.patch("/reviews/:id/status", setReviewStatus);
 
 export default router;

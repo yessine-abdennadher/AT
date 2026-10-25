@@ -23,17 +23,15 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({ onSelectActi
 
   const categories = [
     { key: 'all', label: 'Toutes les sorties', icon: Compass },
-    { key: 'fun', label: 'Loisirs Indoor', icon: Gamepad2 },
-    { key: 'culture', label: 'Culture & Détente', icon: Coffee },
+    { key: 'fun', label: 'Divertissement & Jeux', icon: Gamepad2 },
+    { key: 'food', label: 'Cafés & Restos', icon: Coffee },
     { key: 'outdoor', label: 'Plein Air & Mer', icon: Waves },
+    { key: 'creative', label: 'Culture & Spectacles', icon: Sparkles },
   ];
 
   const cities = [
     { key: 'all', label: 'Toutes les villes' },
-    { key: 'Sfax', label: 'Sfax' },
-    { key: 'Kerkennah', label: 'Kerkennah' },
-    { key: 'Sidi Bou Saïd', label: 'Sidi Bou Saïd' },
-    { key: 'Djerba', label: 'Djerba' },
+    { key: 'Sfax', label: 'Sfax (Ville Active)' },
   ];
 
   const filtered = DEMO_ACTIVITIES.filter((act) => {
@@ -48,7 +46,7 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({ onSelectActi
         {/* En-tête de section */}
         <div style={{ textAlign: 'center', maxWidth: '720px', margin: '0 auto 48px' }}>
           <span className="badge badge-primary" style={{ marginBottom: '12px' }}>
-            Expériences Certifiées Win
+            Expériences Certifiées Tfarhida (تفرهيدة)
           </span>
           <h2
             style={{
@@ -218,7 +216,7 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({ onSelectActi
                     position: 'absolute',
                     bottom: '12px',
                     right: '12px',
-                    backgroundColor: 'rgba(11, 21, 40, 0.9)',
+                    backgroundColor: activity.price === 0 ? 'rgba(16, 185, 129, 0.95)' : 'rgba(11, 21, 40, 0.9)',
                     color: '#FFFFFF',
                     padding: '6px 12px',
                     borderRadius: 'var(--radius-md)',
@@ -227,7 +225,7 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({ onSelectActi
                     backdropFilter: 'blur(4px)',
                   }}
                 >
-                  {activity.price} DT <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>/pers</span>
+                  {activity.price === 0 ? 'Accès Gratuit' : `${activity.price} DT`} {activity.price > 0 && <span style={{ fontSize: '0.75rem', fontWeight: 500 }}>/pers</span>}
                 </div>
               </div>
 
@@ -236,7 +234,7 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({ onSelectActi
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '0.825rem' }}>
                     <MapPin size={14} color="var(--color-primary)" />
-                    <span>{activity.city}</span>
+                    <span>{activity.locationName || activity.city}</span>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
@@ -250,17 +248,23 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({ onSelectActi
                   </div>
                 </div>
 
-                <h3
-                  style={{
-                    fontSize: '1.2rem',
-                    fontWeight: 700,
-                    color: 'var(--color-navy)',
-                    marginBottom: '8px',
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {activity.name}
-                </h3>
+                <div style={{ marginBottom: '8px' }}>
+                  <h3
+                    style={{
+                      fontSize: '1.2rem',
+                      fontWeight: 700,
+                      color: 'var(--color-navy)',
+                      lineHeight: 1.3,
+                    }}
+                  >
+                    {activity.name}
+                  </h3>
+                  {activity.nameAr && (
+                    <span style={{ fontSize: '0.8rem', fontFamily: 'var(--font-arabic)', color: 'var(--color-purple-signature)', fontWeight: 600 }}>
+                      {activity.nameAr}
+                    </span>
+                  )}
+                </div>
 
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '14px', flex: 1 }}>
                   {activity.highlight}
@@ -288,7 +292,7 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({ onSelectActi
                 {/* Bouton Action Directe WhatsApp */}
                 <div style={{ display: 'flex', gap: '10px' }}>
                   <a
-                    href={`https://wa.me/21620000000?text=${encodeURIComponent(`Bonjour, je vous contacte depuis Win pour réserver : ${activity.name}`)}`}
+                    href={`https://wa.me/21620000000?text=${encodeURIComponent(`Bonjour, je vous contacte depuis Tfarhida pour réserver : ${activity.name}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="btn btn-secondary"

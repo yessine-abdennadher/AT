@@ -35,6 +35,12 @@ La façade évite une migration simultanée des contrôleurs; chaque domaine peu
 - Toute nouvelle activité reste en attente (`isApproved: false`), quel que soit le rôle et même si la requête tente d'envoyer `isApproved: true`.
 - Seule la route dédiée d'administration peut approuver une activité; la mise à jour générique ignore `isApproved` et `createdBy`.
 
+### Modération des avis
+
+- Les nouveaux avis et les avis modifiés restent `pending`; les réponses publiques et la note agrégée ne comptent que les avis approuvés. Sans avis public, la note et le compteur valent 0.
+- `GET /api/admin/reviews?status=pending` liste les avis à traiter (pagination). `PATCH /api/admin/reviews/:id/status` accepte `approved` ou `rejected` pour un administrateur authentifié et enregistre le modérateur et l'heure.
+- Les avis historiques sans champ `status` restent visibles pour compatibilité et apparaissent dans le filtre admin `approved`; ils peuvent être rejetés manuellement. Une vérification de ces anciens avis reste nécessaire avant ouverture publique.
+
 Les routes protégées attendent `Authorization: Bearer <token>`.
 
 ## Sécurité et exploitation

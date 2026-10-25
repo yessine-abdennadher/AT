@@ -56,11 +56,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenApp, onSelectCity }) => {
           justifyContent: 'space-between',
         }}
       >
-        {/* Logo & Identité Win */}
+        {/* Logo & Identité Tfarhida */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <img
             src="/Logo.png"
-            alt="Win Logo"
+            alt="Tfarhida Logo"
             style={{
               width: '44px',
               height: '44px',
@@ -72,7 +72,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenApp, onSelectCity }) => {
             }}
           />
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <span
                 style={{
                   fontFamily: 'var(--font-heading)',
@@ -82,20 +82,24 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenApp, onSelectCity }) => {
                   color: 'var(--color-navy)',
                 }}
               >
-                Win<span style={{ color: 'var(--color-primary)' }}>.tn</span>
+                Tfarhida<span style={{ color: 'var(--color-primary)' }}>.tn</span>
               </span>
               <span
                 style={{
-                  display: 'inline-block',
-                  width: '8px',
-                  height: '8px',
-                  borderRadius: '50%',
-                  backgroundColor: 'var(--color-tunisian-red)',
+                  fontSize: '0.8rem',
+                  fontFamily: 'var(--font-arabic)',
+                  fontWeight: 700,
+                  color: 'var(--color-purple-signature)',
+                  backgroundColor: 'var(--color-pale-purple)',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
                 }}
-              />
+              >
+                تفرهيدة
+              </span>
             </div>
             <p style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontWeight: 600, lineHeight: 1 }}>
-              L'art de sortir & s'évader en Tunisie
+              شنوّة نعمل توّا؟ · Guide sorties Tunisie
             </p>
           </div>
         </div>
@@ -236,7 +240,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenApp, onSelectCity }) => {
             style={{ padding: '9px 20px', fontSize: '0.875rem' }}
           >
             <Sparkles size={16} />
-            <span>Ouvrir Win</span>
+            <span>Ouvrir Tfarhida</span>
           </button>
         </div>
       </div>

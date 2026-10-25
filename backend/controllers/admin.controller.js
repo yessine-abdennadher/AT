@@ -1,4 +1,18 @@
 import * as adminService from "../services/admin.service.js";
+import { getReviewsForModeration, moderateReview } from "../services/activity-review.service.js";
+
+export const getReviewsForAdmin = async (req, res, next) => {
+  try {
+    res.json({ success: true, ...(await getReviewsForModeration(req.query)) });
+  } catch (error) { next(error); }
+};
+
+export const setReviewStatus = async (req, res, next) => {
+  try {
+    const review = await moderateReview(req.params.id, req.body.status, req.user._id);
+    res.json({ success: true, review });
+  } catch (error) { next(error); }
+};
 
 // @desc    Obtenir les statistiques KPI globales
 // @route   GET /api/admin/stats

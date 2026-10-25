@@ -22,5 +22,6 @@ router.post("/logout", protect, logoutUser);
 router.get("/me", protect, getMe);
 router.get("/favorites", protect, getFavorites);
 router.put("/profile", protect, updateProfile);
+router.patch("/profile", protect, updateProfile);
 
 export default router;

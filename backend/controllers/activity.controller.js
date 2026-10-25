@@ -12,6 +12,7 @@ export const listActivities = async (req, res, next) => {
       total: result.total,
       page: result.page,
       totalPages: result.totalPages,
+      hasMore: result.hasMore,
       electricityAlertActive: result.electricityAlertActive || false,
       activities: result.activities,
     });
@@ -148,7 +149,8 @@ export const addReview = async (req, res, next) => {
     const result = await activityService.addReview(req.params.id, req.body, req.user);
     res.status(201).json({
       success: true,
-      message: "Avis ajouté avec succès.",
+      message: "Avis soumis à la modération.",
+      pending: result.pending,
       averageRating: result.averageRating,
       reviewsCount: result.reviewsCount,
       reviews: result.reviews,
@@ -171,7 +173,8 @@ export const updateReview = async (req, res, next) => {
     );
     res.json({
       success: true,
-      message: "Avis mis à jour avec succès.",
+      message: "Avis mis à jour et soumis à la modération.",
+      pending: result.pending,
       averageRating: result.averageRating,
       reviewsCount: result.reviewsCount,
       reviews: result.reviews,

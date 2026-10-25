@@ -43,12 +43,12 @@ export const Footer: React.FC = () => {
             marginBottom: '48px',
           }}
         >
-          {/* Colonne 1 : Marque Win & Réseaux Sociaux */}
+          {/* Colonne 1 : Marque Tfarhida & Réseaux Sociaux */}
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <img
                 src="/Logo.png"
-                alt="Win Logo"
+                alt="Tfarhida Logo"
                 style={{
                   width: '40px',
                   height: '40px',
@@ -60,7 +60,20 @@ export const Footer: React.FC = () => {
                 }}
               />
               <span style={{ fontSize: '1.3rem', fontWeight: 800, color: '#FFFFFF' }}>
-                Win<span style={{ color: '#38BDF8' }}>.tn</span>
+                Tfarhida<span style={{ color: '#38BDF8' }}>.tn</span>
+              </span>
+              <span
+                style={{
+                  fontSize: '0.8rem',
+                  fontFamily: 'var(--font-arabic)',
+                  fontWeight: 700,
+                  color: '#C084FC',
+                  backgroundColor: 'rgba(192, 132, 252, 0.15)',
+                  padding: '2px 8px',
+                  borderRadius: '8px',
+                }}
+              >
+                تفرهيدة
               </span>
             </div>
             <p style={{ fontSize: '0.875rem', lineHeight: 1.6, color: '#94A3B8', marginBottom: '20px' }}>
@@ -72,7 +85,7 @@ export const Footer: React.FC = () => {
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Instagram Win"
+                aria-label="Instagram Tfarhida"
                 style={{
                   width: '36px',
                   height: '36px',
@@ -102,7 +115,7 @@ export const Footer: React.FC = () => {
                 href="https://facebook.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Facebook Win"
+                aria-label="Facebook Tfarhida"
                 style={{
                   width: '36px',
                   height: '36px',
@@ -132,7 +145,7 @@ export const Footer: React.FC = () => {
                 href="https://linkedin.com"
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="LinkedIn Win"
+                aria-label="LinkedIn Tfarhida"
                 style={{
                   width: '36px',
                   height: '36px',
@@ -251,7 +264,7 @@ export const Footer: React.FC = () => {
             </h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '0.875rem' }}>
               <a
-                href="mailto:contact@win.tn"
+                href="mailto:contact@tfarhida.tn"
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -264,7 +277,7 @@ export const Footer: React.FC = () => {
                 onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
               >
                 <Mail size={16} color="#38BDF8" />
-                <span>contact@win.tn</span>
+                <span>contact@tfarhida.tn</span>
               </a>
               <a
                 href="tel:+21674000000"
@@ -300,7 +313,7 @@ export const Footer: React.FC = () => {
             color: '#64748B',
           }}
         >
-          <p>© {new Date().getFullYear()} Win. Tous droits réservés.</p>
+          <p>© {new Date().getFullYear()} Tfarhida (تفرهيدة). Tous droits réservés.</p>
           <p>Plateforme digitale conçue pour la Tunisie</p>
         </div>
       </div>
