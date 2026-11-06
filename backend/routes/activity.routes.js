@@ -17,6 +17,7 @@ import {
   setPromotion,
   createEvent,
   getSystemStatus,
+  getSearchSuggestions,
   postPowerReport,
 } from "../controllers/activity.controller.js";
 import { protect, authorize } from "../middlewares/auth.middleware.js";
@@ -24,6 +25,7 @@ import { protect, authorize } from "../middlewares/auth.middleware.js";
 const router = express.Router();
 
 router.get("/system-status", getSystemStatus);
+router.get("/suggestions", getSearchSuggestions);
 router.get("/", listActivities);
 router.post("/recommendations", getRecommendations);
 

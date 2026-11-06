@@ -1,0 +1,9 @@
+[
+  { "input": "je m'ennuie fortement", "expectedIntent": "DISCOVER_ACTIVITIES", "minConfidence": 0.4 },
+  { "input": "win nemchi lyoum", "expectedIntent": "DISCOVER_ACTIVITIES", "minConfidence": 0.5 },
+  { "input": "wa9tech ysakker el café", "expectedIntent": "ASK_OPENING_HOURS", "minConfidence": 0.4 },
+  { "input": "9adech el soum mte3hom", "expectedIntent": "ASK_MENU_OR_PRICE", "minConfidence": 0.4 },
+  { "input": "3andhom noumrou whatsapp", "expectedIntent": "ASK_CONTACT_OR_SOCIAL", "minConfidence": 0.4 },
+  { "input": "ab3athli localisation", "expectedIntent": "ASK_LOCATION_OR_MAPS", "minConfidence": 0.4 }
+]
+

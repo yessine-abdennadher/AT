@@ -1,0 +1,11 @@
+[
+  { "input": "bonjour", "expectedIntent": "GREETING", "expectedMatched": true },
+  { "input": "merci", "expectedIntent": "THANKS", "expectedMatched": true },
+  { "input": "au revoir", "expectedIntent": "GOODBYE", "expectedMatched": true },
+  { "input": "aslema", "expectedIntent": "GREETING", "expectedMatched": true },
+  { "input": "hello", "expectedIntent": "GREETING", "expectedMatched": true },
+  { "input": "السلام عليكم", "expectedIntent": "GREETING", "expectedMatched": true },
+  { "input": "recommencer", "expectedIntent": "RESET_SEARCH", "expectedMatched": true },
+  { "input": "une phrase inconnue qui doit rater le fastpath", "expectedIntent": null, "expectedMatched": false }
+]
+

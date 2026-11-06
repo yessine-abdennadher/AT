@@ -1,16 +1,28 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Sparkles, PhoneCall, ChevronDown, MapPin } from 'lucide-react';
+import { ChevronDown, Sun, Moon, Globe, Menu, X, Building2, ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
+import { useLanguage, type Language } from '../../context/LanguageContext';
 
 interface NavbarProps {
+  isPartnerView?: boolean;
+  onToggleView: (view: 'client' | 'partner') => void;
   onOpenApp?: () => void;
+  onOpenProModal?: () => void;
   onSelectCity?: (city: string) => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ onOpenApp, onSelectCity }) => {
+export const Navbar: React.FC<NavbarProps> = ({
+  isPartnerView = false,
+  onToggleView,
+  onOpenProModal,
+}) => {
+  const { toggleTheme, isDark } = useTheme();
+  const { language, setLanguage, t, isRTL } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
-  const [selectedCity, setSelectedCity] = useState('Sfax (Actif)');
-  const [cityMenuOpen, setCityMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [langMenuOpen, setLangMenuOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const langMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -22,227 +34,240 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenApp, onSelectCity }) => {
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
-        setCityMenuOpen(false);
+      if (langMenuRef.current && !langMenuRef.current.contains(e.target as Node)) {
+        setLangMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const cities = ['Sfax (Actif)', 'Tunis', 'Sousse', 'Djerba'];
+  const languages: { code: Language; label: string; badge: string }[] = [
+    { code: 'fr', label: 'Français', badge: 'FR' },
+    { code: 'ar', label: 'العربية', badge: 'AR' },
+    { code: 'en', label: 'English', badge: 'EN' },
+  ];
+
+  // Sur le Hero Vidéo : Transparent cinématographique uniquement en Mode Sombre (la vidéo traverse la navbar).
+  // En Mode Clair : Navbar en blanc satiné dépoli pour une netteté et un contraste impeccables.
+  const isHeroActive = !isPartnerView && !isScrolled && isDark;
 
   return (
-    <header
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        height: 'var(--nav-height)',
-        zIndex: 1000,
-        backgroundColor: isScrolled ? 'rgba(255, 255, 255, 0.95)' : 'transparent',
-        backdropFilter: isScrolled ? 'blur(12px)' : 'none',
-        borderBottom: isScrolled ? '1px solid var(--border-subtle)' : '1px solid transparent',
-        transition: 'all 0.3s ease',
-      }}
-    >
-      <div
-        className="container"
-        style={{
-          height: '100%',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        {/* Logo & Identité Tfarhida */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <img
-            src="/Logo.png"
-            alt="Tfarhida Logo"
-            style={{
-              width: '44px',
-              height: '44px',
-              objectFit: 'contain',
-              borderRadius: '12px',
-              boxShadow: '0 4px 14px rgba(2, 132, 199, 0.25)',
-              backgroundColor: '#FFFFFF',
-              padding: '3px',
+    <header className={`site-header ${isHeroActive ? 'on-hero' : 'scrolled'}`}>
+      <div className="container navbar-inner">
+        {/* 1. Marque & Logo */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              onToggleView('client');
             }}
-          />
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span
-                style={{
-                  fontFamily: 'var(--font-heading)',
-                  fontSize: '1.35rem',
-                  fontWeight: 800,
-                  letterSpacing: '-0.02em',
-                  color: 'var(--color-navy)',
-                }}
-              >
-                Tfarhida<span style={{ color: 'var(--color-primary)' }}>.tn</span>
-              </span>
-              <span
-                style={{
-                  fontSize: '0.8rem',
-                  fontFamily: 'var(--font-arabic)',
-                  fontWeight: 700,
-                  color: 'var(--color-purple-signature)',
-                  backgroundColor: 'var(--color-pale-purple)',
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                }}
-              >
-                تفرهيدة
-              </span>
-            </div>
-            <p style={{ fontSize: '0.725rem', color: 'var(--text-muted)', fontWeight: 600, lineHeight: 1 }}>
-              شنوّة نعمل توّا؟ · Guide sorties Tunisie
-            </p>
-          </div>
+            className="navbar-brand"
+          >
+            {language === 'ar' ? (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                <img
+                  src="/Logo.png"
+                  alt="Tfarhida Logo"
+                  className="navbar-brand-logo"
+                  style={{ height: '34px', width: 'auto' }}
+                />
+                <span className="navbar-brand-title">
+                  {t('brand.name')}
+                  {isPartnerView && (
+                    <span className="navbar-brand-domain"> Business</span>
+                  )}
+                </span>
+              </div>
+            ) : (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <img
+                  src={isDark ? '/logo-full-white.png' : '/logo-full.png'}
+                  alt="Tfarhida"
+                  className="navbar-brand-logo-full"
+                />
+                {isPartnerView && (
+                  <span className="navbar-brand-domain"> Business</span>
+                )}
+              </div>
+            )}
+          </a>
         </div>
 
-        {/* Liens de Navigation Desktop */}
-        <nav
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '28px',
-          }}
-          className="desktop-nav"
-        >
-          <a
-            href="#explorer"
-            style={{
-              fontSize: '0.925rem',
-              fontWeight: 600,
-              color: 'var(--text-secondary)',
-              transition: 'color 0.2s ease',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-primary)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
-          >
-            Explorer les sorties
-          </a>
+        {/* 2. Liens Centraux Desktop (Adaptés selon la vue Client vs Partenaire) */}
+        {!isPartnerView ? (
+          <nav className="navbar-links">
+            <a href="#explorer" className="navbar-link">
+              {t('nav.explore')}
+            </a>
 
-          <a
-            href="#piliers"
-            style={{
-              fontSize: '0.925rem',
-              fontWeight: 600,
-              color: 'var(--text-secondary)',
-              transition: 'color 0.2s ease',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-primary)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
-          >
-            Avantages
-          </a>
+            <a href="#piliers" className="navbar-link">
+              {t('nav.advantages')}
+            </a>
 
-          <a
-            href="#partenaires"
-            style={{
-              fontSize: '0.925rem',
-              fontWeight: 600,
-              color: 'var(--text-secondary)',
-              transition: 'color 0.2s ease',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = 'var(--color-primary)')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-secondary)')}
-          >
-            Espace Pro
-          </a>
-
-          {/* Sélecteur de ville interactif */}
-          <div ref={menuRef} style={{ position: 'relative' }}>
             <button
-              onClick={() => setCityMenuOpen(!cityMenuOpen)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '6px 14px',
-                borderRadius: 'var(--radius-full)',
-                backgroundColor: 'var(--color-pale-blue)',
-                color: 'var(--color-primary)',
-                fontSize: '0.825rem',
-                fontWeight: 700,
-                border: '1px solid var(--border-accent)',
-              }}
+              type="button"
+              onClick={() => onToggleView('partner')}
+              className="navbar-link navbar-link-partner"
             >
-              <MapPin size={13} color="var(--color-primary)" />
-              <span>{selectedCity}</span>
-              <ChevronDown size={14} />
+              <Building2 size={16} />
+              <span>{t('partnerPortal.switchPartner')}</span>
+            </button>
+          </nav>
+        ) : (
+          <nav className="navbar-links">
+            <a href="#tarifs" className="navbar-link">
+              {t('nav.pricing')}
+            </a>
+
+            <button
+              type="button"
+              onClick={() => onToggleView('client')}
+              className="navbar-link navbar-link-partner"
+            >
+              {isRTL ? <ArrowRight size={15} /> : <ArrowLeft size={15} />}
+              <span>{t('partnerPortal.switchClient')}</span>
+            </button>
+          </nav>
+        )}
+
+        {/* 3. Contrôles de Droite (Ville, Langue, Thème, CTA) */}
+        <div className="navbar-actions">
+      
+          {/* Sélecteur de Langue (FR / AR / EN) */}
+          <div ref={langMenuRef} style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => {
+                setLangMenuOpen(!langMenuOpen);
+              }}
+              className="nav-pill-btn"
+              title="Changer de langue"
+              aria-label="Changer de langue"
+            >
+              <Globe size={14} className="nav-btn-icon" />
+              <span>{language.toUpperCase()}</span>
+              <ChevronDown size={13} className="nav-chevron-icon" />
             </button>
 
-            {cityMenuOpen && (
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 'calc(100% + 8px)',
-                  right: 0,
-                  backgroundColor: '#FFFFFF',
-                  borderRadius: '12px',
-                  boxShadow: 'var(--shadow-lg)',
-                  border: '1px solid var(--border-subtle)',
-                  padding: '6px',
-                  minWidth: '160px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '2px',
-                }}
-              >
-                {cities.map((city) => (
+            {langMenuOpen && (
+              <div className="nav-dropdown-menu">
+                {languages.map((l) => (
                   <button
-                    key={city}
+                    key={l.code}
+                    type="button"
                     onClick={() => {
-                      setSelectedCity(city);
-                      setCityMenuOpen(false);
-                      if (onSelectCity) onSelectCity(city);
+                      setLanguage(l.code);
+                      setLangMenuOpen(false);
                     }}
-                    style={{
-                      textAlign: 'left',
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      fontSize: '0.85rem',
-                      fontWeight: selectedCity === city ? 700 : 500,
-                      color: selectedCity === city ? 'var(--color-primary)' : 'var(--text-secondary)',
-                      backgroundColor: selectedCity === city ? 'var(--color-pale-blue)' : 'transparent',
-                    }}
+                    className={`nav-dropdown-item ${language === l.code ? 'active' : ''}`}
                   >
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <MapPin size={12} color={selectedCity === city ? 'var(--color-primary)' : 'var(--text-muted)'} />
-                      <span>{city}</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '0.7rem', fontWeight: 800, padding: '2px 5px', borderRadius: '4px', backgroundColor: 'var(--color-pale-blue)', color: 'var(--color-primary)' }}>{l.badge}</span>
+                      <span>{l.label}</span>
                     </span>
+                    {language === l.code && <Check size={14} color="var(--color-primary)" />}
                   </button>
                 ))}
               </div>
             )}
           </div>
-        </nav>
 
-        {/* Boutons d'Action */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <a
-            href="tel:+21674000000"
-            className="btn btn-secondary"
-            style={{ padding: '8px 16px', fontSize: '0.875rem' }}
-          >
-            <PhoneCall size={16} />
-            <span>Assistance</span>
-          </a>
-
+          {/* Bouton Thème Sombre / Clair */}
           <button
-            onClick={onOpenApp}
-            className="btn btn-primary"
-            style={{ padding: '9px 20px', fontSize: '0.875rem' }}
+            type="button"
+            onClick={toggleTheme}
+            className="theme-toggle-btn"
+            title={isDark ? t('theme.lightMode') : t('theme.darkMode')}
+            aria-label={t('theme.switch')}
           >
-            <Sparkles size={16} />
-            <span>Ouvrir Tfarhida</span>
+            {isDark ? (
+              <Sun size={18} className="theme-icon-sun" />
+            ) : (
+              <Moon size={18} className="theme-icon-moon" />
+            )}
+          </button>
+
+          {/* Bouton CTA Partenaire (affiché uniquement sur la vue Partenaire) */}
+          {isPartnerView && (
+            <button
+              type="button"
+              onClick={onOpenProModal}
+              className="btn btn-primary nav-cta-btn"
+            >
+              <Building2 size={16} />
+              <span>{t('nav.registerSteps')}</span>
+            </button>
+          )}
+          
+
+          {/* Bouton Menu Mobile */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="mobile-menu-btn"
+            aria-label="Menu"
+          >
+            {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
           </button>
         </div>
+      </div>
+
+      {/* 4. Tiroir Mobile Responsive */}
+      <div className={`mobile-drawer ${mobileMenuOpen ? 'open' : ''}`}>
+        {!isPartnerView ? (
+          <>
+            <a
+              href="#explorer"
+              className="navbar-link"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {t('nav.explore')}
+            </a>
+            <a
+              href="#piliers"
+              className="navbar-link"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {t('nav.advantages')}
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onToggleView('partner');
+              }}
+              className="navbar-link"
+              style={{ textAlign: isRTL ? 'right' : 'left', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)', fontWeight: 700 }}
+            >
+              <Building2 size={16} color="var(--color-primary)" />
+              <span>{t('partnerPortal.switchPartner')}</span>
+            </button>
+          </>
+        ) : (
+          <>
+            <a
+              href="#tarifs"
+              className="navbar-link"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              {t('nav.pricing')}
+            </a>
+            <button
+              type="button"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                onToggleView('client');
+              }}
+              className="navbar-link"
+              style={{ textAlign: isRTL ? 'right' : 'left', display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              {isRTL ? <ArrowRight size={15} /> : <ArrowLeft size={15} />}
+              <span>{t('partnerPortal.switchClient')}</span>
+            </button>
+          </>
+        )}
       </div>
     </header>
   );

@@ -1,0 +1,22 @@
+[
+  {
+    "turn1": { "city": "La Marsa", "categories": ["cafe"], "amenities": ["wifi"] },
+    "turn2": { "amenities": ["climatisation"] },
+    "expectedAfterTurn2": {
+      "city": "La Marsa",
+      "category": "cafe",
+      "amenities": ["wifi", "climatisation"]
+    }
+  },
+  {
+    "turn1": { "city": "La Marsa", "categories": ["cafe"], "amenities": ["wifi"] },
+    "turn2": { "city": "Sousse", "amenities": ["terrasse"], "excluded": { "amenities": ["wifi"] } },
+    "expectedAfterTurn2": {
+      "city": "Sousse",
+      "category": "cafe",
+      "amenities": ["terrasse"],
+      "excludedAmenities": ["wifi"]
+    }
+  }
+]
+

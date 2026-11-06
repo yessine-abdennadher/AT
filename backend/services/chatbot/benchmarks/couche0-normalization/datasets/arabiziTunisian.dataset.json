@@ -1,0 +1,6 @@
+[
+  { "input": "nheb 9ahwa fi sousse", "expectedTokens": ["je veux", "café"], "expectedCity": "Sousse", "expectedLang": "derja" },
+  { "input": "win nokhrej fi hammamet", "expectedTokens": ["sortir"], "expectedCity": "Hammamet", "expectedLang": "derja" },
+  { "input": "wa9tech mahloul el resto", "expectedTokens": ["horaires", "ouvert"], "expectedCity": null, "expectedLang": "derja" },
+  { "input": "blassa behia rkhis", "expectedTokens": ["sympa", "petit budget"], "expectedCity": null, "expectedLang": "derja" }
+]

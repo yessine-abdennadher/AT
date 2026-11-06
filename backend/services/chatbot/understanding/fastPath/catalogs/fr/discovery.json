@@ -1,0 +1,41 @@
+{
+  "DISCOVER_ACTIVITIES": [
+    "ou sortir",
+    "ou sortir ce soir",
+    "propose moi une sortie",
+    "je cherche un endroit",
+    "je cherche un café",
+    "je cherche un restaurant",
+    "idee de sortie",
+    "quoi faire aujourd hui"
+  ],
+  "ASK_OPENING_HOURS": [
+    "horaires",
+    "c est ouvert",
+    "a quelle heure ca ouvre",
+    "a quelle heure ca ferme",
+    "horaires d ouverture"
+  ],
+  "ASK_MENU_OR_PRICE": [
+    "voir menu",
+    "le menu",
+    "quel est le prix",
+    "combien ca coute",
+    "les tarifs"
+  ],
+  "ASK_LOCATION_OR_MAPS": [
+    "adresse",
+    "ou se trouve",
+    "localisation",
+    "lien maps",
+    "google maps"
+  ],
+  "ASK_CONTACT_OR_SOCIAL": [
+    "numero",
+    "téléphone",
+    "whatsapp",
+    "instagram",
+    "contact"
+  ]
+}
+

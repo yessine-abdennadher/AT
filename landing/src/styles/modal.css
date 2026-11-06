@@ -1,0 +1,65 @@
+/* ==========================================================================
+   Tfarhida — Modals & OTP Styles (Scrollbar-Free & Apple Glass)
+   ========================================================================== */
+
+/* Suppression totale de la scrollbar sur les modals */
+.modal-no-scrollbar {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+}
+
+.modal-no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* OTP 6-digits Input Boxes */
+.otp-container {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin: 16px 0;
+}
+
+.otp-box {
+  width: 44px;
+  height: 50px;
+  border-radius: 12px;
+  border: 1.5px solid var(--border-strong);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  font-size: 1.4rem;
+  font-weight: 800;
+  text-align: center;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.otp-box:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.25);
+  transform: translateY(-2px);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

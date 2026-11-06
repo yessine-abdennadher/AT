@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
 import { JWT_SECRET } from "../config/jwt.config.js";
+import { checkAndHandleExpiration } from "../services/partner-subscription.service.js";
 
 export const protect = async (req, res, next) => {
   let token;
@@ -18,6 +19,9 @@ export const protect = async (req, res, next) => {
       if (!req.user.isActive) {
         return res.status(403).json({ success: false, message: "Votre compte a été désactivé" });
       }
+
+      // Verrou de sécurité : auto-expiration pour les abonnements partenaires échus
+      await checkAndHandleExpiration(req.user);
 
       return next();
     } catch (error) {

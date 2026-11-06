@@ -1,0 +1,9 @@
+[
+  { "intentKey": "GREETING", "lang": "fr", "minStaticVariants": 3 },
+  { "intentKey": "THANKS", "lang": "fr", "minStaticVariants": 3 },
+  { "intentKey": "DISCOVER_SUCCESS", "lang": "fr", "minStaticVariants": 3 },
+  { "intentKey": "DETAIL_HOURS", "lang": "fr", "minStaticVariants": 3 },
+  { "intentKey": "GREETING", "lang": "ar", "minStaticVariants": 3 },
+  { "intentKey": "GREETING", "lang": "derja", "minStaticVariants": 3 }
+]
+

@@ -1,0 +1,33 @@
+{
+  "GREETING": [
+    { "id": "greet_fr_1", "text": "Bonjour ! Je suis KharjaBot. Dites-moi ce que vous cherchez : un café, un restaurant, une sortie en famille ?" },
+    { "id": "greet_fr_2", "text": "Salut ! Prêt à trouver une bonne sortie ? Donnez-moi une ville, une catégorie ou une ambiance." },
+    { "id": "greet_fr_3", "text": "Bienvenue ! Je peux vous proposer des lieux, vous donner leurs horaires, leur menu ou leur contact." }
+  ],
+  "THANKS": [
+    { "id": "thanks_fr_1", "text": "Avec plaisir ! Je reste disponible si vous voulez affiner votre recherche." },
+    { "id": "thanks_fr_2", "text": "De rien ! N'hésitez pas à me demander d'autres idées de sortie." },
+    { "id": "thanks_fr_3", "text": "Content d'avoir pu aider. Bonne sortie !" }
+  ],
+  "GOODBYE": [
+    { "id": "bye_fr_1", "text": "À bientôt et bonne sortie !" },
+    { "id": "bye_fr_2", "text": "Au revoir ! Revenez quand vous voulez une nouvelle idée." },
+    { "id": "bye_fr_3", "text": "Bonne journée, et à très vite sur Tfarhida." }
+  ],
+  "HELP_GENERAL": [
+    { "id": "help_fr_1", "text": "Je peux chercher des lieux par ville, catégorie, budget ou équipements, puis vous donner horaires, menu, adresse et contact." },
+    { "id": "help_fr_2", "text": "Dites par exemple : « un café avec wifi à La Marsa », puis affinez : « moins cher » ou « avec terrasse »." },
+    { "id": "help_fr_3", "text": "Je propose des sorties, je compare des lieux et je compose un programme en plusieurs étapes si vous le souhaitez." }
+  ],
+  "UNKNOWN": [
+    { "id": "unk_fr_1", "text": "Je n'ai pas bien compris. Pouvez-vous préciser une ville ou un type de lieu ?" },
+    { "id": "unk_fr_2", "text": "Pouvez-vous reformuler ? Par exemple : « un restaurant à Sousse »." },
+    { "id": "unk_fr_3", "text": "Je ne suis pas sûr de saisir. Cherchez-vous un café, un restaurant ou une activité ?" }
+  ],
+  "RESET_DONE": [
+    { "id": "reset_fr_1", "text": "C'est noté, on repart de zéro. Que cherchez-vous ?" },
+    { "id": "reset_fr_2", "text": "Recherche réinitialisée. Donnez-moi de nouveaux critères." },
+    { "id": "reset_fr_3", "text": "Très bien, nouvelle recherche. Quelle ville et quel type de lieu ?" }
+  ]
+}
+

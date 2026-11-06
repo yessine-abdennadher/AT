@@ -1,5 +1,8 @@
 import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
 import { User } from "../models/User.js";
+import { OtpVerification } from "../models/OtpVerification.js";
+import { sendPartnerOtpEmail } from "./mail.service.js";
 import { JWT_SECRET, JWT_REFRESH_SECRET, JWT_EXPIRE } from "../config/jwt.config.js";
 
 // Génération de tokens JWT
@@ -23,6 +26,14 @@ export const formatUserResponse = (user) => ({
   role: user.role,
   userType: user.userType,
   partnerTier: user.partnerTier || "standard",
+  requestedTier: user.requestedTier || "standard",
+  requestedBillingCycle: user.requestedBillingCycle || "monthly",
+  subscriptionStatus: user.subscriptionStatus || "none",
+  subscriptionStartedAt: user.subscriptionStartedAt,
+  subscriptionExpiresAt: user.subscriptionExpiresAt,
+  daysRemaining: user.daysRemaining || 0,
+  isExpiringSoon: user.isExpiringSoon || false,
+  isEmailVerified: user.isEmailVerified || false,
   establishmentName: user.establishmentName || "",
   avatar: user.avatar,
   bio: user.bio,
@@ -320,5 +331,133 @@ export const authenticateWithGoogle = async ({
     accessToken: appAccessToken,
     refreshToken: appRefreshToken,
     user: formatUserResponse(user),
+  };
+};
+
+/**
+ * Étape 1 : Initialisation & Envoi du code OTP pour partenaire
+ */
+export const sendPartnerOtp = async ({
+  managerName,
+  email,
+  password,
+  establishmentName,
+  whatsapp,
+  city = "Sfax",
+  category = "cafe",
+  plan = "standard",
+  billingCycle = "monthly",
+}) => {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  // 1. Vérifier si l'utilisateur existe déjà
+  const existingUser = await User.findOne({ email: normalizedEmail });
+  if (existingUser) {
+    const error = new Error("Un compte existe déjà avec cette adresse email.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // 2. Générer un code OTP cryptographique à 6 chiffres
+  const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  const salt = await bcrypt.genSalt(10);
+  const otpHash = await bcrypt.hash(rawOtp, salt);
+
+  // 3. Sauvegarder dans la collection éphémère (TTL 10 min)
+  await OtpVerification.deleteMany({ email: normalizedEmail });
+  await OtpVerification.create({
+    email: normalizedEmail,
+    otpHash,
+    partnerData: {
+      name: managerName.trim(),
+      establishmentName: establishmentName.trim(),
+      phone: whatsapp.trim(),
+      city,
+      category,
+      password,
+      plan,
+      billingCycle,
+    },
+  });
+
+  // 4. Déclencher l'envoi de l'email officiel (Resend / Log local)
+  const mailResult = await sendPartnerOtpEmail({
+    email: normalizedEmail,
+    managerName,
+    establishmentName,
+    otpCode: rawOtp,
+  });
+
+  return {
+    success: true,
+    email: normalizedEmail,
+    demoCode: rawOtp, // Pratique pour le test rapide
+    mailResult,
+  };
+};
+
+/**
+ * Étape 2 : Vérification du code OTP & Création sécurisée du compte Partenaire
+ */
+export const verifyPartnerOtp = async ({ email, otp }) => {
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const otpRecord = await OtpVerification.findOne({ email: normalizedEmail });
+  if (!otpRecord) {
+    const error = new Error("Code expiré ou demande introuvable. Veuillez recommencer.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  // Anti-bruteforce (3 essais maximum)
+  if (otpRecord.attempts >= 3) {
+    await OtpVerification.deleteOne({ _id: otpRecord._id });
+    const error = new Error("Trop de tentatives incorrectes. Veuillez demander un nouveau code.");
+    error.statusCode = 429;
+    throw error;
+  }
+
+  const isMatch = await bcrypt.compare(otp.trim(), otpRecord.otpHash);
+  if (!isMatch) {
+    otpRecord.attempts += 1;
+    await otpRecord.save();
+    const error = new Error("Code de vérification incorrect.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const data = otpRecord.partnerData;
+  const isPaidPlan = data.plan === "pro" || data.plan === "premium";
+
+  // Création du compte Partenaire : partnerTier est TOUJOURS "standard" par défaut !
+  const newUser = await User.create({
+    name: data.name,
+    email: normalizedEmail,
+    password: data.password,
+    phone: data.phone,
+    establishmentName: data.establishmentName,
+    city: data.city,
+    role: "partner",
+    partnerTier: "standard", // Verrou de sécurité 0 DT
+    requestedTier: data.plan, // Forfait souhaité
+    requestedBillingCycle: data.billingCycle || "monthly",
+    subscriptionStatus: isPaidPlan ? "pending_payment" : "none",
+    isEmailVerified: true,
+  });
+
+  // Nettoyage de l'OTP
+  await OtpVerification.deleteOne({ _id: otpRecord._id });
+
+  // Génération des JWT
+  const accessToken = generateAccessToken(newUser._id);
+  const refreshToken = generateRefreshToken(newUser._id);
+  newUser.refreshTokens = [refreshToken];
+  newUser.lastLogin = new Date();
+  await newUser.save({ validateBeforeSave: false });
+
+  return {
+    accessToken,
+    refreshToken,
+    user: formatUserResponse(newUser),
   };
 };

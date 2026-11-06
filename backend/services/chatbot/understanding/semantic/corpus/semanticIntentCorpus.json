@@ -1,0 +1,84 @@
+{
+  "GREETING": [
+    "bonjour a toi",
+    "salut tout le monde",
+    "hello bot",
+    "coucou ca va",
+    "aslema chnahwelek",
+    "sbah el khir",
+    "مساء النور كيف حالك"
+  ],
+  "THANKS": [
+    "merci pour ton aide",
+    "c est gentil merci",
+    "merci bien",
+    "grand merci",
+    "ya3tik el saha",
+    "baraka allahou fik",
+    "يعطيك الصحة شكرا"
+  ],
+  "GOODBYE": [
+    "a plus tard",
+    "a demain",
+    "je dois y aller",
+    "ciao",
+    "besslema",
+    "تصبح على خير"
+  ],
+  "HELP_GENERAL": [
+    "comment utiliser l application",
+    "qu est ce que tu sais faire",
+    "peux tu m aider",
+    "explique moi",
+    "kifech yemchi el chatbot",
+    "شنوا تنجم تعمل"
+  ],
+  "DISCOVER_ACTIVITIES": [
+    "propose moi quelque chose a faire",
+    "une idee de sortie",
+    "je m ennuie que faire",
+    "recommande moi un endroit sympa",
+    "ou aller aujourd hui",
+    "win nemchi lyoum",
+    "a3tini blassa mzyena nokhrej fiha",
+    "nheb nokhrej m3a s7abi",
+    "فماش بلاصة باهية نخرجو فيها"
+  ],
+  "ASK_OPENING_HOURS": [
+    "jusqu a quelle heure",
+    "quand ca ouvre",
+    "est ce encore ouvert",
+    "wa9tech ysakker",
+    "wa9tech y7el",
+    "محلول توة ولا مسكر"
+  ],
+  "ASK_MENU_OR_PRICE": [
+    "c est cher",
+    "quels sont les prix",
+    "montre moi la carte",
+    "9adech el soum",
+    "famma menu",
+    "قداش الأسعار متاعهم"
+  ],
+  "ASK_LOCATION_OR_MAPS": [
+    "comment y aller",
+    "c est ou exactement",
+    "donne moi l emplacement",
+    "win jeya el blassa bedhabt",
+    "ab3athli localisation",
+    "وين يجي بالضبط"
+  ],
+  "ASK_CONTACT_OR_SOCIAL": [
+    "comment les joindre",
+    "donne moi leur contact",
+    "ils ont un compte instagram",
+    "3andhom noumrou talifoun",
+    "عطيني نومرو التليفون ولا الأنستغرام"
+  ],
+  "RESET_SEARCH": [
+    "on repart de zero",
+    "oublie ma recherche",
+    "3awed men jdid",
+    "نعاودو البحث من الأول"
+  ]
+}

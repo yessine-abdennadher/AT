@@ -1,83 +1,16 @@
 /* ==========================================================================
-   Tfarhida (تفرهيدة) — Design Tokens & Core Styles
-   Palette officielle de l'application mobile Tfarhida
+   Tfarhida (تفرهيدة) — Main Entry CSS
+   Imports modulaires pour une maintenance optimale
    ========================================================================== */
 
-:root {
-  /* Palette Tfarhida (Cyan Signature, Bleu Roi & Violet Signature) */
-  --color-primary: #0284C7;
-  --color-primary-hover: #0369A1;
-  --color-primary-light: #38BDF8;
-  --color-cyan-glow: #00D2FF;
-  --color-royal-blue: #2563EB;
-  --color-purple-signature: #7C3AED;
-  --color-primary-gradient: linear-gradient(135deg, #00D2FF 0%, #2563EB 55%, #7C3AED 100%);
-  --color-header-gradient: linear-gradient(135deg, #E0F2FE 0%, #EDE9FE 50%, #F0FDF4 100%);
-  
-  --color-navy: #0B1528;
-  --color-navy-dark: #070D18;
-  --color-navy-card: #0E1E38;
-  
-  --color-pale-blue: #E0F2FE;
-  --color-pale-purple: #F3E8FF;
-  --color-pale-blue-subtle: #F0F7FF;
-  --color-off-white: #F8FAFC;
-  
-  --color-tunisian-red: #E11D48;
-  --color-tunisian-red-light: #FFE4E6;
-  --color-amber: #F59E0B;
-  --color-amber-light: #FEF3C7;
-  --color-emerald: #10B981;
-  --color-emerald-light: #D1FAE5;
+@import './styles/variables.css';
+@import './styles/navbar.css';
+@import './styles/pricing.css';
+@import './styles/modal.css';
 
-  /* Surfaces & Backgrounds alignées avec App Mobile Tfarhida */
-  --bg-main: #F0F7FF;
-  --bg-secondary: #E0F2FE;
-  --bg-card: #FFFFFF;
-  --bg-card-hover: #FFFFFF;
-  --bg-card-subtle: #F8FAFC;
-  --border-subtle: rgba(224, 242, 254, 0.9);
-  --border-strong: #BAE6FD;
-  --border-accent: rgba(2, 132, 199, 0.25);
-
-  /* Typographie */
-  --text-primary: #0F172A;
-  --text-secondary: #475569;
-  --text-muted: #64748B;
-  --text-brand: #0284C7;
-
-  /* Typographie Families */
-  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-arabic: 'Noto Kufi Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
-
-  /* Ombres & Effets */
-  --shadow-sm: 0 1px 3px 0 rgba(2, 132, 199, 0.08);
-  --shadow-md: 0 4px 6px -1px rgba(2, 132, 199, 0.1), 0 2px 4px -2px rgba(2, 132, 199, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(2, 132, 199, 0.12), 0 4px 6px -4px rgba(2, 132, 199, 0.08);
-  --shadow-xl: 0 20px 25px -5px rgba(11, 21, 40, 0.12), 0 8px 10px -6px rgba(11, 21, 40, 0.08);
-  --shadow-glow: 0 0 28px rgba(0, 210, 255, 0.45);
-
-  /* Rayons de bordure */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 18px;
-  --radius-xl: 26px;
-  --radius-full: 9999px;
-
-  /* Transitions */
-  --ease-out-cubic: cubic-bezier(0.33, 1, 0.68, 1);
-  --transition-fast: 150ms var(--ease-out-cubic);
-  --transition-normal: 250ms var(--ease-out-cubic);
-  --transition-smooth: 400ms var(--ease-out-cubic);
-
-  /* Layout */
-  --max-width-container: 1240px;
-  --nav-height: 76px;
-}
-
-/* Reset & Base */
+/* ==========================================================================
+   Reset & Base
+   ========================================================================== */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -89,6 +22,8 @@ html {
   font-size: 16px;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 body {
@@ -96,7 +31,20 @@ body {
   background-color: var(--bg-main);
   color: var(--text-primary);
   line-height: 1.6;
+  max-width: 100%;
   overflow-x: hidden;
+  position: relative;
+  transition: background-color 0.25s ease, color 0.2s ease;
+}
+
+#root {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+main, section {
+  max-width: 100%;
+  overflow-x: clip;
 }
 
 /* Headings */
@@ -105,6 +53,10 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-navy);
   font-weight: 700;
   line-height: 1.2;
+}
+
+[dir="rtl"] body, [dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3, [dir="rtl"] h4, [dir="rtl"] h5, [dir="rtl"] h6 {
+  font-family: var(--font-arabic), var(--font-heading), sans-serif;
 }
 
 a {
@@ -189,22 +141,35 @@ button {
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(2, 132, 199, 0.45);
-  background: linear-gradient(135deg, #0284C7 0%, #0369A1 100%);
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.45), 0 0 16px rgba(124, 58, 237, 0.35);
+  background: linear-gradient(135deg, #00D2FF 0%, #1D4ED8 50%, #7C3AED 100%);
+  filter: brightness(1.08);
 }
 
 .btn-secondary {
-  background-color: #FFFFFF;
-  color: var(--color-navy);
-  border: 1.5px solid var(--border-subtle);
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border: 1.5px solid var(--border-strong);
   box-shadow: var(--shadow-sm);
 }
 
 .btn-secondary:hover {
-  background-color: var(--color-pale-blue-subtle);
+  background-color: var(--bg-card-hover);
   border-color: var(--color-primary);
   color: var(--color-primary);
   transform: translateY(-2px);
+}
+
+[data-theme="dark"] .btn-secondary {
+  background-color: var(--bg-card);
+  color: var(--text-primary);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+[data-theme="dark"] .btn-secondary:hover {
+  background-color: var(--bg-card-hover);
+  border-color: var(--color-cyan-glow);
+  color: var(--color-cyan-glow);
 }
 
 .btn-ghost {
@@ -225,4 +190,260 @@ button {
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* Masquer la barre de défilement tout en préservant le défilement */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+/* Carousel Activités */
+.activity-card-item {
+  flex: 0 0 calc((100% - 48px) / 3);
+  min-width: 290px;
+  scroll-snap-align: start;
+}
+
+@media (max-width: 1024px) {
+  .activity-card-item {
+    flex: 0 0 calc((100% - 24px) / 2);
+    min-width: 280px;
+  }
+}
+
+@media (max-width: 640px) {
+  .activity-card-item {
+    flex: 0 0 85% !important;
+    min-width: 260px !important;
+    max-width: 320px !important;
+  }
+}
+
+/* Grille Bento */
+.bento-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
+}
+.bento-col-7 {
+  grid-column: span 7;
+}
+.bento-col-5 {
+  grid-column: span 5;
+}
+
+@media (max-width: 900px) {
+  .bento-grid {
+    grid-template-columns: 1fr !important;
+    gap: 18px !important;
+  }
+  .bento-col-7,
+  .bento-col-5 {
+    grid-column: span 1 !important;
+  }
+}
+
+/* Bento Card Modern Hover & Micro-Interactions */
+.bento-card-modern {
+  transition: transform 0.28s cubic-bezier(0.33, 1, 0.68, 1), box-shadow 0.28s ease, border-color 0.25s ease;
+}
+.bento-card-modern:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-primary-light) !important;
+  box-shadow: 0 20px 35px -8px rgba(2, 132, 199, 0.16), 0 8px 16px -6px rgba(2, 132, 199, 0.1) !important;
+}
+
+/* ==========================================================================
+   Text Gradients Apple Pro (100% Cross-Browser Safe, zero clipping bug)
+   ========================================================================== */
+.text-gradient-tfarhida {
+  background: linear-gradient(135deg, #00D2FF 0%, #2563EB 50%, #7C3AED 100%);
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  display: inline-block;
+}
+
+.text-gradient-emerald {
+  background: linear-gradient(135deg, #10B981 0%, #00D2FF 100%);
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  display: inline-block;
+}
+
+.text-gradient-amber {
+  background: linear-gradient(135deg, #F59E0B 0%, #D97706 45%, #0284C7 100%);
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  display: inline-block;
+}
+
+.text-gradient-royal {
+  background: linear-gradient(135deg, #2563EB 0%, #7C3AED 100%);
+  -webkit-background-clip: text !important;
+  background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  color: transparent !important;
+  display: inline-block;
+}
+
+@keyframes live-ping {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+  50% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+}
+
+.radar-ping {
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  background-color: #10B981;
+  animation: live-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Hero & Responsive Mobile Styles (Zero Horizontal Overflow) */
+@media (max-width: 768px) {
+  .hero-search-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    padding: 12px !important;
+    border-radius: var(--radius-lg) !important;
+  }
+  .hero-search-bar button {
+    width: 100% !important;
+    margin-top: 8px !important;
+  }
+  .hero-orb-col {
+    min-height: auto !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+  .hero-floating-card {
+    position: static !important;
+    margin-top: 14px !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    transform: none !important;
+    left: auto !important;
+    right: auto !important;
+  }
+  .hero-floating-badge {
+    position: static !important;
+    margin-bottom: 12px !important;
+    align-self: flex-start !important;
+    transform: none !important;
+    left: auto !important;
+    right: auto !important;
+  }
+  .app-fever-banner {
+    border-radius: 20px !important;
+  }
+  .app-phone-container {
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    justify-content: center !important;
+  }
+}
+
+/* Style du Pied de Page (Footer) */
+.site-footer {
+  background-color: var(--footer-bg);
+  color: var(--footer-text);
+  padding-top: 64px;
+  padding-bottom: 36px;
+  border-top: 1px solid var(--footer-border);
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.2s ease;
+}
+
+.footer-heading {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--footer-heading);
+  margin-bottom: 16px;
+  transition: color 0.2s ease;
+}
+
+.footer-link {
+  color: var(--footer-link);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.footer-link:hover {
+  color: var(--footer-link-hover) !important;
+}
+
+.footer-social-link {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background-color: var(--footer-social-bg);
+  border: 1px solid var(--footer-social-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--footer-link);
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.footer-social-link:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.footer-bottom-line {
+  border-top: 1px solid var(--footer-bottom-border);
+  padding-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 0.825rem;
+  color: var(--footer-subtext);
+}
+
+/* ==========================================================================
+   Hero Cinématique — Transition & Lisibilité (Sans Brouillard)
+   ========================================================================== */
+.hero-bottom-fade {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 28%;
+  background: linear-gradient(180deg, rgba(240, 247, 255, 0) 0%, rgba(240, 247, 255, 0.35) 45%, rgba(240, 247, 255, 0.741) 80%, var(--bg-main) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+[data-theme="dark"] .hero-bottom-fade,
+html.dark .hero-bottom-fade,
+body.dark .hero-bottom-fade {
+  background: linear-gradient(180deg, rgba(6, 11, 36, 0) 0%, rgba(6, 11, 36, 0.35) 45%, rgba(6, 11, 36, 0.85) 80%, var(--bg-main) 100%);
 }

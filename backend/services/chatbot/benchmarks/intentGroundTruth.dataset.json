@@ -1,0 +1,15 @@
+[
+  { "text": "bonjour", "intent": "GREETING" },
+  { "text": "aslema", "intent": "GREETING" },
+  { "text": "merci beaucoup", "intent": "THANKS" },
+  { "text": "je cherche un café à la marsa", "intent": "DISCOVER_ACTIVITIES" },
+  { "text": "nheb 9ahwa fi sousse", "intent": "DISCOVER_ACTIVITIES" },
+  { "text": "un restaurant pas cher à tunis", "intent": "DISCOVER_ACTIVITIES" },
+  { "text": "horaires", "intent": "ASK_OPENING_HOURS" },
+  { "text": "c'est quoi leur numéro", "intent": "ASK_CONTACT_OR_SOCIAL" },
+  { "text": "voir menu", "intent": "ASK_MENU_OR_PRICE" },
+  { "text": "où se trouve l'adresse", "intent": "ASK_LOCATION_OR_MAPS" },
+  { "text": "un café puis un restaurant à la marsa", "intent": "PLAN_MULTI_STEP_OUTING" },
+  { "text": "recommencer", "intent": "RESET_SEARCH" }
+]
+

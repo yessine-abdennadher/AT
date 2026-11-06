@@ -136,3 +136,39 @@ export const googleAuth = async (req, res, next) => {
     next(error);
   }
 };
+
+// @desc    Étape 1 : Initialiser l'onboarding partenaire et envoyer le code OTP
+// @route   POST /api/auth/partner/send-otp
+// @access  Public
+export const sendPartnerOtp = async (req, res, next) => {
+  try {
+    const result = await authService.sendPartnerOtp(req.body);
+    res.status(200).json({
+      success: true,
+      message: `Code de sécurité envoyé à l'adresse ${result.email}`,
+      email: result.email,
+      demoCode: result.demoCode,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Étape 2 : Vérifier le code OTP et finaliser la création du compte partenaire
+// @route   POST /api/auth/partner/verify-otp
+// @access  Public
+export const verifyPartnerOtp = async (req, res, next) => {
+  try {
+    const result = await authService.verifyPartnerOtp(req.body);
+    res.status(201).json({
+      success: true,
+      message: "Adresse email vérifiée et Espace Partenaire créé avec succès.",
+      token: result.accessToken,
+      accessToken: result.accessToken,
+      refreshToken: result.refreshToken,
+      user: result.user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

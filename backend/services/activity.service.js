@@ -114,6 +114,57 @@ export const deleteActivity = async (id, user) => {
   return true;
 };
 
+export const getSearchSuggestions = async ({ query = "", limit = 6 } = {}) => {
+  const limitNum = Math.min(20, Math.max(1, parseInt(limit, 10) || 6));
+  const filter = { isApproved: true };
+
+  if (query && typeof query === "string" && query.trim()) {
+    const searchRegex = new RegExp(escapeRegex(query.trim()), "i");
+    filter.$or = [
+      { name: searchRegex },
+      { nameFr: searchRegex },
+      { nameAr: searchRegex },
+      { nameEn: searchRegex },
+      { description: searchRegex },
+      { locationName: searchRegex },
+      { category: searchRegex },
+      { city: searchRegex },
+      { tags: { $in: [searchRegex] } },
+    ];
+  }
+
+  const activities = await Activity.find(filter)
+    .populate("createdBy", "name role establishmentName partnerTier")
+    .limit(limitNum * 2);
+
+  const sorted = activities.sort((a, b) => {
+    const aTier = a.createdBy?.partnerTier;
+    const bTier = b.createdBy?.partnerTier;
+    const aIsPremium = aTier === "premium" || aTier === "pro" || a.isFeatured;
+    const bIsPremium = bTier === "premium" || bTier === "pro" || b.isFeatured;
+
+    if (aIsPremium && !bIsPremium) return -1;
+    if (!aIsPremium && bIsPremium) return 1;
+    return (b.rating || 0) - (a.rating || 0);
+  }).slice(0, limitNum);
+
+  return sorted.map((act) => ({
+    _id: act._id,
+    id: act._id,
+    name: act.nameFr || act.name,
+    nameAr: act.nameAr || act.name,
+    city: act.city,
+    locationName: act.locationName || act.city,
+    category: act.category,
+    price: act.price,
+    rating: act.rating,
+    imageUrl: act.imageUrl,
+    powerBackupMode: Boolean(act.powerBackupMode || act.hasPowerBackup),
+    isPremium: Boolean(act.createdBy?.partnerTier === "premium" || act.createdBy?.partnerTier === "pro" || act.isFeatured),
+    partnerTier: act.createdBy?.partnerTier || (act.isFeatured ? "premium" : "standard"),
+  }));
+};
+
 // Stable facade for existing controller imports; implementations live by domain.
 export {
   buildPublicActivityFilter,

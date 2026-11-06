@@ -1,0 +1,140 @@
+/* ==========================================================================
+   Tfarhida (تفرهيدة) — Design Tokens & Theme Variables
+   Palette officielle de l'application mobile Tfarhida
+   ========================================================================== */
+
+:root {
+  /* Palette Tfarhida (Cyan Signature, Bleu Roi & Violet Signature) */
+  --color-primary: #0284C7;
+  --color-primary-hover: #0369A1;
+  --color-primary-light: #38BDF8;
+  --color-cyan-glow: #00D2FF;
+  --color-royal-blue: #2563EB;
+  --color-purple-signature: #7C3AED;
+  --color-primary-gradient: linear-gradient(135deg, #00D2FF 0%, #2563EB 55%, #7C3AED 100%);
+  --color-header-gradient: linear-gradient(135deg, #E0F2FE 0%, #EDE9FE 50%, #F0FDF4 100%);
+  
+  --color-navy: #0B1528;
+  --color-navy-dark: #070D18;
+  --color-navy-card: #0E1E38;
+  
+  --color-pale-blue: #E0F2FE;
+  --color-pale-purple: #F3E8FF;
+  --color-pale-blue-subtle: #F0F7FF;
+  --color-off-white: #F8FAFC;
+  
+  --color-tunisian-red: #E11D48;
+  --color-tunisian-red-light: #FFE4E6;
+  --color-amber: #F59E0B;
+  --color-amber-light: #FEF3C7;
+  --color-emerald: #10B981;
+  --color-emerald-light: #D1FAE5;
+
+  /* Surfaces & Backgrounds alignées avec App Mobile Tfarhida */
+  --bg-main: #F0F7FF;
+  --bg-secondary: #E0F2FE;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FFFFFF;
+  --bg-card-subtle: #F8FAFC;
+  --border-subtle: rgba(224, 242, 254, 0.9);
+  --border-strong: #BAE6FD;
+  --border-accent: rgba(2, 132, 199, 0.25);
+
+  /* Typographie */
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --text-brand: #0284C7;
+
+  /* Typographie Families */
+  --font-display: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-arabic: 'Noto Kufi Arabic', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Ombres & Effets */
+  --shadow-sm: 0 1px 3px 0 rgba(2, 132, 199, 0.08);
+  --shadow-md: 0 4px 6px -1px rgba(2, 132, 199, 0.1), 0 2px 4px -2px rgba(2, 132, 199, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(2, 132, 199, 0.12), 0 4px 6px -4px rgba(2, 132, 199, 0.08);
+  --shadow-xl: 0 20px 25px -5px rgba(11, 21, 40, 0.12), 0 8px 10px -6px rgba(11, 21, 40, 0.08);
+  --shadow-glow: 0 0 28px rgba(0, 210, 255, 0.45);
+
+  /* Rayons de bordure */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 26px;
+  --radius-full: 9999px;
+
+  /* Transitions */
+  --ease-out-cubic: cubic-bezier(0.33, 1, 0.68, 1);
+  --transition-fast: 150ms var(--ease-out-cubic);
+  --transition-normal: 250ms var(--ease-out-cubic);
+  --transition-smooth: 400ms var(--ease-out-cubic);
+
+  /* Layout */
+  --max-width-container: 1240px;
+  --nav-height: 74px;
+  --navbar-bg: rgba(255, 255, 255, 0.94);
+
+  /* Footer Tokens (Mode Clair) */
+  --footer-bg: #F8FAFC;
+  --footer-border: #E2E8F0;
+  --footer-text: #475569;
+  --footer-heading: #0F172A;
+  --footer-link: #64748B;
+  --footer-link-hover: #0284C7;
+  --footer-social-bg: #FFFFFF;
+  --footer-social-border: #CBD5E1;
+  --footer-bottom-border: #E2E8F0;
+  --footer-subtext: #64748B;
+}
+
+/* ==========================================================================
+   DARK THEME (Cosmic Midnight — Palette Officielle App Mobile Tfarhida)
+   ========================================================================== */
+[data-theme="dark"], html.dark, body.dark {
+  /* Surfaces & Backgrounds Dark */
+  --bg-main: #060B24;
+  --bg-secondary: #0A1232;
+  --bg-card: #0F172A;
+  --bg-card-hover: #151D3B;
+  --bg-card-subtle: #1E293B;
+  --border-subtle: rgba(255, 255, 255, 0.08);
+  --border-strong: rgba(255, 255, 255, 0.16);
+  --border-accent: rgba(0, 210, 255, 0.35);
+
+  /* Typographie Dark */
+  --text-primary: #F8FAFC;
+  --text-secondary: #CBD5E1;
+  --text-muted: #94A3B8;
+  --text-brand: #38BDF8;
+
+  --color-navy: #FFFFFF;
+  --color-navy-dark: #060B24;
+  --color-navy-card: #0F172A;
+
+  --color-pale-blue: rgba(2, 132, 199, 0.22);
+  --color-pale-purple: rgba(124, 58, 237, 0.28);
+  --color-pale-blue-subtle: rgba(15, 23, 42, 0.7);
+
+  /* Ombres sombres immersives */
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.55);
+  --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.65);
+  --shadow-xl: 0 20px 35px rgba(0, 0, 0, 0.8);
+
+  --navbar-bg: rgba(6, 11, 36, 0.94);
+
+  /* Footer Tokens (Mode Sombre) */
+  --footer-bg: #070D18;
+  --footer-border: rgba(255, 255, 255, 0.08);
+  --footer-text: #94A3B8;
+  --footer-heading: #F8FAFC;
+  --footer-link: #94A3B8;
+  --footer-link-hover: #38BDF8;
+  --footer-social-bg: rgba(255, 255, 255, 0.06);
+  --footer-social-border: rgba(255, 255, 255, 0.12);
+  --footer-bottom-border: rgba(255, 255, 255, 0.08);
+  --footer-subtext: #64748B;
+}

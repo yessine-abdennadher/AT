@@ -1,0 +1,6 @@
+export const SEMANTIC_THRESHOLDS = Object.freeze({
+  HIGH_CONFIDENCE: 0.82,
+  MEDIUM_CONFIDENCE: 0.58,
+  FALLBACK_THRESHOLD: 0.38,
+});
+

@@ -1,145 +1,284 @@
-# Guide d'Intégration & Architecture du Chatbot IA (ActivityTN)
+# Architecture Technique & Plan d'Action du Chatbot (KharjaBot / Tfarhida AI)
 
-> **Document de référence pour le déploiement futur**  
-> Ce document détaille où et comment implémenter le Chatbot IA (« Kharja Assistant ») à travers l'application mobile Frontend et le Backend Node.js / MongoDB.
-
----
-
-## 1. Vision & Rôle du Chatbot dans ActivityTN
-
-Le Chatbot d'ActivityTN n'est pas un bot de support classique. C'est un **Concierge Virtuel de Sorties et de Loisirs en Tunisie**.
-
-### Objectifs Clés :
-1. **Recommandation conversationnelle :** Répondre à des besoins naturels (*« On est 4 étudiants à Sousse, budget 25 DT chacun, on veut une terrasse sympa ce soir »*).
-2. **Support trilingue & Derja (Tunisien / Arabizi) :** Comprendre les requêtes en Arabe tunisien (*« Win nemchi el lila fi Tunis ? »*), Français et Anglais.
-3. **Zéro hallucination (RAG MongoDB) :** L'IA ne cite QUE des activités, cafés et restaurants réels existant dans la base MongoDB d'ActivityTN.
-4. **Booster de conversion Partenaire :** Recommander en priorité les partenaires **Pro & Premium** ayant des promotions actives.
+Ce document décrit l'architecture industrielle, modulaire et déterministe-hybride du système conversationnel **KharjaBot** pour la plateforme **Tfarhida (ActivityTN)**. L'architecture sépare strictement la **Compréhension (`understanding/`)**, la **Mémoire (`memory/`)**, les **Capacités Métier (`capabilities/`)**, la **Génération et Expansion Dynamique des Réponses (`responses/`)**, les **Garde-fous (`guards/`)**, l'Orchestration (`conversations/`) et l'Évaluation continue (`benchmarks/`).
 
 ---
 
-## 2. Où intégrer le Chatbot dans le Frontend Mobile ?
+## 1. Principes Directeurs de l'Architecture
 
-### A. Les 3 Points d'Entrée Utilisateur (UI)
-
-```
-┌───────────────────────────────────────────────────────────┐
-│                    Points d'Entrée UI                     │
-├─────────────────────────┬─────────────────────────────────┤
-│ 1. Bouton Flottant (FAB)│ Bulle brillante animée en bas à │
-│                         │ droite de l'écran d'accueil     │
-├─────────────────────────┼─────────────────────────────────┤
-│ 2. Carte Hero Découverte│ Bannière dans HomeScreenTab :   │
-│                         │ « Pas d'idée ? Demandez à l'IA »│
-├─────────────────────────┼─────────────────────────────────┤
-│ 3. Onglet Bottom Bar    │ (Optionnel) Remplacer ou ajouter│
-│                         │ un 5ème onglet « Kharja IA »    │
-└─────────────────────────┴─────────────────────────────────┘
-```
-
-#### Emplacement recommandé dans le code frontend :
-1. **Écran de discussion :**  
-   Créer `src/screens/ChatScreen.tsx` (ou modal plein écran via `SwipeableModal`).
-2. **Bouton d'accès rapide dans l'accueil :**  
-   Dans `src/screens/HomeScreenTab.tsx` :
-   - Ajouter un bouton flottant avec `AnimatedGlowButton` ou une icône étincelle `sparkles`.
-3. **Cartes d'activités dans le chat :**  
-   Créer `src/components/chat/ChatActivityCard.tsx` :
-   - Quand l'IA recommande un lieu, elle ne renvoie pas juste du texte mais une **carte cliquable** avec la photo, le prix, la ville, et deux boutons directs :
-     - 📞 **Appeler**
-     - 💬 **WhatsApp**
-     - 📍 **Itinéraire GPS**
+1. **Zéro Poids sur le Bundle Mobile (+0 Mo)** : Toute l'intelligence conversationnelle réside côté serveur (`backend/services/chatbot/`). L'application mobile et le site web n'échangent que des payloads JSON légers (`< 2 Ko`).
+2. **Séparation Stricte des Responsabilités (Single Responsibility par Couche)** :
+   - Aucune expression régulière ou règle de compréhension dans les exécuteurs métier ou les constructeurs de réponses.
+   - Aucune requête base de données directe dans la couche de compréhension.
+   - Tout passage d'une couche à l'autre repose sur un contrat de données explicite et validé (`turnUnderstanding`, `memoryFrame`, `capabilityResult`, `responseDto`).
+3. **Pipeline de Compréhension Multi-Étapes (`understanding/`) — Le LLM ne répond jamais directement au client** :
+   - **Étape 0 (`normalization/`)** : Nettoyage Unicode, réduction des répétitions (`"caaaafé"` -> `"café"`), translittération Derja/Arabizi (`3`, `7`, `9`, `5`), correction de fautes de frappe (distance Damerau-Levenshtein) et alias géographiques tunisiens (`"marsa"`, `"lac 2"`).
+   - **Étape 1 (`fastPath/`)** : Rapprochement instantané (`0 ms`) sur catalogues JSON symétriques (`fr`, `ar`, `en`, `derja`).
+   - **Étape 2 (`classification/` & `constraints/`)** : Classification déterministe des actes de dialogue (`dialogueAct`), de la catégorie, de l'ambiance (`vibe`), de l'urgence et extraction structurée des contraintes (`city`, `category`, `budgetLevel`, `amenities`, `excluded`).
+   - **Étape 3 (`semantic/chatMiniLmEmbedder` & `chatSemanticIntentMatcher`)** : Découpage en clauses (`clauseSegmenter`), rapprochement sémantique hybride (MiniLM `Xenova/paraphrase-multilingual-MiniLM-L12-v2` + TF-IDF cosinus) sur corpus d'ancres multilingue (FR/EN/AR/Derja).
+   - **Étape 4 (`semantic/chatLlmIntentClassifier` — Gemini 2.5 Flash / Groq)** : Appelé **uniquement si les étapes 1 à 3 sont incertaines** (`confidence < 0.58`). Le LLM (`gemini-2.5-flash` avec `thinkingBudget: 0` en n°1 pour la Derja Tounsia, `Groq llama-3.3-70b-versatile` en secours) **ne rédige jamais la réponse** : il renvoie exclusivement un JSON strict `{ intent, city, category, budgetLevel, amenities }` validé contre `supportedIntentContract.json`. La réponse finale est toujours assemblée par le dossier `responses/`.
+4. **Mémoire Conversationnelle, Historique & Statut (`memory/`)** :
+   - **Verrouillage de Tour (`chatSessionTurnLock`)** : Empêche les conditions de course (*race conditions*) lorsqu'un utilisateur envoie plusieurs messages simultanément.
+   - **Machine à États & Statut (`chatWorkflowStateSchema`)** : Suit le statut exact de la session (`IDLE`, `COLLECTING_CRITERIA`, `RECOMMENDING`, `REFINING`, `INSPECTING_ITEM`, `PLANNING_OUTING`, `PARTNER_ASSIST`).
+   - **Deep Merge Additif (`chatSessionStatePersistence`)** : Fusionne récursivement les critères au fil des tours (ex. Tour 1 : *"Un café à La Marsa"* -> Tour 2 : *"Avec Wi-Fi et terrasse"*) sans perdre le contexte initial, tout en gérant les contraintes négatives (`"pas trop cher"`, `"sans chicha"`).
+   - **Historique Structuré (`chatConversationHistory`)** : Conserve l'historique des tours (`user` / `bot`), les intentions résolues, les entités extraites et l'identifiant du dernier établissement inspecté (`lastInspectedActivityId`) pour résoudre les pronoms (*"C'est quoi leur numéro ?"*, *"Et le menu ?"*).
+   - **Mémoire Anti-Répétition (`recommendations/`)** : Mémorise les établissements déjà présentés (`shownActivityIds`) et l'historique des variantes de réponses utilisées.
+5. **Système de Réponses Multi-Variantes & Expansion Dynamique par LLM après 3 Utilisations (`responses/`)** :
+   - Chaque intention dispose d'un **pool initial d'au moins 3 variantes de réponses** par langue (`fr`, `ar`, `en`, `derja`).
+   - Un sélecteur anti-répétition (`antiRepetitionVariantSelector`) alterne les formulations pour éviter un ton robotique.
+   - **Règle des 3 utilisations (`responseUsageTracker` + `llmVariantGenerator`)** : Dès qu'un pool de réponses pour un couple `(intent, language)` atteint **3 utilisations**, le système déclenche automatiquement en arrière-plan (ou à la volée) le générateur de variantes (`llmVariantGenerator.service.js`). Celui-ci crée de nouvelles formulations naturelles qui respectent strictement les placeholders ICU (`{count}`, `{city}`, `{category}`, `{activityName}`), les valide via `outputGuard`, et les injecte dans `dynamicResponseStore.service.js`.
 
 ---
 
-## 3. Architecture Technique Backend
-
-Le backend possède **déjà les fondations prêtes** :
-- Routes existantes : `backend/routes/chat.routes.js`
-- Contrôleur : `backend/controllers/chat.controller.js`
-- Sessions sécurisées : `backend/services/chatSession.service.js`
-- Sécurité & Limiteur de requêtes : `backend/middlewares/rateLimit.middleware.js` (20 msgs/min)
-
-### Schéma du flux IA (RAG - Retrieval Augmented Generation) :
-
-```mermaid
-sequenceDiagram
-    autonumber
-    actor User as Utilisateur Mobile
-    participant App as Frontend (ActivityTN)
-    participant API as Backend Express (/api/chat)
-    participant DB as MongoDB (Collection Activities)
-    participant LLM as Moteur IA (Gemini / OpenAI / DeepSeek)
-
-    User->>App: "Un bon resto fruits de mer à Bizerte pour ce soir ?"
-    App->>API: POST /api/chat/send { sessionId, text }
-    API->>DB: Recherche activités { category: "restaurant", city: "Bizerte", tags: "fruits de mer" }
-    DB-->>API: Renvoie les fiches réelles + Partenaires Pro
-    API->>LLM: Prompt Système + Fiches activités + Message Utilisateur
-    LLM-->>API: Réponse personnalisée et chaleureuse en Derja/FR
-    API-->>App: { text: "...", recommendedActivities: [...] }
-    App-->>User: Affiche le message + Cartes cliquables avec boutons WhatsApp/GPS
-```
-
----
-
-## 4. Prompt Système Recommandé pour l'IA
-
-À injecter dans le contrôleur backend lors de l'appel au modèle d'IA :
+## 2. Arborescence Complète (`backend/services/chatbot/`)
 
 ```text
-Tu es "Kharja Assistant", le guide officiel et concierge des sorties en Tunisie sur l'application ActivityTN.
-Ton ton est jeune, chaleureux, accueillant et dynamique.
-
-Règles fondamentales :
-1. Tu parles et comprends couramment le Français, l'Anglais et l'Arabe tunisien (Derja en caractères arabes et en Arabizi).
-2. Réponds toujours dans la même langue que l'utilisateur.
-3. Ne recommande JAMAIS d'endroits inventés. Utilise UNIQUEMENT la liste d'activités fournies dans le contexte JSON.
-4. Pour chaque recommandation, précise : le nom, la ville, l'ambiance et pourquoi c'est un bon choix.
-5. Si un établissement possède un badge "PRO" ou "PREMIUM" ou une promotion, mets-le en valeur en priorité.
-6. Termine toujours par une invitation à réserver ou à voir l'itinéraire GPS.
+backend/services/chatbot/
+│
+├── benchmarks/                                            <-- ÉVALUATION CONTINUE & QUALIFICATION PAR COUCHE
+│   ├── couche0-normalization/
+│   │   ├── datasets/
+│   │   │   ├── noisyInputs.dataset.json
+│   │   │   └── arabiziTunisian.dataset.json
+│   │   └── normalization.benchmark.js
+│   ├── couche1-fastpath/
+│   │   ├── datasets/
+│   │   │   └── fastPathExactHits.dataset.json
+│   │   └── fastPath.benchmark.js
+│   ├── couche2-classification/
+│   │   ├── datasets/
+│   │   │   └── intentAndConstraints.dataset.json
+│   │   └── classification.benchmark.js
+│   ├── couche3-semantic/
+│   │   ├── datasets/
+│   │   │   └── semanticCorpusHoldout.dataset.json
+│   │   └── semanticMatcher.benchmark.js
+│   ├── couche4-memory/
+│   │   ├── datasets/
+│   │   │   └── multiTurnDeepMerge.dataset.json
+│   │   └── memoryIntegrity.benchmark.js
+│   ├── couche5-responses/
+│   │   ├── datasets/
+│   │   │   └── variantRotationAndExpansion.dataset.json
+│   │   └── responses.benchmark.js
+│   └── runAllBenchmarks.js                                <-- Orchestrateur global de benchmarks
+│
+├── understanding/                                         <-- COMPRÉHENSION DU SENS (PIPELINE DÉTERMINISTE & SÉMANTIQUE)
+│   ├── normalization/                                     (Étape 0 : Nettoyage, Typo, Arabizi, Villes TN)
+│   │   ├── catalogs/
+│   │   │   ├── fr/
+│   │   │   │   ├── typoDictionary.json
+│   │   │   │   ├── phraseAliases.json
+│   │   │   │   └── domainKeywordsWhitelist.json
+│   │   │   ├── en/
+│   │   │   │   └── typoDictionary.json
+│   │   │   ├── arabizi/
+│   │   │   │   └── tunisianDerjaDictionary.json
+│   │   │   ├── geo/
+│   │   │   │   └── tunisiaCitiesAliases.json
+│   │   │   └── shared/
+│   │   │       └── immutableTokens.json
+│   │   ├── loaders/
+│   │   │   └── normalizationCatalog.loader.js
+│   │   └── chatTextNormalizer.service.js
+│   │
+│   ├── fastPath/                                          (Étape 1 : Rapprochement rapide 0 ms)
+│   │   ├── catalogs/
+│   │   │   ├── fr/
+│   │   │   │   ├── common.json
+│   │   │   │   ├── discovery.json
+│   │   │   │   └── partner.json
+│   │   │   ├── ar/
+│   │   │   │   └── common.json
+│   │   │   ├── en/
+│   │   │   │   └── common.json
+│   │   │   ├── derja/
+│   │   │   │   └── common.json
+│   │   │   └── supportedIntentContract.json
+│   │   ├── loaders/
+│   │   │   └── fastPathCatalog.loader.js
+│   │   └── chatFastPathMatcher.service.js
+│   │
+│   ├── classification/                                    (Étape 2A : Classifieurs métier & Actes de dialogue)
+│   │   ├── chatDialogueActClassifier.service.js
+│   │   ├── chatActivityCategoryClassifier.service.js
+│   │   ├── chatVibeAndAudienceClassifier.service.js
+│   │   ├── chatTimeUrgencyClassifier.service.js
+│   │   └── chatClassification.facade.js
+│   │
+│   ├── constraints/                                       (Étape 2B : Extraction d'entités & filtres cumulables)
+│   │   └── chatOutingConstraints.service.js
+│   │
+│   └── semantic/                                          (Étape 3 : Similarité sémantique & Arbitre)
+│       ├── config/
+│       │   └── semanticThresholds.config.js
+│       ├── corpus/
+│       │   └── semanticIntentCorpus.json
+│       ├── contracts/
+│       │   └── turnUnderstanding.contract.js
+│       ├── chatClauseSegmenter.service.js
+│       ├── chatSemanticIntentMatcher.service.js
+│       └── chatUnderstandingArbiter.service.js
+│
+├── memory/                                                <-- GESTION CENTRALISÉE DE LA MÉMOIRE, HISTORIQUE & STATUT
+│   ├── persistence/
+│   │   ├── chatSessionTurnLock.service.js
+│   │   └── chatSessionStatePersistence.service.js
+│   ├── conversation/
+│   │   ├── chatWorkflowStateSchema.service.js
+│   │   ├── chatConversationHistory.service.js
+│   │   ├── chatSessionContextMemory.service.js
+│   │   └── chatMemoryFrameProjector.service.js
+│   └── recommendations/
+│       ├── chatShownActivitiesMemory.service.js
+│       └── chatResponseUsageMemory.service.js
+│
+├── capabilities/                                          <-- EXÉCUTION MÉTIER, RECOMMANDATIONS & PLANS DE SORTIE
+│   ├── recommendations/
+│   │   ├── activityQueryBuilder.service.js
+│   │   ├── activityRanker.service.js
+│   │   └── fallbackRelaxation.service.js
+│   ├── actionPlanning/
+│   │   ├── chatOutingPlanGraph.service.js
+│   │   ├── chatOutingPlanExecutor.service.js
+│   │   └── chatOutingPlanMemory.service.js
+│   ├── establishmentInfo/
+│   │   └── activityDetailResponder.service.js
+│   └── appHelp/
+│       └── appNavigationGuide.service.js
+│
+├── responses/                                             <-- MULTI-RÉPONSES, ANTI-RÉPÉTITION & EXPANSION LLM (> 3 USAGES)
+│   ├── catalog/
+│   │   ├── fr/
+│   │   │   ├── greetingsAndCommon.Pool.json
+│   │   │   ├── recommendations.Pool.json
+│   │   │   ├── establishmentDetails.Pool.json
+│   │   │   └── partnerHelp.Pool.json
+│   │   ├── ar/
+│   │   │   └── responses.Pool.json
+│   │   ├── en/
+│   │   │   └── responses.Pool.json
+│   │   └── derja/
+│   │       └── responses.Pool.json
+│   ├── dynamicPool/
+│   │   ├── responseUsageTracker.service.js
+│   │   ├── llmVariantGenerator.service.js
+│   │   └── dynamicResponseStore.service.js
+│   ├── resolution/
+│   │   ├── responseResolver.service.js
+│   │   ├── antiRepetitionVariantSelector.service.js
+│   │   └── variableInterpolator.service.js
+│   ├── composition/
+│   │   ├── responseComposer.service.js
+│   │   └── quickRepliesBuilder.service.js
+│   └── validation/
+│       └── chatResponseDtoValidator.service.js
+│
+├── guards/                                                <-- PARE-FEUX DE SÉCURITÉ & VÉRACITÉ DES DONNÉES
+│   ├── hallucinationGuard.service.js
+│   ├── privacyLeakGuard.service.js
+│   └── outputGuard.service.js
+│
+└── conversations/                                         <-- ORCHESTRATEURS PAR RÔLE & GATEWAY CENTRALE
+    ├── explorer/
+    │   ├── chatExplorerOrchestrator.service.js
+    │   └── chatExplorerIntentRouter.service.js
+    ├── partner/
+    │   └── chatPartnerOrchestrator.service.js
+    └── chatMainGateway.service.js
 ```
 
 ---
 
-## 5. Fournisseurs d'IA Recommandés (Coûts & Performance)
+## 3. Flux d'Exécution d'un Tour de Conversation (Dataflow)
 
-| Fournisseur | Modèle | Avantage principal | Coût estimé |
-| :--- | :--- | :--- | :--- |
-| **Google Gemini** *(Recommandé)* | `gemini-1.5-flash` | Ultra-rapide, quota gratuit généreux, excellente gestion du multilingue et Derja. | **Gratuit au démarrage** puis ~0.075 $ / 1M tokens |
-| **DeepSeek** | `deepseek-chat` | Prix imbattable, très performant pour le filtrage structuré JSON. | ~0.14 $ / 1M tokens |
-| **OpenAI** | `gpt-4o-mini` | Excellente compréhension contextuelle et formatage. | ~0.15 $ / 1M tokens |
-
----
-
-## 6. Feuille de Route d'Implémentation (Roadmap Futur)
-
-```
-Étape 1 : Branchement LLM Backend
-├── Installer le SDK officiel (ex: @google/genai ou openai)
-├── Remplacer createBotReply() dans backend/controllers/chat.controller.js
-└── Tester les réponses dans Postman
-
-Étape 2 : Connecter la base MongoDB (RAG)
-├── Extraire les mots-clés du message utilisateur (ville, budget, ambiance)
-├── Requêter MongoDB : Activity.find({ city, category, isAvailable: true })
-└── Transmettre les résultats au modèle d'IA
-
-Étape 3 : Interface Utilisateur Mobile
-├── Créer src/screens/ChatScreen.tsx avec FlatList de bulles de messages
-├── Créer src/components/chat/ChatBubble.tsx
-├── Intégrer les cartes d'activités interactives (Bouton d'appel & GPS direct)
-└── Ajouter le bouton d'ouverture dans HomeScreenTab.tsx
+```mermaid
+flowchart TD
+    UserInput["Message Utilisateur + SessionToken"] --> TurnLock["1. memory/persistence/chatSessionTurnLock"]
+    TurnLock --> LoadMem["2. memory/conversation/chatMemoryFrameProjector"]
+    LoadMem --> Norm["3. understanding/normalization/chatTextNormalizer"]
+    Norm --> FastPath["4. understanding/fastPath/chatFastPathMatcher"]
+    Norm --> Classif["5. understanding/classification + constraints"]
+    FastPath --> Arbiter["6. understanding/semantic/chatUnderstandingArbiter"]
+    Classif --> SemMatcher["understanding/semantic/chatSemanticIntentMatcher"]
+    SemMatcher --> Arbiter
+    Arbiter --> Orchestrator["7. conversations/explorer ou partner Orchestrator"]
+    Orchestrator --> Capability["8. capabilities/ (Recommendations, Detail, OutingPlan, AppHelp)"]
+    Capability --> DeepMerge["9. memory/persistence/chatSessionStatePersistence (Deep Merge + Statut)"]
+    DeepMerge --> RespResolver["10. responses/resolution/responseResolver"]
+    RespResolver --> UsageTrack["11. responses/dynamicPool/responseUsageTracker"]
+    UsageTrack -->|"Usage >= 3"| LLMGen["responses/dynamicPool/llmVariantGenerator (Expansion Pool)"]
+    RespResolver --> Guards["12. guards/outputGuard + hallucinationGuard + privacyLeakGuard"]
+    Guards --> DTO["13. responses/validation/chatResponseDtoValidator"]
 ```
 
 ---
 
-## 7. Fichiers Concernés dans le Projet
+## 4. Machine à États de la Mémoire Conversationnelle (`memory/`)
 
-* **Backend :**
-  - [backend/controllers/chat.controller.js](file:///c:/AT/backend/controllers/chat.controller.js) : Remplacement de la réponse mock par l'appel LLM.
-  - [backend/services/chatSession.service.js](file:///c:/AT/backend/services/chatSession.service.js) : Historique des conversations par utilisateur.
-  - [backend/routes/chat.routes.js](file:///c:/AT/backend/routes/chat.routes.js) : Routes protégées par `chatLimiter`.
-* **Frontend Mobile :**
-  - `src/screens/ChatScreen.tsx` *(à créer lors du déploiement)*
-  - `src/services/chatService.ts` *(à créer pour appeler `/api/chat/send`)*
-  - [src/screens/HomeScreenTab.tsx](file:///c:/AT/activitytn/src/screens/HomeScreenTab.tsx) : Point d'accès visible du chatbot.
+Chaque session maintient un objet `workflowState` canonique validé par `chatWorkflowStateSchema.service.js` :
+
+| Statut (`status`) | Description | Transitions possibles |
+| :--- | :--- | :--- |
+| `IDLE` | Début de session ou conversation générale | `COLLECTING_CRITERIA`, `RECOMMENDING`, `INSPECTING_ITEM`, `PLANNING_OUTING`, `PARTNER_ASSIST` |
+| `COLLECTING_CRITERIA` | L'utilisateur cherche une sortie mais il manque un critère clé | `RECOMMENDING`, `PLANNING_OUTING` |
+| `RECOMMENDING` | Le bot a présenté une sélection d'établissements | `REFINING`, `INSPECTING_ITEM`, `PLANNING_OUTING` |
+| `REFINING` | L'utilisateur affine les filtres (*"Moins cher"*, *"Avec terrasse"*, *"Plutôt à Sousse"*) | `RECOMMENDING`, `INSPECTING_ITEM` |
+| `INSPECTING_ITEM` | L'utilisateur pose une question sur un lieu précis (*"Horaires ?"*, *"Menu ?"*, *"Instagram ?"*) | `INSPECTING_ITEM`, `REFINING`, `RECOMMENDING` |
+| `PLANNING_OUTING` | Planification multi-étapes (ex. Café + Restaurant + Activité) | `RECOMMENDING`, `INSPECTING_ITEM` |
+| `PARTNER_ASSIST` | Mode dédié aux partenaires (gestion d'établissement, horaires, promotions) | `PARTNER_ASSIST`, `IDLE` |
+
+### Règle de Fusion Cumulative (*Deep Merge*)
+Lorsqu'un utilisateur enchaîne :
+1. *"Je cherche un café à La Marsa"* -> `activeFilters = { category: "cafe", city: "La Marsa", amenities: [] }`
+2. *"Avec Wi-Fi et climatisation"* -> `Deep Merge` conserve `category: "cafe"` et `city: "La Marsa"` tout en ajoutant `amenities: ["wifi", "climatisation"]`.
+3. *"Non plutôt à Sidi Bou Said"* -> `city` est remplacé par `"Sidi Bou Said"`, mais `category: "cafe"` et `amenities` sont préservés.
+
+---
+
+## 5. Système de Réponses Multi-Variantes & Génération Dynamique après 3 Utilisations
+
+### 5.1 Pool Initial (Catalogue Statique)
+Pour chaque intention (ex. `RECOMMEND_SUCCESS`, `RECOMMEND_RELAXED`, `ESTABLISHMENT_HOURS`, `GREETING`, `PARTNER_HELP`), le catalogue contient au minimum **3 variantes distinctes** par langue (`fr`, `ar`, `en`, `derja`).
+
+### 5.2 Rotation Anti-Répétition
+Le service `antiRepetitionVariantSelector.service.js` inspecte `memory.responseUsage.recentVariantIds` pour la session en cours et sélectionne en priorité une variante qui n'a pas encore été servie à l'utilisateur.
+
+### 5.3 Expansion Automatique au bout de 3 Utilisations (`threshold = 3`)
+1. À chaque fois qu'une intention `(intentKey, lang)` est résolue, `responseUsageTracker.service.js` incrémente son compteur d'utilisation.
+2. Dès que `usageCount >= 3` (et à chaque multiple de 3 ou lorsque toutes les variantes existantes ont été vues), `llmVariantGenerator.service.js` est invoqué :
+   - Si une clé API LLM (`GEMINI_API_KEY` ou `OPENAI_API_KEY`) est configurée, il appelle le modèle léger avec les 3 variantes existantes comme exemples (*few-shot*) et génère 2 nouvelles variantes respectant exactement les mêmes variables `{city}`, `{category}`, `{count}`, `{name}`.
+   - Si aucune clé LLM externe n'est configurée (ou hors-ligne), un moteur de synthèse combinatoire déterministe (*Template Morphing Engine*) assemble de nouvelles variantes grammaticalement naturelles et variées sans jamais bloquer le tour.
+3. Toutes les nouvelles variantes passent par `outputGuard.service.js` (vérification de l'intégrité des variables `{...}`, absence d'emojis interdits ou de données privées) avant d'être enregistrées dans `dynamicResponseStore.service.js`.
+
+---
+
+## 6. Plan d'Action d'Implémentation & Déploiement
+
+### Phase 1 : Fondations & Compréhension (`understanding/`)
+- [x] Créer les catalogues de normalisation (`fr`, `en`, `arabizi`, `geo`, `shared`) et le chargeur mémoire.
+- [x] Implémenter `chatTextNormalizer.service.js` (nettoyage, translittération Derja/Arabizi, correction Damerau-Levenshtein, résolution des villes tunisiennes).
+- [x] Implémenter `chatFastPathMatcher.service.js` et ses catalogues `0 ms` (`fr`, `ar`, `en`, `derja`).
+- [x] Implémenter les classifieurs (`dialogueAct`, `category`, `vibe`, `urgency`) et l'extracteur de contraintes (`chatOutingConstraints.service.js`).
+- [x] Implémenter la couche sémantique (`chatClauseSegmenter`, `chatSemanticIntentMatcher`, `chatUnderstandingArbiter`).
+
+### Phase 2 : Mémoire, Statut & Historique (`memory/`)
+- [x] Implémenter le verrou atomique de tour (`chatSessionTurnLock.service.js`).
+- [x] Définir le contrat d'état canonique (`chatWorkflowStateSchema.service.js`) et le moteur de *Deep Merge* (`chatSessionStatePersistence.service.js`).
+- [x] Implémenter la gestion de l'historique multi-tours (`chatConversationHistory.service.js`), du contexte de session (`chatSessionContextMemory.service.js`) et de la mémoire anti-répétition (`chatShownActivitiesMemory.service.js`, `chatResponseUsageMemory.service.js`).
+
+### Phase 3 : Capacités Métier (`capabilities/`)
+- [x] Implémenter `activityQueryBuilder.service.js`, `activityRanker.service.js` et `fallbackRelaxation.service.js` (relâchement gracieux si 0 résultat strict).
+- [x] Implémenter le planificateur de sortie multi-étapes (`chatOutingPlanGraph.service.js`, `chatOutingPlanExecutor.service.js`, `chatOutingPlanMemory.service.js`).
+- [x] Implémenter l'inspecteur de détails d'établissement (`activityDetailResponder.service.js` : horaires, adresse, menu, équipements, téléphone/WhatsApp/Instagram) et le guide d'aide (`appNavigationGuide.service.js`).
+
+### Phase 4 : Réponses Multi-Variantes, Expansion LLM (3 Utilisations) & Garde-fous (`responses/` & `guards/`)
+- [x] Créer les pools de réponses multilingues (`fr`, `ar`, `en`, `derja`) avec >= 3 variantes par intention.
+- [x] Implémenter `responseUsageTracker.service.js`, `llmVariantGenerator.service.js` et `dynamicResponseStore.service.js`.
+- [x] Implémenter `antiRepetitionVariantSelector.service.js`, `variableInterpolator.service.js`, `responseResolver.service.js`, `responseComposer.service.js`, `quickRepliesBuilder.service.js` et `chatResponseDtoValidator.service.js`.
+- [x] Implémenter les garde-fous (`hallucinationGuard`, `privacyLeakGuard`, `outputGuard`).
+
+### Phase 5 : Orchestration, Intégration Contrôleur & Benchmarks (`conversations/` & `benchmarks/`)
+- [x] Implémenter `chatExplorerIntentRouter.service.js`, `chatExplorerOrchestrator.service.js`, `chatPartnerOrchestrator.service.js` et `chatMainGateway.service.js`.
+- [x] Intégrer `chatMainGateway.service.js` dans `backend/controllers/chat.controller.js` et étendre `backend/models/ChatSession.js` tout en préservant 100% de rétrocompatibilité avec les tests existants.
+- [x] Créer la suite de benchmarks (`benchmarks/couche0` à `couche5` + `runAllBenchmarks.js`) et les tests unitaires/intégration.

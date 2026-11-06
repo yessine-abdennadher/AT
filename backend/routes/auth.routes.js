@@ -8,11 +8,17 @@ import {
   updateProfile,
   getFavorites,
   googleAuth,
+  sendPartnerOtp,
+  verifyPartnerOtp,
 } from "../controllers/auth.controller.js";
 import { protect } from "../middlewares/auth.middleware.js";
 import { authLimiter } from "../middlewares/rateLimit.middleware.js";
 
 const router = express.Router();
+
+// Onboarding Partenaire sécurisé avec OTP 2FA (Resend)
+router.post("/partner/send-otp", authLimiter, sendPartnerOtp);
+router.post("/partner/verify-otp", authLimiter, verifyPartnerOtp);
 
 router.post("/register", authLimiter, registerUser);
 router.post("/login", authLimiter, loginUser);

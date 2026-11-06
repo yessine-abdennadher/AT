@@ -1,0 +1,163 @@
+/* ==========================================================================
+   Tfarhida — Pricing & Tarifs (Apple Monolith Edition)
+   Design System aligné sur l'excellence Apple & Brand Book Tfarhida
+   ========================================================================== */
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+  align-items: stretch;
+}
+
+@media (max-width: 1024px) {
+  .pricing-grid {
+    grid-template-columns: 1fr;
+    max-width: 520px;
+    margin: 0 auto;
+    gap: 32px;
+  }
+}
+
+/* ── Carte de Tarif Pro Apple ─────────────────────────────────────────── */
+.pricing-card {
+  background-color: var(--bg-card);
+  border-radius: 28px;
+  padding: clamp(32px, 4vw, 44px) clamp(24px, 3vw, 36px);
+  border: 1px solid rgba(2, 132, 199, 0.18);
+  box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease, border-color 0.25s ease;
+}
+
+.pricing-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 25px 50px -12px rgba(2, 132, 199, 0.16);
+  border-color: var(--color-primary-light);
+}
+
+/* ── Carte Vedette Pro : Effet "iPhone Pro" Monolith ──────────────────── */
+.pricing-card.featured {
+  border: 2px solid var(--color-primary);
+  background: linear-gradient(180deg, var(--bg-card) 0%, rgba(2, 132, 199, 0.04) 100%);
+  box-shadow: 0 25px 60px -15px rgba(2, 132, 199, 0.26), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.pricing-card.featured:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 35px 70px -15px rgba(2, 132, 199, 0.35);
+  border-color: var(--color-primary);
+}
+
+[data-theme="dark"] .pricing-card {
+  border-color: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 45px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+[data-theme="dark"] .pricing-card.featured {
+  background: linear-gradient(180deg, rgba(10, 20, 42, 0.95) 0%, rgba(6, 11, 28, 0.95) 100%);
+  border-color: var(--color-cyan-glow);
+  box-shadow: 0 25px 60px -15px rgba(0, 210, 255, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* ── iOS Segmented Control Switch ─────────────────────────────────────── */
+.pricing-toggle-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-strong);
+  padding: 5px;
+  border-radius: var(--radius-full);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.pricing-toggle-btn {
+  padding: 9px 22px;
+  border-radius: var(--radius-full);
+  font-size: 0.875rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  color: var(--text-secondary);
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.pricing-toggle-btn:hover:not(.active) {
+  color: var(--color-navy);
+}
+
+.pricing-toggle-btn.active {
+  background: linear-gradient(135deg, #0284C7 0%, #2563EB 50%, #7C3AED 100%);
+  color: #FFFFFF;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+}
+
+/* ── Liste d'Avantages Pure Apple (Zéro Croix Négatives) ───────────────── */
+.pricing-features-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 24px;
+}
+
+.pricing-feature-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+
+.pricing-feature-icon-wrap {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: rgba(16, 185, 129, 0.12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ── Cartes d'Étapes Onboarding Minimalistes ──────────────────────────── */
+.pricing-step-card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: 20px;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s ease, border-color 0.25s ease;
+}
+
+.pricing-step-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--color-primary-light);
+}
+
+.pricing-step-watermark {
+  position: absolute;
+  top: -8px;
+  right: 12px;
+  font-size: 4rem;
+  font-weight: 900;
+  color: var(--color-primary);
+  opacity: 0.08;
+  line-height: 1;
+  pointer-events: none;
+  font-family: var(--font-display);
+}
+
+[dir="rtl"] .pricing-step-watermark {
+  right: auto;
+  left: 12px;
+}

@@ -1,0 +1,18 @@
+{
+  "PARTNER_HELP": [
+    { "id": "partner_fr_1", "text": "Depuis votre espace partenaire, ouvrez votre établissement pour modifier horaires, menu, adresse, équipements et Instagram." },
+    { "id": "partner_fr_2", "text": "Dans l'espace partenaire, la fiche de votre lieu permet de régler les horaires avec le sélecteur, d'ajouter le menu et la carte Maps." },
+    { "id": "partner_fr_3", "text": "Rendez-vous dans l'espace partenaire, section établissement : tout se modifie en quelques appuis." }
+  ],
+  "PARTNER_HOURS_HELP": [
+    { "id": "phours_fr_1", "text": "Dans la fiche de votre établissement, faites défiler les roues d'ouverture et de fermeture : la mise à jour est instantanée." },
+    { "id": "phours_fr_2", "text": "Pour changer vos horaires, ouvrez votre fiche puis utilisez le sélecteur d'heure, sans bouton de validation." },
+    { "id": "phours_fr_3", "text": "Les horaires se règlent dans votre fiche avec les roues d'heure ; les jours d'ouverture se cochent juste en dessous." }
+  ],
+  "PARTNER_PROMOTION_HELP": [
+    { "id": "ppromo_fr_1", "text": "Ajoutez une promotion depuis la fiche de votre établissement : elle sera mise en avant auprès des explorateurs." },
+    { "id": "ppromo_fr_2", "text": "Pour une offre spéciale, ouvrez votre fiche, renseignez la promotion et enregistrez." },
+    { "id": "ppromo_fr_3", "text": "Une promotion active remonte votre lieu dans mes recommandations. Configurez-la dans votre fiche." }
+  ]
+}
+

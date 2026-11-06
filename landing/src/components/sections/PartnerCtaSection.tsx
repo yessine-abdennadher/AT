@@ -2,7 +2,11 @@ import React, { useState } from 'react';
 import { Building2, CheckCircle2, Send } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
-export const PartnerCtaSection: React.FC = () => {
+interface PartnerCtaSectionProps {
+  onOpenOnboarding?: () => void;
+}
+
+export const PartnerCtaSection: React.FC<PartnerCtaSectionProps> = ({ onOpenOnboarding }) => {
   const [establishmentName, setEstablishmentName] = useState('');
   const [phone, setPhone] = useState('');
   const [submitted, setSubmitted] = useState(false);
@@ -19,6 +23,9 @@ export const PartnerCtaSection: React.FC = () => {
     });
 
     setSubmitted(true);
+    if (onOpenOnboarding) {
+      setTimeout(() => onOpenOnboarding(), 500);
+    }
   };
 
   return (
@@ -26,7 +33,7 @@ export const PartnerCtaSection: React.FC = () => {
       id="partenaires"
       style={{
         padding: '90px 0',
-        backgroundColor: '#FFFFFF',
+        backgroundColor: 'var(--bg-main)',
         borderTop: '1px solid var(--border-subtle)',
       }}
     >

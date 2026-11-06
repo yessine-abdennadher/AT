@@ -1,0 +1,29 @@
+[
+  {
+    "input": "un café avec wifi à La Marsa",
+    "expectedCategory": "cafe",
+    "expectedCity": "La Marsa",
+    "expectedAmenity": "wifi",
+    "expectedAct": "SEARCH_REQUEST"
+  },
+  {
+    "input": "un restaurant avec terrasse sans wifi à Sousse",
+    "expectedCategory": "restaurant",
+    "expectedCity": "Sousse",
+    "expectedAmenity": "terrasse",
+    "expectedExcludedAmenity": "wifi",
+    "expectedAct": "SEARCH_REQUEST"
+  },
+  {
+    "input": "recommencer à zéro",
+    "expectedCategory": null,
+    "expectedCity": null,
+    "expectedAct": "RESET"
+  },
+  {
+    "input": "c'est quoi les horaires",
+    "expectedDetailIntent": "ASK_OPENING_HOURS",
+    "expectedAct": "DETAIL_QUESTION"
+  }
+]
+

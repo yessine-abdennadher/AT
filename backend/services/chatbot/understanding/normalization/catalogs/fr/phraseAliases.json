@@ -1,0 +1,17 @@
+{
+  "pas cher": "petit budget",
+  "moins cher": "petit budget",
+  "bon marché": "petit budget",
+  "haut de gamme": "budget élevé",
+  "groupe électrogène": "power_backup",
+  "groupe electrogene": "power_backup",
+  "sans coupure": "power_backup",
+  "air conditionné": "climatisation",
+  "en plein air": "terrasse",
+  "vue sur mer": "vue_mer",
+  "bord de mer": "vue_mer",
+  "à proximité": "proche",
+  "c'est quoi le menu": "voir menu",
+  "carte des prix": "voir menu"
+}
+

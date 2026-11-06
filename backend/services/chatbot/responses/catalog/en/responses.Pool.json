@@ -1,0 +1,33 @@
+{
+  "GREETING": [
+    { "id": "greet_en_1", "text": "Hello! I'm KharjaBot. Tell me what you're looking for: a coffee shop, a restaurant, a family outing?" },
+    { "id": "greet_en_2", "text": "Hi there! Give me a city, a category or a mood and I'll find a place." },
+    { "id": "greet_en_3", "text": "Welcome! I can suggest places and share their hours, menu or contact." }
+  ],
+  "THANKS": [
+    { "id": "thanks_en_1", "text": "You're welcome! Ask me anytime to refine your search." },
+    { "id": "thanks_en_2", "text": "Happy to help! Want more outing ideas?" },
+    { "id": "thanks_en_3", "text": "Glad I could help. Enjoy your outing!" }
+  ],
+  "DISCOVER_SUCCESS": [
+    { "id": "disc_en_1", "text": "I found {count} place(s) matching your search:" },
+    { "id": "disc_en_2", "text": "Here are {count} suggestion(s) for you:" },
+    { "id": "disc_en_3", "text": "{count} option(s) look great for your outing:" }
+  ],
+  "DISCOVER_EMPTY": [
+    { "id": "empty_en_1", "text": "I couldn't find any place for those criteria. Try another city or category." },
+    { "id": "empty_en_2", "text": "No results for now. Want me to widen the search to another city?" },
+    { "id": "empty_en_3", "text": "Nothing available with these filters. Shall we drop one?" }
+  ],
+  "ASK_MORE_CRITERIA": [
+    { "id": "more_en_1", "text": "To help you better, which city and what kind of place are you after?" },
+    { "id": "more_en_2", "text": "Tell me more: a city, a category (coffee, restaurant, beach...) or a budget?" },
+    { "id": "more_en_3", "text": "Which city, and what kind of outing?" }
+  ],
+  "UNKNOWN": [
+    { "id": "unk_en_1", "text": "I didn't quite get that. Could you mention a city or a type of place?" },
+    { "id": "unk_en_2", "text": "Could you rephrase? For example: \"a restaurant in Sousse\"." },
+    { "id": "unk_en_3", "text": "Not sure I follow. Are you looking for a coffee shop, a restaurant or an activity?" }
+  ]
+}
+

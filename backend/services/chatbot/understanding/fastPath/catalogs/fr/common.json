@@ -1,0 +1,39 @@
+{
+  "GREETING": [
+    "bonjour",
+    "salut",
+    "bonsoir",
+    "coucou",
+    "hello",
+    "hey"
+  ],
+  "THANKS": [
+    "merci",
+    "merci beaucoup",
+    "super merci",
+    "top merci",
+    "parfait merci"
+  ],
+  "GOODBYE": [
+    "au revoir",
+    "a bientot",
+    "bye",
+    "bonne soiree",
+    "bonne journee"
+  ],
+  "HELP_GENERAL": [
+    "aide",
+    "comment ca marche",
+    "que peux tu faire",
+    "aide moi",
+    "besoin d aide"
+  ],
+  "RESET_SEARCH": [
+    "recommencer",
+    "nouvelle recherche",
+    "reinitialiser",
+    "tout effacer",
+    "changer tout"
+  ]
+}
+

@@ -1,0 +1,33 @@
+{
+  "DISCOVER_SUCCESS": [
+    { "id": "disc_fr_1", "text": "J'ai trouvé {count} lieu(x) qui correspondent à votre recherche :" },
+    { "id": "disc_fr_2", "text": "Voici {count} suggestion(s) pour vous :" },
+    { "id": "disc_fr_3", "text": "{count} option(s) semblent parfaites pour votre sortie :" }
+  ],
+  "DISCOVER_RELAXED": [
+    { "id": "relax_fr_1", "text": "Rien d'exactement conforme, mais j'ai élargi la recherche ({relaxed}). Voici {count} option(s) :" },
+    { "id": "relax_fr_2", "text": "Pas de correspondance stricte. En assouplissant ({relaxed}), je trouve {count} lieu(x) :" },
+    { "id": "relax_fr_3", "text": "J'ai relâché un critère ({relaxed}) pour vous proposer {count} lieu(x) :" }
+  ],
+  "DISCOVER_EMPTY": [
+    { "id": "empty_fr_1", "text": "Je n'ai trouvé aucun lieu pour ces critères. Essayez une autre ville ou une autre catégorie." },
+    { "id": "empty_fr_2", "text": "Aucun résultat pour le moment. Voulez-vous élargir à une autre ville ?" },
+    { "id": "empty_fr_3", "text": "Rien de disponible avec ces filtres. Retirons un critère ou changeons de catégorie ?" }
+  ],
+  "ASK_MORE_CRITERIA": [
+    { "id": "more_fr_1", "text": "Pour mieux vous aider, dans quelle ville et quel type de lieu cherchez-vous ?" },
+    { "id": "more_fr_2", "text": "Dites-m'en plus : une ville, une catégorie (café, restaurant, plage...) ou un budget ?" },
+    { "id": "more_fr_3", "text": "Quelle ville visez-vous, et pour quel genre de sortie ?" }
+  ],
+  "PLAN_SUCCESS": [
+    { "id": "plan_fr_1", "text": "Voici un programme en {count} étape(s) :" },
+    { "id": "plan_fr_2", "text": "J'ai composé votre sortie en {count} étape(s) :" },
+    { "id": "plan_fr_3", "text": "Programme prêt, {count} étape(s) à enchaîner :" }
+  ],
+  "PLAN_PARTIAL": [
+    { "id": "planp_fr_1", "text": "J'ai pu composer seulement une partie du programme ({count} étape(s)) :" },
+    { "id": "planp_fr_2", "text": "Certaines étapes n'ont aucun lieu disponible. Voici ce que j'ai ({count}) :" },
+    { "id": "planp_fr_3", "text": "Programme incomplet : {count} étape(s) trouvée(s) :" }
+  ]
+}
+

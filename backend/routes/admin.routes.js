@@ -10,6 +10,7 @@ import {
   removeActivity,
   getDiagnostics,
   changePartnerTier,
+  managePartnerSubscription,
   changeGlobalElectricityMode,
   getReviewsForAdmin,
   setReviewStatus,
@@ -32,6 +33,7 @@ router.get("/users", getUsers);
 router.patch("/users/:id/status", changeUserStatus);
 router.patch("/users/:id/role", changeUserRole);
 router.patch("/partners/:id/tier", changePartnerTier);
+router.patch("/partners/:id/subscription", managePartnerSubscription);
 
 // Modération des Activités
 router.get("/activities", getActivitiesForModeration);

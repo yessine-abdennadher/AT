@@ -1,0 +1,7 @@
+[
+  { "input": "caaaafé", "expected": "café", "mustContainCity": null },
+  { "input": "restorant terasse", "expected": "restaurant terrasse", "mustContainCity": null },
+  { "input": "wiffi clim", "expected": "wifi climatisation", "mustContainCity": null },
+  { "input": "un resto pas cher a marsa", "expected": "restaurant", "mustContainCity": "La Marsa" }
+]
+

@@ -1,5 +1,6 @@
 import * as adminService from "../services/admin.service.js";
 import { getReviewsForModeration, moderateReview } from "../services/activity-review.service.js";
+import { updatePartnerSubscription } from "../services/partner-subscription.service.js";
 
 export const getReviewsForAdmin = async (req, res, next) => {
   try {
@@ -172,6 +173,18 @@ export const changePartnerTier = async (req, res, next) => {
       message: `Tier partenaire mis à jour : ${partner.partnerTier}`,
       partner,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Gérer l'abonnement partenaire : valider (+30j/+365j), prolonger ou refuser
+// @route   PATCH /api/admin/partners/:id/subscription
+// @access  Private (Admin)
+export const managePartnerSubscription = async (req, res, next) => {
+  try {
+    const result = await updatePartnerSubscription(req.params.id, req.body);
+    res.json(result);
   } catch (error) {
     next(error);
   }

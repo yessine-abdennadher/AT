@@ -1,5 +1,7 @@
 import React from 'react';
-import { Mail, Phone } from 'lucide-react';
+import { Mail, Phone, Zap, Building2 } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const InstagramIcon: React.FC<{ size?: number }> = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -23,17 +25,15 @@ const LinkedinIcon: React.FC<{ size?: number }> = ({ size = 18 }) => (
   </svg>
 );
 
-export const Footer: React.FC = () => {
+interface FooterProps {
+  onSwitchView?: (view: 'client' | 'partner') => void;
+}
+
+export const Footer: React.FC<FooterProps> = ({ onSwitchView }) => {
+  const { t, isRTL } = useLanguage();
+  const { isDark } = useTheme();
   return (
-    <footer
-      style={{
-        backgroundColor: '#070D18',
-        color: '#94A3B8',
-        paddingTop: '64px',
-        paddingBottom: '36px',
-        borderTop: '1px solid rgba(56, 189, 248, 0.12)',
-      }}
-    >
+    <footer className="site-footer">
       <div className="container">
         <div
           style={{
@@ -45,69 +45,61 @@ export const Footer: React.FC = () => {
         >
           {/* Colonne 1 : Marque Tfarhida & Réseaux Sociaux */}
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <img
-                src="/Logo.png"
-                alt="Tfarhida Logo"
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  objectFit: 'contain',
-                  borderRadius: '10px',
-                  backgroundColor: '#FFFFFF',
-                  padding: '3px',
-                  boxShadow: '0 4px 12px rgba(2, 132, 199, 0.25)',
-                }}
-              />
-              <span style={{ fontSize: '1.3rem', fontWeight: 800, color: '#FFFFFF' }}>
-                Tfarhida<span style={{ color: '#38BDF8' }}>.tn</span>
-              </span>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
+              {isRTL ? (
+                <>
+                  <img
+                    src="/Logo.png"
+                    alt="Tfarhida Logo"
+                    style={{
+                      height: '34px',
+                      width: 'auto',
+                      objectFit: 'contain',
+                      filter: 'drop-shadow(0 2px 6px rgba(0, 210, 255, 0.25))',
+                    }}
+                  />
+                  <span style={{ fontSize: '1.4rem', fontFamily: 'var(--font-heading)', fontWeight: 800, color: 'var(--color-navy)' }}>
+                    {t('brand.name')}
+                  </span>
+                </>
+              ) : (
+                <img
+                  src={isDark ? '/logo-full-white.png' : '/logo-full.png'}
+                  alt="Tfarhida"
+                  style={{
+                    height: '32px',
+                    width: 'auto',
+                    objectFit: 'contain',
+                    filter: 'drop-shadow(0 2px 6px rgba(0, 210, 255, 0.22))',
+                  }}
+                />
+              )}
               <span
                 style={{
                   fontSize: '0.8rem',
-                  fontFamily: 'var(--font-arabic)',
+                  fontFamily: isRTL ? 'var(--font-arabic)' : 'inherit',
                   fontWeight: 700,
-                  color: '#C084FC',
-                  backgroundColor: 'rgba(192, 132, 252, 0.15)',
+                  color: 'var(--color-purple-signature)',
+                  backgroundColor: 'var(--color-pale-purple)',
                   padding: '2px 8px',
                   borderRadius: '8px',
                 }}
               >
-                تفرهيدة
+                {t('brand.taglineShort')}
               </span>
             </div>
-            <p style={{ fontSize: '0.875rem', lineHeight: 1.6, color: '#94A3B8', marginBottom: '20px' }}>
-              La plateforme référence pour découvrir les meilleures sorties, loisirs et activités authentiques en Tunisie.
+            <p style={{ fontSize: '0.875rem', lineHeight: 1.6, color: 'var(--footer-text)', marginBottom: '20px' }}>
+              {t('footer.tagline')}
             </p>
-            {/* Vrais Réseaux Sociaux Officiels */}
+
+            {/* Réseaux Sociaux Officiels */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <a
                 href="https://instagram.com"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Instagram Tfarhida"
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#94A3B8',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#38BDF8';
-                  e.currentTarget.style.borderColor = '#38BDF8';
-                  e.currentTarget.style.backgroundColor = 'rgba(56, 189, 248, 0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#94A3B8';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-                }}
+                className="footer-social-link"
               >
                 <InstagramIcon size={18} />
               </a>
@@ -116,28 +108,7 @@ export const Footer: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook Tfarhida"
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#94A3B8',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#38BDF8';
-                  e.currentTarget.style.borderColor = '#38BDF8';
-                  e.currentTarget.style.backgroundColor = 'rgba(56, 189, 248, 0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#94A3B8';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-                }}
+                className="footer-social-link"
               >
                 <FacebookIcon size={18} />
               </a>
@@ -146,28 +117,7 @@ export const Footer: React.FC = () => {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="LinkedIn Tfarhida"
-                style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '10px',
-                  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#94A3B8',
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = '#38BDF8';
-                  e.currentTarget.style.borderColor = '#38BDF8';
-                  e.currentTarget.style.backgroundColor = 'rgba(56, 189, 248, 0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = '#94A3B8';
-                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-                  e.currentTarget.style.backgroundColor = 'rgba(255, 255, 255, 0.05)';
-                }}
+                className="footer-social-link"
               >
                 <LinkedinIcon size={18} />
               </a>
@@ -176,33 +126,31 @@ export const Footer: React.FC = () => {
 
           {/* Colonne 2 : Villes & Régions */}
           <div>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '16px' }}>
-              Villes & Régions
-            </h4>
+            <h4 className="footer-heading">{t('footer.citiesTitle')}</h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.875rem' }}>
               <li>
                 <a
                   href="#explorer"
-                  style={{ color: '#E2E8F0', fontWeight: 600, textDecoration: 'none', transition: 'color 0.2s' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#38BDF8')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#E2E8F0')}
+                  className="footer-link"
+                  style={{ fontWeight: 700, color: 'var(--color-primary)', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
-                  Sfax — Ville active
+                  <Zap size={14} color="var(--color-primary)" />
+                  <span>{t('footer.sfaxActive')}</span>
                 </a>
               </li>
               <li>
-                <span style={{ color: '#64748B' }}>
-                  Grand Tunis (Bientôt disponible)
+                <span style={{ color: 'var(--footer-subtext)', fontSize: '0.85rem' }}>
+                  Grand Tunis ({t('footer.comingSoon')})
                 </span>
               </li>
               <li>
-                <span style={{ color: '#64748B' }}>
-                  Sousse & Sahel (Bientôt disponible)
+                <span style={{ color: 'var(--footer-subtext)', fontSize: '0.85rem' }}>
+                  Sousse & Sahel ({t('footer.comingSoon')})
                 </span>
               </li>
               <li>
-                <span style={{ color: '#64748B' }}>
-                  Djerba & Sud (Bientôt disponible)
+                <span style={{ color: 'var(--footer-subtext)', fontSize: '0.85rem' }}>
+                  Djerba & Sud ({t('footer.comingSoon')})
                 </span>
               </li>
             </ul>
@@ -210,48 +158,32 @@ export const Footer: React.FC = () => {
 
           {/* Colonne 3 : Navigation Rapide */}
           <div>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '16px' }}>
-              Navigation
-            </h4>
+            <h4 className="footer-heading">{t('footer.navTitle')}</h4>
             <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.875rem' }}>
               <li>
-                <a
-                  href="#explorer"
-                  style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.2s' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
-                >
-                  Explorer les sorties
+                <a href="#explorer" className="footer-link">
+                  {t('footer.navExplore')}
                 </a>
               </li>
               <li>
-                <a
-                  href="#piliers"
-                  style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.2s' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
-                >
-                  Fonctionnalités
+                <a href="#piliers" className="footer-link">
+                  {t('footer.navAdvantages')}
                 </a>
               </li>
               <li>
-                <a
-                  href="#partenaires"
-                  style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.2s' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
+                <button
+                  type="button"
+                  onClick={() => onSwitchView ? onSwitchView('partner') : (window.location.hash = '#/partenaire')}
+                  className="footer-link"
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'inherit', color: 'var(--color-primary)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '6px' }}
                 >
-                  Espace Partenaire Pro
-                </a>
+                  <Building2 size={15} color="var(--color-primary)" />
+                  <span>{t('footer.navPartners')}</span>
+                </button>
               </li>
               <li>
-                <a
-                  href="tel:+21674000000"
-                  style={{ color: '#94A3B8', textDecoration: 'none', transition: 'color 0.2s' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = '#FFFFFF')}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
-                >
-                  Support & Assistance
+                <a href="tel:+21674000000" className="footer-link">
+                  {t('footer.support')}
                 </a>
               </li>
             </ul>
@@ -259,40 +191,22 @@ export const Footer: React.FC = () => {
 
           {/* Colonne 4 : Contact Direct */}
           <div>
-            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#FFFFFF', marginBottom: '16px' }}>
-              Contact
-            </h4>
+            <h4 className="footer-heading">{t('footer.contactTitle')}</h4>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '0.875rem' }}>
               <a
                 href="mailto:contact@tfarhida.tn"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  color: '#94A3B8',
-                  textDecoration: 'none',
-                  transition: 'color 0.2s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#38BDF8')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
+                className="footer-link"
+                style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
               >
-                <Mail size={16} color="#38BDF8" />
+                <Mail size={16} color="var(--color-primary)" />
                 <span>contact@tfarhida.tn</span>
               </a>
               <a
                 href="tel:+21674000000"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  color: '#94A3B8',
-                  textDecoration: 'none',
-                  transition: 'color 0.2s',
-                }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = '#38BDF8')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = '#94A3B8')}
+                className="footer-link"
+                style={{ display: 'flex', alignItems: 'center', gap: '10px' }}
               >
-                <Phone size={16} color="#38BDF8" />
+                <Phone size={16} color="var(--color-primary)" />
                 <span>+216 74 000 000</span>
               </a>
             </div>
@@ -300,21 +214,9 @@ export const Footer: React.FC = () => {
         </div>
 
         {/* Ligne inférieure de Copyright */}
-        <div
-          style={{
-            borderTop: '1px solid rgba(255, 255, 255, 0.08)',
-            paddingTop: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '12px',
-            fontSize: '0.8rem',
-            color: '#64748B',
-          }}
-        >
-          <p>© {new Date().getFullYear()} Tfarhida (تفرهيدة). Tous droits réservés.</p>
-          <p>Plateforme digitale conçue pour la Tunisie</p>
+        <div className="footer-bottom-line">
+          <p>© {new Date().getFullYear()} {t('brand.name')}. {t('footer.rights')}</p>
+          <p>{t('footer.designedFor')}</p>
         </div>
       </div>
     </footer>

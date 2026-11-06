@@ -1,0 +1,38 @@
+{
+  "NO_FOCUS": [
+    { "id": "nofocus_fr_1", "text": "De quel lieu parlez-vous ? Demandez-moi d'abord une recommandation." },
+    { "id": "nofocus_fr_2", "text": "Je n'ai pas de lieu en cours. Cherchons d'abord un endroit ensemble." },
+    { "id": "nofocus_fr_3", "text": "Précisez le lieu concerné, ou lancez une recherche pour que je vous en propose." }
+  ],
+  "DETAIL_HOURS": [
+    { "id": "hours_fr_1", "text": "{name} est ouvert de {hours}." },
+    { "id": "hours_fr_2", "text": "Horaires de {name} : {hours}." },
+    { "id": "hours_fr_3", "text": "Vous pouvez passer chez {name} : {hours}." }
+  ],
+  "DETAIL_MENU": [
+    { "id": "menu_fr_1", "text": "Le menu de {name} est disponible ici : {link}" },
+    { "id": "menu_fr_2", "text": "Pour {name}, voici la carte : {link}" },
+    { "id": "menu_fr_3", "text": "Consultez le menu de {name} : {link}" }
+  ],
+  "DETAIL_PRICE": [
+    { "id": "price_fr_1", "text": "Le prix indicatif chez {name} est de {price}." },
+    { "id": "price_fr_2", "text": "Comptez environ {price} chez {name}." },
+    { "id": "price_fr_3", "text": "Tarif de {name} : {price}." }
+  ],
+  "DETAIL_LOCATION": [
+    { "id": "loc_fr_1", "text": "{name} se trouve ici : {address}" },
+    { "id": "loc_fr_2", "text": "Adresse de {name} : {address}" },
+    { "id": "loc_fr_3", "text": "Pour aller chez {name} : {address}" }
+  ],
+  "DETAIL_CONTACT": [
+    { "id": "contact_fr_1", "text": "Contact de {name} : {contact}" },
+    { "id": "contact_fr_2", "text": "Vous pouvez joindre {name} ainsi : {contact}" },
+    { "id": "contact_fr_3", "text": "Pour contacter {name} : {contact}" }
+  ],
+  "DETAIL_UNAVAILABLE": [
+    { "id": "unav_fr_1", "text": "{name} n'a pas encore renseigné cette information." },
+    { "id": "unav_fr_2", "text": "Cette information n'est pas disponible pour {name} pour l'instant." },
+    { "id": "unav_fr_3", "text": "Je n'ai pas cette donnée pour {name}." }
+  ]
+}
+

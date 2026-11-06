@@ -61,6 +61,33 @@ const userSchema = new mongoose.Schema(
       enum: ["standard", "pro", "premium"],
       default: "standard",
     },
+    requestedTier: {
+      type: String,
+      enum: ["standard", "pro", "premium"],
+      default: "standard",
+    },
+    requestedBillingCycle: {
+      type: String,
+      enum: ["monthly", "yearly"],
+      default: "monthly",
+    },
+    subscriptionStatus: {
+      type: String,
+      enum: ["none", "pending_payment", "active", "expired", "cancelled"],
+      default: "none",
+    },
+    subscriptionStartedAt: {
+      type: Date,
+      default: null,
+    },
+    subscriptionExpiresAt: {
+      type: Date,
+      default: null,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
     refreshTokens: [
       {
         type: String,
@@ -116,6 +143,21 @@ userSchema.virtual("userType").get(function () {
   if (this.role === "admin") return "administrator";
   if (this.role === "partner") return "partner_business";
   return "simple_user";
+});
+
+// Getter virtuel calculant les jours restants avant expiration
+userSchema.virtual("daysRemaining").get(function () {
+  if (!this.subscriptionExpiresAt) return 0;
+  const now = new Date().getTime();
+  const expires = new Date(this.subscriptionExpiresAt).getTime();
+  const diff = expires - now;
+  return diff > 0 ? Math.ceil(diff / (1000 * 60 * 60 * 24)) : 0;
+});
+
+// Getter virtuel alertant si expiration sous 3 jours
+userSchema.virtual("isExpiringSoon").get(function () {
+  const days = this.daysRemaining;
+  return days > 0 && days <= 3;
 });
 
 userSchema.pre("save", async function (next) {

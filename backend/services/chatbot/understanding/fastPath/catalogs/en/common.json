@@ -1,0 +1,32 @@
+{
+  "GREETING": [
+    "hello",
+    "hi",
+    "good morning",
+    "good evening",
+    "hey there"
+  ],
+  "THANKS": [
+    "thanks",
+    "thank you",
+    "appreciate it"
+  ],
+  "DISCOVER_ACTIVITIES": [
+    "where to go",
+    "find a coffee shop",
+    "find a restaurant",
+    "places to visit",
+    "recommend a place"
+  ],
+  "ASK_OPENING_HOURS": [
+    "opening hours",
+    "is it open now",
+    "when does it close"
+  ],
+  "ASK_MENU_OR_PRICE": [
+    "show menu",
+    "price range",
+    "how much does it cost"
+  ]
+}
+

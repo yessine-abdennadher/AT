@@ -1,0 +1,97 @@
+{
+  "GREETING": [
+    { "id": "greet_dj_1", "text": "Aslema! Ena KharjaBot. 9olli chnowa t7eb: 9ahwa, restaurant wala kharja m3a el 3a2ila?" },
+    { "id": "greet_dj_2", "text": "Marhba bik! A3tini ville wala noo3 el blassa w ena nlawejlek." },
+    { "id": "greet_dj_3", "text": "Aslema! Nejjem na9tare7lek blayes w na3tik el wa9t, el menu w el contact." }
+  ],
+  "THANKS": [
+    { "id": "thanks_dj_1", "text": "Bessaha! Ena hna kan t7eb n7asen el be7th." },
+    { "id": "thanks_dj_2", "text": "3la rou7ek! T7eb afkar o5ra lel kharja?" },
+    { "id": "thanks_dj_3", "text": "Farhan elli nejjemt na3awnek. Kharja mou2affa9a!" }
+  ],
+  "GOODBYE": [
+    { "id": "bye_dj_1", "text": "Besslema w kharja mou2affa9a !" },
+    { "id": "bye_dj_2", "text": "Au revoir ! Arja3 wa9t ma t7eb afkar o5ra." },
+    { "id": "bye_dj_3", "text": "Nharek zin w nchoufouk 9rib 3la Tfarhida !" }
+  ],
+  "HELP_GENERAL": [
+    { "id": "help_dj_1", "text": "Nejjem nlawejlek 3la blayes b ville, noo3, budget wala équipements, w na3tik aw9at, menu, adresse w contact." },
+    { "id": "help_dj_2", "text": "Mathalan 9olli: « 9ahwa fi marsa m3a wifi », w ba3d 9olli: « ar5as » wala « m3a terrasse »." },
+    { "id": "help_dj_3", "text": "Na9tare7lek kharjet, n9arenlek blayes w nrakablek programme kemel ken t7eb." }
+  ],
+  "UNKNOWN": [
+    { "id": "unk_dj_1", "text": "Ma fhemtech mlih. Nejjem tdhkorli ville wala noo3 blassa?" },
+    { "id": "unk_dj_2", "text": "3awed sayegha men fadhlek, mathalan: restaurant fi Sousse." },
+    { "id": "unk_dj_3", "text": "Mouch metaakked. T7eb 9ahwa, restaurant wala nacheta?" }
+  ],
+  "RESET_DONE": [
+    { "id": "reset_dj_1", "text": "Behi, n3awdou mel loul. Chnowa t7eb tlawej ?" },
+    { "id": "reset_dj_2", "text": "Recherche t3awdet men jdid. A3tini ma3ayir o5ra." },
+    { "id": "reset_dj_3", "text": "D'accord, be7th jdid. Anhi ville w anhi noo3 blassa ?" }
+  ],
+  "DISCOVER_SUCCESS": [
+    { "id": "disc_dj_1", "text": "L9it {count} blassa tonseb el be7th mte3ek:" },
+    { "id": "disc_dj_2", "text": "Houwa {count} e9tirah lik:" },
+    { "id": "disc_dj_3", "text": "{count} khyar mnasseb lel kharja mte3ek:" }
+  ],
+  "DISCOVER_RELAXED": [
+    { "id": "relax_dj_1", "text": "Ma l9itch bedhabt, ama wassa3t chwaya fel be7th ({relaxed}). Haw {count} blassa :" },
+    { "id": "relax_dj_2", "text": "Ma fammech haja conforme 100%, na7it ma3yar ({relaxed}) w l9it {count} blassa :" },
+    { "id": "relax_dj_3", "text": "Wassa3t chwaya fel filtres ({relaxed}) : haw {count} e9tirah :" }
+  ],
+  "DISCOVER_EMPTY": [
+    { "id": "empty_dj_1", "text": "Ma l9itch blassa bel me3ayir hethom. Jarreb ville o5ra wala noo3 akher." },
+    { "id": "empty_dj_2", "text": "Ma famech natija tawa. T7eb nwassa3 el be7th l ville o5ra?" },
+    { "id": "empty_dj_3", "text": "Ma famma chay bel filtres hethom. N7ayou ma3yar?" }
+  ],
+  "ASK_MORE_CRITERIA": [
+    { "id": "more_dj_1", "text": "Bech na3awnek a7sen, fi anhi ville w anhi noo3 blassa?" },
+    { "id": "more_dj_2", "text": "Zidni tafsil: ville, noo3 (9ahwa, restaurant, plage...) wala budget?" },
+    { "id": "more_dj_3", "text": "Anhi ville, w chnowa noo3 el kharja?" }
+  ],
+  "NO_FOCUS": [
+    { "id": "nofocus_dj_1", "text": "3la anhi blassa ta7ki ? Etselni 3la e9tirah 9bal." },
+    { "id": "nofocus_dj_2", "text": "Ma fammech blassa fel be7th tawa. Nlawjou 3la blassa m3a ba3dhna 9bal." },
+    { "id": "nofocus_dj_3", "text": "Wadhahli el blassa wala a3mellek be7th jdid." }
+  ],
+  "DETAIL_HOURS": [
+    { "id": "hours_dj_1", "text": "{name} ma7loul men {hours}." },
+    { "id": "hours_dj_2", "text": "Aw9at el khedma mte3 {name} : {hours}." },
+    { "id": "hours_dj_3", "text": "Tnejjem temchi l {name} : {hours}." }
+  ],
+  "DETAIL_MENU": [
+    { "id": "menu_dj_1", "text": "El menu mte3 {name} tel9ah hna : {link}" },
+    { "id": "menu_dj_2", "text": "Haw carte mte3 {name} : {link}" },
+    { "id": "menu_dj_3", "text": "Chouf menu {name} men hna : {link}" }
+  ],
+  "DETAIL_PRICE": [
+    { "id": "price_dj_1", "text": "El soum el ta9ribi 3and {name} houwa {price}." },
+    { "id": "price_dj_2", "text": "A7seb fi 7doud {price} 3and {name}." },
+    { "id": "price_dj_3", "text": "Tarif mte3 {name} : {price}." }
+  ],
+  "DETAIL_LOCATION": [
+    { "id": "loc_dj_1", "text": "{name} jey fi : {address}" },
+    { "id": "loc_dj_2", "text": "Adresse mte3 {name} : {address}" },
+    { "id": "loc_dj_3", "text": "Bech temchi l {name} : {address}" }
+  ],
+  "DETAIL_CONTACT": [
+    { "id": "contact_dj_1", "text": "Contact mte3 {name} : {contact}" },
+    { "id": "contact_dj_2", "text": "Tnejjem tkalem {name} hakka : {contact}" },
+    { "id": "contact_dj_3", "text": "Numéro w contact {name} : {contact}" }
+  ],
+  "DETAIL_UNAVAILABLE": [
+    { "id": "unav_dj_1", "text": "{name} mezal ma 7attch el ma3louma hedhi." },
+    { "id": "unav_dj_2", "text": "El ma3louma hedhi mouch mawjouda tawa 3and {name}." },
+    { "id": "unav_dj_3", "text": "Ma 3andich el ma3louma hedhi 3la {name}." }
+  ],
+  "PLAN_SUCCESS": [
+    { "id": "plan_dj_1", "text": "Haw programme mte3 kharja fi {count} marhala :" },
+    { "id": "plan_dj_2", "text": "Sawaftlek kharja behia fi {count} marhala :" },
+    { "id": "plan_dj_3", "text": "El programme 7adher, {count} blayes tnejjem tchahedhom :" }
+  ],
+  "PLAN_PARTIAL": [
+    { "id": "planp_dj_1", "text": "L9it partie barka mel programme ({count} marhala) :" },
+    { "id": "planp_dj_2", "text": "Famma etapes ma l9itelhomch blassa, haw elli l9itou ({count}) :" },
+    { "id": "planp_dj_3", "text": "Programme na9es chwaya : l9it {count} blassa :" }
+  ]
+}

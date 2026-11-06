@@ -37,6 +37,23 @@ export const getSystemStatus = async (req, res, next) => {
   }
 };
 
+// @desc    Obtenir des suggestions de recherche (avec priorité partenaires premium)
+// @route   GET /api/activities/suggestions
+// @access  Public
+export const getSearchSuggestions = async (req, res, next) => {
+  try {
+    const { q, limit } = req.query;
+    const suggestions = await activityService.getSearchSuggestions({ query: q, limit });
+    res.json({
+      success: true,
+      count: suggestions.length,
+      suggestions,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Obtenir les détails d'une activité
 // @route   GET /api/activities/:id
 // @access  Public

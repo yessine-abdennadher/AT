@@ -1,0 +1,20 @@
+{
+  "PARTNER_MANAGE_ACTIVITY": [
+    "ajouter mon etablissement",
+    "modifier ma fiche",
+    "espace partenaire",
+    "gerer mon activite",
+    "ajouter le menu"
+  ],
+  "PARTNER_HOURS_HELP": [
+    "modifier mes horaires",
+    "changer heure d ouverture",
+    "configurer les horaires"
+  ],
+  "PARTNER_PROMOTION_HELP": [
+    "creer une promotion",
+    "ajouter une offre",
+    "mettre en avant mon etablissement"
+  ]
+}
+
