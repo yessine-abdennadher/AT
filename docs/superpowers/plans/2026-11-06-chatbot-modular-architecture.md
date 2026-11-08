@@ -75,7 +75,12 @@ flowchart TD
 
 ### Phase 3 : Couche `capabilities/` (Recommandations, Plans de Sortie, Détails) — [Terminé]
 - [x] Construction de requêtes MongoDB [`activityQueryBuilder.service.js`](file:///c:/AT/backend/services/chatbot/capabilities/recommendations/activityQueryBuilder.service.js), scoring [`activityRanker.service.js`](file:///c:/AT/backend/services/chatbot/capabilities/recommendations/activityRanker.service.js) et relâchement progressif [`fallbackRelaxation.service.js`](file:///c:/AT/backend/services/chatbot/capabilities/recommendations/fallbackRelaxation.service.js).
-- [x] Planificateur de sortie multi-étapes (*"un café puis un restaurant"*) dans `capabilities/actionPlanning/`.
+- [x] Moteur modulaire de programme de sortie multi-étapes (`capabilities/actionPlanning/`) :
+  - [`chatOutingPlanGraph.service.js`](file:///c:/AT/backend/services/chatbot/capabilities/actionPlanning/chatOutingPlanGraph.service.js) : Validation formelle de DAG acyclique par parcours DFS.
+  - [`chatOutingPlanMemory.service.js`](file:///c:/AT/backend/services/chatbot/capabilities/actionPlanning/chatOutingPlanMemory.service.js) : Pile d'interruption `interruptStack`, mise en pause (`pauseOutingPlan`) et reprise (`resumeOutingPlan`) sans écrasement.
+  - [`chatOutingPlanEligibility.service.js`](file:///c:/AT/backend/services/chatbot/capabilities/actionPlanning/chatOutingPlanEligibility.service.js) : Décision d'éligibilité du tour (`RESUME_PLAN`, `CANCEL_PLAN`, `INTERRUPT_PLAN`, `CONTINUE`).
+  - [`chatOutingPlanResponse.service.js`](file:///c:/AT/backend/services/chatbot/capabilities/actionPlanning/chatOutingPlanResponse.service.js) : Suggestions et accusés de reprise localisés (FR, Derja, Arabe).
+  - [`chatOutingPlanExecutor.service.js`](file:///c:/AT/backend/services/chatbot/capabilities/actionPlanning/chatOutingPlanExecutor.service.js) : Résolution des lieux par étape.
 - [x] Extracteur de faits d'établissement (horaires, menu, adresse/Maps, téléphone/WhatsApp/Instagram) dans [`activityDetailResponder.service.js`](file:///c:/AT/backend/services/chatbot/capabilities/establishmentInfo/activityDetailResponder.service.js).
 
 ---

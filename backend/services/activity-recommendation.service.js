@@ -1,4 +1,5 @@
 import { Activity } from "../models/Activity.js";
+import "../models/User.js";
 import { escapeRegex } from "./activity.utils.js";
 
 export const getRecommendationWindow = ({ page = 1, limit = 20 } = {}) => {
@@ -20,6 +21,7 @@ export const buildRecommendationQuery = (filters = {}) => {
   }
   const possibleMatches = [];
   if (filters.category) possibleMatches.push({ category: filters.category });
+  if (filters.type) possibleMatches.push({ type: filters.type });
   if (filters.budgetMax !== undefined && Number.isFinite(Number(filters.budgetMax))) {
     possibleMatches.push({ price: { $lte: Number(filters.budgetMax) } });
   } else if (filters.budget) {
@@ -39,6 +41,16 @@ export const buildRecommendationQuery = (filters = {}) => {
   if (filters.situation === "hot") possibleMatches.push({ $or: [{ hasAirConditioning: true }, { category: "outdoor" }] });
   if (filters.situation === "rain") possibleMatches.push({ isIndoor: true });
   if (filters.situation === "open_now") possibleMatches.push({ isOpenNow: { $ne: false } });
+  if (filters.hasPromo) possibleMatches.push({ "promotion.isPromo": true });
+  if (filters.situation === "night" || filters.isEvening) {
+    possibleMatches.push({
+      $or: [
+        { "events.0": { $exists: true } },
+        { "promotion.isPromo": true },
+        { closingTime: { $gte: "21:00" } },
+      ],
+    });
+  }
   if (possibleMatches.length) query.$and = [{ $or: possibleMatches }];
   return query;
 };
@@ -55,6 +67,7 @@ export const getRecommendations = async (filters = {}, sortBy = "rating", pagina
   const scoredActivities = activities
     .map((activity) => {
       let score = 0;
+      if (filters.type && activity.type === filters.type) score += 6;
       if (filters.category && activity.category === filters.category) score += 4;
       if (filters.budgetMax !== undefined && activity.price !== undefined) {
         if (activity.price <= Number(filters.budgetMax)) score += 4;
@@ -75,9 +88,12 @@ export const getRecommendations = async (filters = {}, sortBy = "rating", pagina
           case "hot": if (activity.hasAirConditioning || activity.category === "outdoor") score += 4; break;
           case "rain": score += activity.isIndoor ? 5 : -8; break;
           case "open_now": if (activity.isOpenNow !== false) score += 4; break;
+          case "night": if (activity.events?.length || activity.promotion?.isPromo) score += 6; break;
           case "surprise_me": score += getStableSurpriseScore(activity._id); break;
         }
       }
+      if (filters.hasPromo && activity.promotion?.isPromo) score += 8;
+      if (filters.isEvening && (activity.events?.length || activity.promotion?.isPromo)) score += 6;
       return { activity, score };
     })
     .filter(({ score }) => score > 0 || Object.keys(filters).length === 0 || Boolean(filters.city))

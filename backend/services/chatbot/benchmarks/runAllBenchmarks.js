@@ -4,6 +4,7 @@ import { runClassificationBenchmark } from "./couche2-classification/classificat
 import { runSemanticBenchmark } from "./couche3-semantic/semanticMatcher.benchmark.js";
 import { runMemoryBenchmark } from "./couche4-memory/memoryIntegrity.benchmark.js";
 import { runResponsesBenchmark } from "./couche5-responses/responses.benchmark.js";
+import { runArchitectureCheck } from "./architectureCheck.js";
 
 async function runAll() {
   console.log("\n========================================================");
@@ -12,6 +13,7 @@ async function runAll() {
 
   const started = performance.now();
   const results = [
+    await runArchitectureCheck(),
     await runNormalizationBenchmark(),
     await runFastPathBenchmark(),
     await runClassificationBenchmark(),

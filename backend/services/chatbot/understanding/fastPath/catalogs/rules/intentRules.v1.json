@@ -1,0 +1,210 @@
+{
+  "schemaVersion": "1.0.0",
+  "rules": [
+    {
+      "id": "tf-place-discovery-cafes-001",
+      "domain": "PLACE_DISCOVERY",
+      "intent": "search_places",
+      "subIntent": "cafes",
+      "category": "PLACE_DISCOVERY",
+      "subcategory": "cafes",
+      "confidence": 0.99,
+      "priority": 10,
+      "status": "active",
+      "patterns": [
+        "\\b(caf[eé]s?|coffee shops?|cafeterias?)\\b",
+        "\\b(je cherche|je veux|trouve[- ]moi|donne[- ]moi|propose[- ]moi)\\b.{0,35}\\b(caf[eé]|coffee shop|kahwa|9ahwa)\\b",
+        "\\b(find me|i want|show me|looking for)\\b.{0,35}\\b(caf[eé]|coffee shop|coffee|cafe)\\b",
+        "(أبحث عن|ابحث عن|أريد|اريد|اعطني|أعطني|اقترح علي).{0,35}(مقهى|قهوة|كافيه)",
+        "\\b(nlawwej|lawwejli|nheb|a3tini|3tini|9olli)\\b.{0,35}\\b(9ahwa|kahwa|cafe|caf[eé])\\b",
+        "\\b(win|where|ou)\\b.{0,25}\\b(n9ahwi|nchri|nechri|kahwa|9ahwa)\\b"
+      ],
+      "patternFlags": ["i", "i", "i", "i", "i", "i"]
+    },
+    {
+      "id": "tf-place-discovery-restaurants-001",
+      "domain": "PLACE_DISCOVERY",
+      "intent": "search_places",
+      "subIntent": "restaurants",
+      "category": "PLACE_DISCOVERY",
+      "subcategory": "restaurants",
+      "confidence": 0.99,
+      "priority": 10,
+      "status": "active",
+      "patterns": [
+        "\\b(restaurants?|restos?|diner|dining)\\b",
+        "\\b(je cherche|je veux|trouve[- ]moi|propose[- ]moi)\\b.{0,35}\\b(restaurant|resto)\\b",
+        "\\b(find me|i want|show me|looking for)\\b.{0,35}\\b(restaurant|food place)\\b",
+        "(أبحث عن|ابحث عن|أريد|اريد|أعطني|اعطني|اقترح).{0,35}(مطعم|مطاعم|أكل|اكل)",
+        "\\b(nheb|lawwejli|a3tini|3tini|n7eb)\\b.{0,35}\\b(makla|mat3em|restaurant|resto)\\b",
+        "\\b(win|where|ou)\\b.{0,25}\\b(nakol|nekel|neta3cha)\\b"
+      ],
+      "patternFlags": ["i", "i", "i", "i", "i", "i"]
+    },
+    {
+      "id": "tf-place-discovery-lounges-001",
+      "domain": "PLACE_DISCOVERY",
+      "intent": "search_places",
+      "subIntent": "lounges",
+      "category": "PLACE_DISCOVERY",
+      "subcategory": "lounges",
+      "confidence": 0.98,
+      "priority": 10,
+      "status": "active",
+      "patterns": [
+        "\\b(lounge|lounges|lounge caf[eé]|salon de th[eé])\\b",
+        "\\b(je cherche|je veux|propose[- ]moi)\\b.{0,30}\\b(lounge|salon de th[eé])\\b",
+        "\\b(find me|i want|looking for)\\b.{0,30}\\b(lounge|tea house)\\b",
+        "(أبحث عن|ابحث عن|أريد|اريد|اقترح علي).{0,30}(لاونج|صالون شاي|مقهى)",
+        "\\b(nheb|lawwejli|a3tini)\\b.{0,30}\\b(lounge|salon de the|blasa chill)\\b"
+      ],
+      "patternFlags": ["i", "i", "i", "i", "i"]
+    },
+    {
+      "id": "tf-outing-planning-friends-001",
+      "domain": "OUTING_PLANNING",
+      "intent": "plan_outing",
+      "subIntent": "with_friends",
+      "category": "OUTING_PLANNING",
+      "subcategory": "friends",
+      "confidence": 0.99,
+      "priority": 10,
+      "status": "active",
+      "patterns": [
+        "\\b(avec mes amis|entre amis|avec les potes|sortir avec mes amis)\\b",
+        "\\b(with my friends|with friends|hanging out with friends)\\b",
+        "(مع أصدقائي|مع أصحابي|الخروج مع الأصدقاء|مع صحابي)",
+        "\\b(m3a s7abi|m3a as7abi|m3a sahbi|m3a shabi|m3a s7abti)\\b",
+        "\\b(nheb|n7eb|bech|bch)\\b.{0,25}\\b(nokhrej|n5arej|nekhrej|kharja)\\b.{0,25}\\b(s7abi|as7abi|shabi)\\b"
+      ],
+      "patternFlags": ["i", "i", "i", "i", "i"]
+    },
+    {
+      "id": "tf-budget-max-001",
+      "domain": "BUDGET_AND_DEALS",
+      "intent": "filter_by_budget",
+      "subIntent": "maximum_budget",
+      "category": "BUDGET_AND_DEALS",
+      "subcategory": "budget",
+      "confidence": 0.99,
+      "priority": 20,
+      "status": "active",
+      "patterns": [
+        "\\b(budget|max|maximum|moins de|au maximum|ne depasse pas)\\b",
+        "\\b(my budget is|maximum budget|under|less than|up to)\\b",
+        "(ميزانيتي|بحد أقصى|بحد اقصى|لا أتجاوز|لا اتجاوز|أقل من|اقل من)",
+        "\\b(budgeti|ma3andich barcha|max|maximum|ma tfoutch)\\b",
+        "\\b([0-9]+)\\s*(dt|tnd|dinars?|دينار|دنانير)\\b"
+      ],
+      "patternFlags": ["i", "i", "i", "i", "i"]
+    },
+    {
+      "id": "tf-location-nearby-001",
+      "domain": "LOCATION_AND_NAVIGATION",
+      "intent": "search_nearby",
+      "subIntent": "near_current_location",
+      "category": "LOCATION_AND_NAVIGATION",
+      "subcategory": "nearby",
+      "confidence": 0.99,
+      "priority": 20,
+      "status": "active",
+      "patterns": [
+        "\\b(pr[eè]s de moi|autour de moi|a proximit[eé])\\b",
+        "\\b(near me|nearby|close to me|closest to me)\\b",
+        "(بالقرب مني|قريب مني|قريب من موقعي|حول موقعي)",
+        "\\b(9rib lia|9riba menni|7dheya|janbi|9rib meni)\\b"
+      ],
+      "patternFlags": ["i", "i", "i", "i"]
+    },
+    {
+      "id": "tf-atmosphere-quiet-001",
+      "domain": "ATMOSPHERE_AND_PREFERENCES",
+      "intent": "filter_by_atmosphere",
+      "subIntent": "quiet",
+      "category": "ATMOSPHERE_AND_PREFERENCES",
+      "subcategory": "ambience",
+      "confidence": 0.98,
+      "priority": 10,
+      "status": "active",
+      "patterns": [
+        "\\b(calme|tranquille|paisible|sans bruit)\\b",
+        "\\b(quiet|peaceful|silent|relaxing|not noisy)\\b",
+        "(مكان هادئ|مكان هادي|بدون ضجيج|بعيد عن الضوضاء)",
+        "\\b(blasa hadya|blasa calme|bla dhawdha|mouch barcha dhaj|rawe9)\\b"
+      ],
+      "patternFlags": ["i", "i", "i", "i"]
+    },
+    {
+      "id": "tf-availability-open-now-001",
+      "domain": "AVAILABILITY_AND_HOURS",
+      "intent": "check_open_status",
+      "subIntent": "open_now",
+      "category": "AVAILABILITY_AND_HOURS",
+      "subcategory": "opening_status",
+      "confidence": 0.99,
+      "priority": 20,
+      "status": "active",
+      "patterns": [
+        "\\b(ouvert maintenant|ouvert actuellement|est[- ]ce ouvert)\\b",
+        "\\b(open now|is it open|are they open|currently open)\\b",
+        "(هل هو مفتوح الآن|هل المكان مفتوح|هل المطعم مفتوح)",
+        "\\b(ma7loul taw|ma7loula taw|ma7loul|7all taw)\\b"
+      ],
+      "patternFlags": ["i", "i", "i", "i"]
+    },
+    {
+      "id": "tf-contact-whatsapp-001",
+      "domain": "CONTACT_AND_RESERVATION",
+      "intent": "contact_establishment",
+      "subIntent": "whatsapp",
+      "category": "CONTACT_AND_RESERVATION",
+      "subcategory": "contact",
+      "confidence": 0.99,
+      "priority": 20,
+      "status": "active",
+      "patterns": [
+        "\\b(donne[- ]moi|quel est|c'est quoi)\\b.{0,25}\\b(whatsapp|num[eé]ro|t[eé]l[eé]phone)\\b",
+        "\\b(give me|get me|what is)\\b.{0,25}\\b(whatsapp|phone number|contact)\\b",
+        "(أعطني|اعطني|ما هو|ما رقم).{0,25}(رقم الهاتف|الواتساب|رقم التواصل)",
+        "\\b(a3tini|3tini|chnowa|chneya)\\b.{0,25}\\b(whatsapp|numero|numro|contact)\\b"
+      ],
+      "patternFlags": ["i", "i", "i", "i"]
+    },
+    {
+      "id": "tf-personalized-recommendation-001",
+      "domain": "PERSONALIZED_RECOMMENDATION",
+      "intent": "get_recommendations",
+      "subIntent": "personalized",
+      "category": "PERSONALIZED_RECOMMENDATION",
+      "subcategory": "recommendation",
+      "confidence": 0.98,
+      "priority": 10,
+      "status": "active",
+      "patterns": [
+        "\\b(que me conseilles[- ]tu|recommande[- ]moi|propose[- ]moi|suggestion)\\b",
+        "\\b(what do you recommend|suggest me|give me an idea)\\b",
+        "(ماذا تقترح علي|بماذا تنصحني|اقترح علي|شنو تقترح)",
+        "\\b(chnowa tans7ni|chnowa na3mel|win nemchi|a3tini fekra|3tini fekra)\\b"
+      ],
+      "patternFlags": ["i", "i", "i", "i"]
+    },
+    {
+      "id": "tf-chat-greeting-001",
+      "domain": "CHAT_AND_ASSISTANCE",
+      "intent": "greeting",
+      "subIntent": "hello",
+      "category": "CHAT_AND_ASSISTANCE",
+      "subcategory": "greeting",
+      "confidence": 0.99,
+      "priority": 5,
+      "status": "active",
+      "patterns": [
+        "\\b(bonjour|salut|bonsoir|coucou)\\b",
+        "\\b(hello|hi|hey|good morning|good evening)\\b",
+        "(مرحبا|السلام عليكم|أهلا|أهلًا|صباح الخير|مساء الخير)",
+        "\\b(aslema|3aslema|ahla|ahlan|salam|slm)\\b"
+      ],
+      "patternFlags": ["i", "i", "i", "i"]
+    }
+  ]
+}

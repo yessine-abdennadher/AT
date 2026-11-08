@@ -12,7 +12,7 @@ import { createLegacyBotReply } from "./legacyBotReply.js";
 export const createChatMessageController = ({ sessionStore, replyProvider = createLegacyBotReply }) => ({
   sendMessage: async (req, res, next) => {
     try {
-      const { sessionId, text } = req.body || {};
+      const { sessionId, text, hasGps, coords, userCity } = req.body || {};
       const sessionToken = getSessionToken(req);
       if (!hasValidCapability(sessionId, sessionToken)) return notFound(res);
       if (typeof text !== "string" || !text.trim() || text.trim().length > MESSAGE_LIMIT) {
@@ -26,7 +26,16 @@ export const createChatMessageController = ({ sessionStore, replyProvider = crea
       if (!session) return notFound(res);
 
       const userText = text.trim();
-      const botMessage = await replyProvider({ text: userText, session, sessionId });
+      const botMessage = await replyProvider({
+        text: userText,
+        session,
+        sessionId,
+        userContext: {
+          hasGps: Boolean(hasGps),
+          coords: coords || null,
+          userCity: typeof userCity === "string" ? userCity.trim() : null,
+        },
+      });
       const updatedSession = await sessionStore.appendChatExchange({
         sessionId,
         sessionToken,

@@ -14,6 +14,46 @@
     { "id": "disc_en_2", "text": "Here are {count} suggestion(s) for you:" },
     { "id": "disc_en_3", "text": "{count} option(s) look great for your outing:" }
   ],
+  "DISCOVER_BOREDOM_RELIEF": [
+    { "id": "bored_en_1", "text": "Bored and want a change of pace? Here are awesome outings to cheer you up:" },
+    { "id": "bored_en_2", "text": "Need some fun and fresh air? I picked {count} lively spots for you:" },
+    { "id": "bored_en_3", "text": "Looking to beat the boredom? Check out these fun outings:" }
+  ],
+  "DISCOVER_FRIENDS": [
+    { "id": "friends_en_1", "text": "Outing with friends? Here are the best spots to hang out and have a blast:" },
+    { "id": "friends_en_2", "text": "Everything is better with friends! Here are {count} great group-friendly spots:" },
+    { "id": "friends_en_3", "text": "For a great group vibe, check out these awesome places:" }
+  ],
+  "DISCOVER_COUPLE": [
+    { "id": "couple_en_1", "text": "Romantic outing for two? Here are the most intimate and cozy settings:" },
+    { "id": "couple_en_2", "text": "For a quality moment together, I found these charming and quiet spots:" },
+    { "id": "couple_en_3", "text": "Romantic date: here are {count} lovely places for couples:" }
+  ],
+  "DISCOVER_COLD_WEATHER": [
+    { "id": "cold_en_1", "text": "Is it chilly outside? Here are the warmest and coziest indoor spots:" },
+    { "id": "cold_en_2", "text": "Cold weather outing? Check out these snug and sheltered places to stay warm:" },
+    { "id": "cold_en_3", "text": "Chilly day plans: here are the best cozy indoor cafés and restaurants:" }
+  ],
+  "DISCOVER_BUDGET_FOOD": [
+    { "id": "budget_en_1", "text": "Looking for delicious food on a budget? Here are tasty spots that won't break the bank:" },
+    { "id": "budget_en_2", "text": "Great food at wallet-friendly prices? Discover these {count} affordable gems:" },
+    { "id": "budget_en_3", "text": "Here are top-rated tasty eateries with very friendly prices:" }
+  ],
+  "DISCOVER_PROMO": [
+    { "id": "promo_en_1", "text": "Special deals & discounts: here are the best current promotions for you:" },
+    { "id": "promo_en_2", "text": "Looking for special offers? Discover these top venues offering promotions right now:" },
+    { "id": "promo_en_3", "text": "Great deals on Tfarhida! Here are places with active discounts:" }
+  ],
+  "DISCOVER_EVENING_PROMO": [
+    { "id": "eve_promo_en_1", "text": "Evening deals & night promotions! Here are the best special offers and happy hours for tonight in Sfax:" },
+    { "id": "eve_promo_en_2", "text": "Night out with great deals: check out these evening promotions and formulas:" },
+    { "id": "eve_promo_en_3", "text": "Festive evening and discounts: discover tonight's best happy hours and offers:" }
+  ],
+  "DISCOVER_EVENING": [
+    { "id": "eve_en_1", "text": "For tonight's outing, here are the top spots with great evening vibes in Sfax:" },
+    { "id": "eve_en_2", "text": "Looking to go out tonight? I selected these vibrant night spots for you:" },
+    { "id": "eve_en_3", "text": "Nightlife & evening fun: check out these awesome places for tonight:" }
+  ],
   "DISCOVER_EMPTY": [
     { "id": "empty_en_1", "text": "I couldn't find any place for those criteria. Try another city or category." },
     { "id": "empty_en_2", "text": "No results for now. Want me to widen the search to another city?" },

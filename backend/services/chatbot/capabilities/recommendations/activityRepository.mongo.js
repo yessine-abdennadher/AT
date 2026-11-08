@@ -8,12 +8,14 @@ export function createMongoActivityRepository() {
   return {
     async find(query, limit = 40) {
       if (mongoose.connection.readyState !== 1) return [];
-      const { default: Activity } = await import("../../../../models/Activity.js");
+      const actModule = await import("../../../../models/Activity.js");
+      const Activity = actModule.Activity || actModule.default;
       return Activity.find(query).limit(limit).lean();
     },
     async findById(id) {
       if (mongoose.connection.readyState !== 1 || !id) return null;
-      const { default: Activity } = await import("../../../../models/Activity.js");
+      const actModule = await import("../../../../models/Activity.js");
+      const Activity = actModule.Activity || actModule.default;
       return Activity.findById(id).lean().catch(() => null);
     },
   };

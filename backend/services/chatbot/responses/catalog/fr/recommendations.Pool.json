@@ -4,6 +4,46 @@
     { "id": "disc_fr_2", "text": "Voici {count} suggestion(s) pour vous :" },
     { "id": "disc_fr_3", "text": "{count} option(s) semblent parfaites pour votre sortie :" }
   ],
+  "DISCOVER_BOREDOM_RELIEF": [
+    { "id": "bored_fr_1", "text": "Marre de la routine et envie de changer d'air ? Voici de superbes sorties pour vous changer les idées :" },
+    { "id": "bored_fr_2", "text": "Besoin de dépaysement et de fun ? J'ai sélectionné {count} super lieux pour retrouver le sourire :" },
+    { "id": "bored_fr_3", "text": "Envie de bouger et de casser l'ennui ? Voici les meilleures adresses pour décompresser :" }
+  ],
+  "DISCOVER_FRIENDS": [
+    { "id": "friends_fr_1", "text": "Une sortie entre amis ? Voici les meilleurs endroits parfaits pour se retrouver et passer un super moment :" },
+    { "id": "friends_fr_2", "text": "Rien de tel qu'une virée entre potes ! Voici {count} lieux conviviaux au top :" },
+    { "id": "friends_fr_3", "text": "Pour une super ambiance de groupe, découvrez ces adresses parfaites entre amis :" }
+  ],
+  "DISCOVER_COUPLE": [
+    { "id": "couple_fr_1", "text": "Une belle sortie en couple ? Voici les cadres les plus intimes et romantiques :" },
+    { "id": "couple_fr_2", "text": "Pour un moment complice à deux, j'ai sélectionné ces adresses calmes et chaleureuses :" },
+    { "id": "couple_fr_3", "text": "Sortie en amoureux : voici {count} lieux au cadre soigné et romantique :" }
+  ],
+  "DISCOVER_COLD_WEATHER": [
+    { "id": "cold_fr_1", "text": "Il fait froid dehors ? Voici les endroits les plus chaleureux et cosy pour sortir bien au chaud :" },
+    { "id": "cold_fr_2", "text": "Temps frisquet ? Découvrez ces super lieux couverts et douillets pour passer un agréable moment :" },
+    { "id": "cold_fr_3", "text": "Météo fraîche : voici les meilleures adresses intérieures et réconfortantes :" }
+  ],
+  "DISCOVER_BUDGET_FOOD": [
+    { "id": "budget_fr_1", "text": "Envie d'un bon resto savoureux sans vous ruiner ? Voici d'excellentes adresses à prix tout doux :" },
+    { "id": "budget_fr_2", "text": "Se régaler à petit prix ? Découvrez ces {count} tables gourmandes et très abordables :" },
+    { "id": "budget_fr_3", "text": "Voici les meilleurs plans restos savoureux et respectueux de votre budget :" }
+  ],
+  "DISCOVER_PROMO": [
+    { "id": "promo_fr_1", "text": "Bons plans et réductions : voici les meilleures offres et promotions en cours :" },
+    { "id": "promo_fr_2", "text": "Envie de profiter d'offres spéciales ? Découvrez ces promotions exclusives :" },
+    { "id": "promo_fr_3", "text": "Top promos Tfarhida ! Voici les adresses proposant des remises en ce moment :" }
+  ],
+  "DISCOVER_EVENING_PROMO": [
+    { "id": "eve_promo_fr_1", "text": "Envie d'une super soirée à prix doux ? Voici les meilleures promotions et happy hours de ce soir :" },
+    { "id": "eve_promo_fr_2", "text": "Bons plans pour votre soirée : profitez de ces offres exclusives et formules nocturnes :" },
+    { "id": "eve_promo_fr_3", "text": "Soirée festive et promos ! Découvrez les établissements avec offres spéciales ce soir :" }
+  ],
+  "DISCOVER_EVENING": [
+    { "id": "eve_fr_1", "text": "Pour votre soirée, voici les meilleures adresses animées avec une ambiance nocturne au top :" },
+    { "id": "eve_fr_2", "text": "Envie de sortir ce soir ? J'ai sélectionné ces superbes lieux parfaits pour la soirée :" },
+    { "id": "eve_fr_3", "text": "Ambiance nocturne garantie : découvrez ces lieux parfaits pour passer la soirée :" }
+  ],
   "DISCOVER_RELAXED": [
     { "id": "relax_fr_1", "text": "Rien d'exactement conforme, mais j'ai élargi la recherche ({relaxed}). Voici {count} option(s) :" },
     { "id": "relax_fr_2", "text": "Pas de correspondance stricte. En assouplissant ({relaxed}), je trouve {count} lieu(x) :" },

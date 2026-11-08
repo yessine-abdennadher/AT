@@ -31,6 +31,7 @@ export function loadNormalizationCatalogs() {
     },
     geo: {
       citiesAliases: readJson("geo/tunisiaCitiesAliases.json"),
+      sfaxNeighborhoods: readJson("sfaxNeighborhoods.json"),
     },
     shared: {
       immutableTokens: new Set(readJson("shared/immutableTokens.json")),

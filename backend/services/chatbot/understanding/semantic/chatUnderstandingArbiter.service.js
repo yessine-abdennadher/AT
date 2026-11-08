@@ -1,6 +1,6 @@
 import { SEMANTIC_THRESHOLDS } from "./config/semanticThresholds.config.js";
 import { createTurnUnderstanding } from "./contracts/turnUnderstanding.contract.js";
-import { segmentClauses } from "./chatClauseSegmenter.service.js";
+import { segmentClauses, hasSequentialConnector } from "./chatClauseSegmenter.service.js";
 
 const PARTNER_INTENTS = new Set(["PARTNER_MANAGE_ACTIVITY", "PARTNER_HOURS_HELP", "PARTNER_PROMOTION_HELP"]);
 
@@ -8,14 +8,24 @@ function mergeConstraints(primary = {}, secondary = {}) {
   const city = primary.city || secondary.city || null;
   const categories = primary.categories?.length ? primary.categories : (secondary.categories || []);
   const amenities = [...new Set([...(primary.amenities || []), ...(secondary.amenities || [])])];
+  const excludedAmenities = [...new Set([...(primary.excluded?.amenities || []), ...(secondary.excluded?.amenities || [])])];
+  const excludedCategories = [...new Set([...(primary.excluded?.categories || []), ...(secondary.excluded?.categories || [])])];
   return {
     city,
     cities: city ? [city] : [],
+    neighborhood: primary.neighborhood || secondary.neighborhood || null,
+    neighborhoods: primary.neighborhoods?.length ? primary.neighborhoods : (secondary.neighborhoods || []),
     category: categories[0] || null,
     categories,
     budgetLevel: primary.budgetLevel || secondary.budgetLevel || null,
+    situation: primary.situation || secondary.situation || null,
+    group: primary.group || secondary.group || null,
+    mood: primary.mood || secondary.mood || null,
     amenities,
-    excluded: primary.excluded || { amenities: [], categories: [] },
+    excluded: {
+      amenities: excludedAmenities,
+      categories: excludedCategories,
+    },
   };
 }
 
@@ -62,7 +72,9 @@ export function arbitrateUnderstanding({ normalized, fastPath, classification, s
     return createTurnUnderstanding({ ...base, intent: "RESET_SEARCH", confidence: 0.95, source: "classification" });
   }
 
-  const multiCategory = classification.constraints.categories.length >= 2 && segments.length >= 2;
+  const multiCategory =
+    classification.constraints.categories.length >= 2 &&
+    (segments.length >= 2 || hasSequentialConnector(normalized.normalizedText) || classification.dto?.isMultiStepOuting);
   if (multiCategory) {
     return createTurnUnderstanding({ ...base, intent: "PLAN_MULTI_STEP_OUTING", confidence: 0.9, source: "classification" });
   }
@@ -71,7 +83,38 @@ export function arbitrateUnderstanding({ normalized, fastPath, classification, s
     return createTurnUnderstanding({ ...base, intent: classification.detailIntent, confidence: 0.88, source: "classification" });
   }
 
-  if (classification.hasConstraints) {
+  // Résolution ciblée si le bot avait posé une question de clarification (pendingQuestion)
+  if (memory.pendingQuestion) {
+    const field = memory.pendingQuestion.field;
+    if (field === "city" && (classification.constraints.city || normalized.detectedCities?.length)) {
+      const city = classification.constraints.city || normalized.detectedCities[0];
+      return createTurnUnderstanding({
+        ...base,
+        intent: "REFINE_CRITERIA",
+        confidence: 0.92,
+        source: "pending_question_resolved",
+        constraints: { ...classification.constraints, city, cities: [city] },
+      });
+    }
+    if (field === "category" && classification.constraints.category) {
+      return createTurnUnderstanding({
+        ...base,
+        intent: "REFINE_CRITERIA",
+        confidence: 0.92,
+        source: "pending_question_resolved",
+      });
+    }
+    if (field === "budgetLevel" && classification.constraints.budgetLevel) {
+      return createTurnUnderstanding({
+        ...base,
+        intent: "REFINE_CRITERIA",
+        confidence: 0.92,
+        source: "pending_question_resolved",
+      });
+    }
+  }
+
+  if (classification.hasConstraints || classification.dialogueAct === "SEARCH_REQUEST") {
     const refining = classification.dialogueAct === "REFINEMENT";
     return createTurnUnderstanding({ ...base, intent: refining ? "REFINE_CRITERIA" : "DISCOVER_ACTIVITIES", confidence: 0.85, source: "classification" });
   }

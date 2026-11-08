@@ -28,11 +28,41 @@ function amenityClause(amenity) {
 export function buildActivityQuery(constraints = {}, { skip = [] } = {}) {
   const and = [];
   if (constraints.categories?.length && !skip.includes("category")) {
-    and.push({ category: { $in: constraints.categories.map(categoryRegex) } });
+    const catClauses = constraints.categories.map((c) => {
+      if (c === "cafe") {
+        return { $or: [{ type: "cafe" }, { name: rx("café|cafe|coffee|lounge") }, { category: "food" }] };
+      }
+      if (c === "restaurant") {
+        return { $or: [{ type: "restaurant" }, { name: rx("restaurant|resto|pizzeria") }, { category: "food" }] };
+      }
+      return { category: categoryRegex(c) };
+    });
+    and.push({ $or: catClauses });
   }
   if (constraints.city && !skip.includes("city")) {
     const cityRx = rx(constraints.city);
     and.push({ $or: [{ city: cityRx }, { locationName: cityRx }, { address: cityRx }] });
+  }
+  const neighborhood = constraints.neighborhood || (constraints.neighborhoods?.[0]);
+  if (neighborhood && !skip.includes("neighborhood")) {
+    const neighRx = rx(neighborhood);
+    and.push({ $or: [{ address: neighRx }, { locationName: neighRx }, { name: neighRx }, { description: neighRx }] });
+  }
+  if (constraints.budgetLevel === "low" && !skip.includes("budget")) {
+    and.push({ price: { $lte: 35 } });
+  }
+  if ((constraints.situation === "cold" || constraints.situation === "rain") && !skip.includes("situation")) {
+    and.push({ $or: [{ isIndoor: true }, { category: { $ne: "outdoor" } }] });
+  }
+  if (constraints.group && !skip.includes("group")) {
+    and.push({
+      $or: [
+        { suitableFor: constraints.group },
+        { category: constraints.group },
+        { name: rx(constraints.group) },
+        { description: rx(constraints.group) },
+      ],
+    });
   }
   if (!skip.includes("amenities")) {
     for (const amenity of constraints.amenities || []) and.push(amenityClause(amenity));

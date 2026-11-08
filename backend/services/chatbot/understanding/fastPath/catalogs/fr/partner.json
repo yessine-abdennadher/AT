@@ -1,20 +1,28 @@
 {
   "PARTNER_MANAGE_ACTIVITY": [
     "ajouter mon etablissement",
+    "ajouter mon cafe",
+    "ajouter mon restaurant",
+    "inscrire mon etablissement",
     "modifier ma fiche",
     "espace partenaire",
     "gerer mon activite",
-    "ajouter le menu"
+    "ajouter le menu",
+    "modifier les informations de mon local",
+    "compte partenaire"
   ],
   "PARTNER_HOURS_HELP": [
     "modifier mes horaires",
     "changer heure d ouverture",
-    "configurer les horaires"
+    "changer heure de fermeture",
+    "configurer les horaires",
+    "mettre a jour les horaires"
   ],
   "PARTNER_PROMOTION_HELP": [
     "creer une promotion",
     "ajouter une offre",
-    "mettre en avant mon etablissement"
+    "ajouter une reduction",
+    "mettre en avant mon etablissement",
+    "faire une promo"
   ]
 }
-

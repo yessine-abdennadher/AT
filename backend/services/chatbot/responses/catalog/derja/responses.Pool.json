@@ -34,6 +34,46 @@
     { "id": "disc_dj_2", "text": "Houwa {count} e9tirah lik:" },
     { "id": "disc_dj_3", "text": "{count} khyar mnasseb lel kharja mte3ek:" }
   ],
+  "DISCOVER_BOREDOM_RELIEF": [
+    { "id": "bored_dj_1", "text": "Faddit w t7eb tbadal el jaw ? 3andi lik a7la kharjet yna7iw el 9la9 w yfarhdouk :" },
+    { "id": "bored_dj_2", "text": "Mala fadda ! Haw a7la blayes bech tbadal el jaw w t3addi wa9t tayara :" },
+    { "id": "bored_dj_3", "text": "Kharja tfarhed w tna7i el 9la9 ? Chouf hedhom a7la e9tirahat :" }
+  ],
+  "DISCOVER_FRIENDS": [
+    { "id": "friends_dj_1", "text": "Kharja m3a el s7ab ? Haw a7la blayes lamma w jaw behi fi Sfax :" },
+    { "id": "friends_dj_2", "text": "M3a el s7ab el jaw dima a7la ! Haw {count} blassa lkollkom :" },
+    { "id": "friends_dj_3", "text": "A7la lamma m3a s7abek ! Chouf hedhom blayes jawhom tayara :" }
+  ],
+  "DISCOVER_COUPLE": [
+    { "id": "couple_dj_1", "text": "Kharja romantique en couple ? Chouf hedhom a7la blayes calme w cadre romantique fi Sfax :" },
+    { "id": "couple_dj_2", "text": "En couple ? Haw a7la blayes cozy w calme pour un bon moment à deux :" },
+    { "id": "couple_dj_3", "text": "Sortie romantique en amoureux ? Haw a7la adresses fi Sfax :" }
+  ],
+  "DISCOVER_COLD_WEATHER": [
+    { "id": "cold_dj_1", "text": "El ta9s berd el youm ? Haw a7la blayes cozy, defyin w jawhom behi fi Sfax :" },
+    { "id": "cold_dj_2", "text": "Berda el denya ? Chouf hedhom blayes mghatya w defya bech tokhrej merte7 :" },
+    { "id": "cold_dj_3", "text": "Météo berda ? Haw a7la salons w restos defyin fi Sfax :" }
+  ],
+  "DISCOVER_BUDGET_FOOD": [
+    { "id": "budget_dj_1", "text": "Tlawwej 3la restaurant bnin w mouch ghali ? Haw a7la adresses 3la 9ad el jib fi Sfax :" },
+    { "id": "budget_dj_2", "text": "Mekla bnina b soum r5is w mouch ghali ? Haw les meilleurs plans resto :" },
+    { "id": "budget_dj_3", "text": "Resto bnin w 3la 9ad el budget ? Chouf hedhom a7la khyaratt :" }
+  ],
+  "DISCOVER_PROMO": [
+    { "id": "promo_dj_1", "text": "Fama des promos w عروض behia tawa ! Chouf a7sen les réductions hedhom :" },
+    { "id": "promo_dj_2", "text": "T7eb profiter men offres spéciales ? Haw a7la promos fel blayes hedhom :" },
+    { "id": "promo_dj_3", "text": "Bons plans w promos Tfarhida ! Chouf hedhom 3amlin des remises tawa :" }
+  ],
+  "DISCOVER_EVENING_PROMO": [
+    { "id": "eve_promo_dj_1", "text": "Jaw sehra w promos el lila ! Chouf a7la offres spéciales w happy hours fi Sfax :" },
+    { "id": "eve_promo_dj_2", "text": "Sehra mezyena b soum tayara ! Haw a7sen les promos mte3 el lila :" },
+    { "id": "eve_promo_dj_3", "text": "Formules w promos lil sehra el lila ! Chouf les adresses hedhom :" }
+  ],
+  "DISCOVER_EVENING": [
+    { "id": "eve_dj_1", "text": "Lil sehra el lila, haou a7sen el blayes el mazyena w fihom jaw mezyen fi Sfax :" },
+    { "id": "eve_dj_2", "text": "Jaw sehra el lila ! Chouf a7la les adresses hedhom mte3 jaw fil lil :" },
+    { "id": "eve_dj_3", "text": "Kharja mte3 lil w sehra tayara ! Haw a7sen les plans mte3 el lila :" }
+  ],
   "DISCOVER_RELAXED": [
     { "id": "relax_dj_1", "text": "Ma l9itch bedhabt, ama wassa3t chwaya fel be7th ({relaxed}). Haw {count} blassa :" },
     { "id": "relax_dj_2", "text": "Ma fammech haja conforme 100%, na7it ma3yar ({relaxed}) w l9it {count} blassa :" },

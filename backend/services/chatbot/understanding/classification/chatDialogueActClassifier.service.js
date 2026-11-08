@@ -10,6 +10,7 @@ const DETAIL_KEYWORDS = Object.freeze({
 const AFFIRMATIONS = ["oui", "ok", "d accord", "dac", "yes", "ouais", "parfait"];
 const REFUSALS = ["non", "no", "pas du tout", "nope"];
 const RESET_WORDS = ["recommencer", "nouvelle recherche", "reinitialiser", "tout effacer", "changer tout"];
+const DISCOVERY_HINTS = ["sortir", "sortie", "idee", "ou aller", "faire un tour", "endroit", "place", "kharja", "5arja", "nokhrej", "nokhrjou"];
 
 export function classifyDetailIntent(rawText = "") {
   const text = stripDiacritics(rawText);
@@ -24,6 +25,7 @@ export function classifyDialogueAct({ text = "", hasConstraints = false, hasActi
   if (includesAny(stripped, RESET_WORDS)) return "RESET";
   if (classifyDetailIntent(stripped)) return "DETAIL_QUESTION";
   if (hasConstraints) return hasActiveSearch ? "REFINEMENT" : "SEARCH_REQUEST";
+  if (includesAny(stripped, DISCOVERY_HINTS)) return "SEARCH_REQUEST";
   if (REFUSALS.includes(stripped)) return "REFUSAL";
   if (AFFIRMATIONS.includes(stripped)) return "AFFIRMATION";
   return "OTHER";

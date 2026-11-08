@@ -12,9 +12,14 @@ export const STATUS_TRANSITIONS = Object.freeze({
 
 export const emptyConstraints = () => ({
   city: null,
+  neighborhood: null,
+  neighborhoods: [],
   category: null,
   categories: [],
   budgetLevel: null,
+  situation: null,
+  group: null,
+  mood: null,
   amenities: [],
   vibes: [],
   urgency: null,

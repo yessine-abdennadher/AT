@@ -30,7 +30,7 @@ export function createChatMainGateway({
   llmIntentClassifier = classifyIntentWithLlm,
   compose = {},
 } = {}) {
-  const processTurn = async ({ sessionId, text }) => {
+  const processTurn = async ({ sessionId, text, userContext = {} }) => {
     const state = normalizeState(await stateStore.get(sessionId)) || createInitialState();
     const memory = projectMemoryFrame(state);
 
@@ -62,7 +62,71 @@ export function createChatMainGateway({
       understanding = { ...understanding, intent: "HELP_GENERAL" };
     }
 
-    const result = await runExplorerTurn({ understanding, state, repository, compose });
+    // Détection des puces rapides "Toutes les sorties" et "Autre zone"
+    const normLower = (normalized.normalizedText || "").toLowerCase();
+    const isShowAllChip =
+      normLower.includes("toutes les sorties") ||
+      normLower.includes("kol el kharjet") ||
+      normLower.includes("كل الانشطة") ||
+      normLower.includes("كل الأنشطة") ||
+      normLower.includes("all outings");
+
+    const isOtherZoneChip =
+      normLower.includes("autre zone") ||
+      normLower.includes("zone o5ra") ||
+      normLower.includes("منطقة اخرى") ||
+      normLower.includes("منطقة أخرى") ||
+      normLower.includes("other area");
+
+    if (isShowAllChip) {
+      understanding = {
+        ...understanding,
+        intent: "DISCOVER_ACTIVITIES",
+        constraints: {
+          ...understanding.constraints,
+          category: null,
+          categories: [],
+          budgetLevel: null,
+          situation: null,
+          group: null,
+          mood: null,
+          neighborhood: null,
+          neighborhoods: [],
+        },
+      };
+    } else if (isOtherZoneChip) {
+      understanding = {
+        ...understanding,
+        intent: "RESET_SEARCH",
+        constraints: {
+          ...understanding.constraints,
+          neighborhood: null,
+          neighborhoods: [],
+        },
+      };
+    }
+
+    // Si la ville n'a pas été explicitement mentionnée mais que l'utilisateur a une contrainte (catégorie/quartier) ou une ville connue
+    if (
+      !understanding.constraints?.city &&
+      (userContext.userCity || understanding.constraints?.neighborhood || understanding.constraints?.categories?.length)
+    ) {
+      const activeCity = userContext.userCity || state.activeConstraints?.city || (understanding.constraints?.neighborhood ? "Sfax" : null);
+      if (activeCity) {
+        understanding = {
+          ...understanding,
+          constraints: { ...understanding.constraints, city: activeCity },
+        };
+      }
+    }
+
+    const result = await runExplorerTurn({
+      understanding,
+      state,
+      repository,
+      compose,
+      hasGps: Boolean(userContext.hasGps),
+    });
     const { resolution, message } = result.composed;
 
     let next = recordResponseUsage(result.state, {
@@ -84,14 +148,15 @@ export function createChatMainGateway({
   };
 
   return {
-    handleTurn: ({ sessionId, text }) => withTurnLock(sessionId, () => processTurn({ sessionId, text })),
+    handleTurn: ({ sessionId, text, userContext = {} }) =>
+      withTurnLock(sessionId, () => processTurn({ sessionId, text, userContext })),
   };
 }
 
 let defaultGateway = null;
 
 /** Fournisseur de réponses prêt à l'emploi pour `chatMessage.controller`. */
-export const chatbotReplyProvider = async ({ text, sessionId }) => {
+export const chatbotReplyProvider = async ({ text, sessionId, userContext = {} }) => {
   defaultGateway ||= createChatMainGateway();
-  return defaultGateway.handleTurn({ sessionId, text });
+  return defaultGateway.handleTurn({ sessionId, text, userContext });
 };

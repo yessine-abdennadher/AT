@@ -1,7 +1,7 @@
 import { buildActivityQuery } from "./activityQueryBuilder.service.js";
 import { rankActivities } from "./activityRanker.service.js";
 
-const RELAXATION_STEPS = Object.freeze(["amenities", "city"]);
+const RELAXATION_STEPS = Object.freeze(["neighborhood", "amenities", "city"]);
 
 /**
  * Recherche stricte puis relâchement progressif (équipements, puis ville) si 0 résultat.

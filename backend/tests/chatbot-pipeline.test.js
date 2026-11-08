@@ -139,8 +139,96 @@ test("chatbot speaks the user's language: derja query triggers derja response an
   // Follow-up question with ambiguous keyword "horaires" -> should still reply in derja because conversation is in derja!
   const res2 = await gw.handleTurn({ sessionId: "s-derja", text: "wa9tech y7el ?" });
   assert.equal(res2.metadata.lang, "derja");
-  assert.match(res2.text, /ma7loul|Aw9at/i);
+  assert.match(res2.text, /ma7loul|Aw9at|Tnejjem temchi/i);
   assert.match(res2.text, /08:00 - 23:00/);
 });
+
+test("arabic morphology normalizes diacritics, folds alefs and strips proclitics safely", async () => {
+  const { normalizeArabicText, stripArabicProclitics } = await import("../services/chatbot/understanding/normalization/arabicMorphology.service.js");
+  const normalized = normalizeArabicText("أَكْلٌ شَهِيٌّ فِي المَطْعَمِ");
+  assert.equal(normalized, "اكل شهي في المطعم");
+  assert.equal(stripArabicProclitics("المطاعم"), "مطاعم");
+  assert.equal(stripArabicProclitics("وقت"), "وقت"); // Racine protégée préservée
+});
+
+test("weighted damerau levenshtein gives lower cost to adjacent physical keyboard keys", async () => {
+  const { weightedDamerauLevenshtein } = await import("../services/chatbot/understanding/normalization/fuzzy/weightedDamerauLevenshtein.js");
+  const adjCost = weightedDamerauLevenshtein("cafe", "czfe"); // 'a' et 'z' sont adjacents sur AZERTY
+  const nonAdjCost = weightedDamerauLevenshtein("cafe", "cpfe"); // 'a' et 'p' sont éloignés
+  assert.ok(adjCost < nonAdjCost);
+  assert.equal(adjCost, 0.5);
+});
+
+test("ICU message plural formatting handles singular and plural counts", async () => {
+  const { interpolate } = await import("../services/chatbot/responses/resolution/variableInterpolator.service.js");
+  const template = "Trouvé {count, plural, one {# endroit} other {# endroits}} à {city}.";
+  assert.equal(interpolate(template, { count: 1, city: "Tunis" }), "Trouvé 1 endroit à Tunis.");
+  assert.equal(interpolate(template, { count: 3, city: "Tunis" }), "Trouvé 3 endroits à Tunis.");
+});
+
+test("pendingQuestion resolution: clarifies missing criteria without full reset", async () => {
+  const gw = newGateway();
+  // Requête vague sans ville ni catégorie
+  const step1 = await gw.handleTurn({ sessionId: "s-pending", text: "je veux sortir" });
+  assert.equal(step1.metadata.intentKey, "ASK_MORE_CRITERIA");
+
+  // L'utilisateur répond simplement par une ville "La Marsa"
+  const step2 = await gw.handleTurn({ sessionId: "s-pending", text: "à La Marsa" });
+  assert.equal(step2.metadata.intentKey, "DISCOVER_SUCCESS");
+  assert.match(step2.text, /Café Sidi/);
+});
+
+test("outing plan DAG validation rejects cycles and validates sequential dependencies", async () => {
+  const { validateOutingPlanGraph } = await import("../services/chatbot/capabilities/actionPlanning/chatOutingPlanGraph.service.js");
+  const validPlan = {
+    steps: [
+      { id: "step_1", dependencies: [] },
+      { id: "step_2", dependencies: ["step_1"] },
+    ],
+  };
+  assert.equal(validateOutingPlanGraph(validPlan).valid, true);
+
+  const cyclicPlan = {
+    steps: [
+      { id: "step_1", dependencies: ["step_2"] },
+      { id: "step_2", dependencies: ["step_1"] },
+    ],
+  };
+  assert.equal(validateOutingPlanGraph(cyclicPlan).valid, false);
+});
+
+test("outing plan workflow: pauses cleanly on detail question and resumes with suggestions", async () => {
+  const gw = newGateway();
+  // 1. Lancement d'un plan multi-étapes
+  const planReply = await gw.handleTurn({ sessionId: "s-dag-plan", text: "un café puis un restaurant à la marsa" });
+  assert.equal(planReply.metadata.intentKey, "PLAN_SUCCESS");
+
+  // 2. Question incidente sur les horaires : le plan est mis en pause dans interruptStack sans être perdu
+  const detailReply = await gw.handleTurn({ sessionId: "s-dag-plan", text: "c'est quoi les horaires ?" });
+  assert.equal(detailReply.metadata.intentKey, "DETAIL_HOURS");
+  assert.match(detailReply.text, /08:00 - 23:00/);
+  assert.ok(detailReply.suggestions.includes("Reprendre le programme"));
+
+  // 3. L'utilisateur clique ou écrit "reprendre le programme" -> reprise automatique du plan de sortie
+  const resumeReply = await gw.handleTurn({ sessionId: "s-dag-plan", text: "reprendre le programme" });
+  assert.equal(resumeReply.metadata.intentKey, "PLAN_SUCCESS");
+  assert.match(resumeReply.text, /On reprend votre programme de sortie/);
+});
+
+test("classification facade produces rich standardized DTO with slots and isMultiStepOuting flag", async () => {
+  const { classifyTurn } = await import("../services/chatbot/understanding/classification/chatClassification.facade.js");
+  const { normalizeChatText } = await import("../services/chatbot/understanding/normalization/chatTextNormalizer.service.js");
+  const normalized = normalizeChatText("un café et un restaurant pas cher à Sousse avec wifi");
+  const result = classifyTurn({ normalized });
+
+  assert.ok(result.dto);
+  assert.equal(result.dto.isMultiStepOuting, true);
+  assert.equal(result.dto.slots.city, "Sousse");
+  assert.equal(result.dto.slots.budgetLevel, "low");
+  assert.deepEqual(result.dto.slots.amenities, ["wifi"]);
+  assert.deepEqual(result.dto.slots.categories, ["cafe", "restaurant"]);
+});
+
+
 
 

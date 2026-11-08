@@ -1,0 +1,38 @@
+{
+  "gremda": {
+    "canonical": "Gremda",
+    "aliases": ["gremda", "gramda", "gromda", "قرمدة", "route gremda", "thnyet gremda"]
+  },
+  "chihia": {
+    "canonical": "Chihia",
+    "aliases": ["chihia", "chahiya", "chiha", "chihya", "الشيحية", "route chihia", "thnyet chihia"]
+  },
+  "sakiet_ezzit": {
+    "canonical": "Sakiet Ezzit",
+    "aliases": ["sakiet ezzit", "sa9iet ezzit", "sqiet ezzit", "ezzit", "ساقية الزيت"]
+  },
+  "sakiet_eddaier": {
+    "canonical": "Sakiet Eddaïer",
+    "aliases": ["sakiet eddaier", "sa9iet eddayer", "eddaier", "eddayer", "ساقية الدائر"]
+  },
+  "centre_ville": {
+    "canonical": "Centre-ville",
+    "aliases": ["centre ville", "centre-ville", "centre ville sfax", "downtown", "downtown sfax", "bab bhar", "beb bhar", "bab b7ar", "beb b7ar", "bab plage", "beb plage", "sfax el mdina", "وسط المدينة", "باب بحر"]
+  },
+  "sidi_mansour": {
+    "canonical": "Sidi Mansour",
+    "aliases": ["sidi mansour", "sidi mansur", "سيدي منصور"]
+  },
+  "teniour": {
+    "canonical": "Téniour",
+    "aliases": ["teniour", "tenyur", "تنيور", "route teniour"]
+  },
+  "afrane": {
+    "canonical": "Afrane",
+    "aliases": ["afrane", "el afrane", "الأفران", "الافران", "route el afrane"]
+  },
+  "soukra": {
+    "canonical": "Soukra",
+    "aliases": ["soukra sfax", "route soukra", "السكرة"]
+  }
+}

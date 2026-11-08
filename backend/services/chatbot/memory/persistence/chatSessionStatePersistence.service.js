@@ -17,11 +17,18 @@ export function deepMergeConstraints(previous, incoming = {}) {
 
   const categories = inc.categories?.length ? inc.categories : (prev.categories || []).filter((c) => !excludedCategories.includes(c));
 
+  const neighborhoods = union(prev.neighborhoods, inc.neighborhoods);
+
   return {
     city: inc.city || prev.city || null,
+    neighborhood: inc.neighborhood || prev.neighborhood || neighborhoods[0] || null,
+    neighborhoods,
     category: categories[0] || null,
     categories,
     budgetLevel: inc.budgetLevel || prev.budgetLevel || null,
+    situation: inc.situation || prev.situation || null,
+    group: inc.group || prev.group || null,
+    mood: inc.mood || prev.mood || null,
     amenities,
     vibes: union(prev.vibes, inc.vibes),
     urgency: inc.urgency || prev.urgency || null,

@@ -13,10 +13,13 @@ Ce document décrit l'architecture industrielle, modulaire et déterministe-hybr
    - Tout passage d'une couche à l'autre repose sur un contrat de données explicite et validé (`turnUnderstanding`, `memoryFrame`, `capabilityResult`, `responseDto`).
 3. **Pipeline de Compréhension Multi-Étapes (`understanding/`) — Le LLM ne répond jamais directement au client** :
    - **Étape 0 (`normalization/`)** : Nettoyage Unicode, réduction des répétitions (`"caaaafé"` -> `"café"`), translittération Derja/Arabizi (`3`, `7`, `9`, `5`), correction de fautes de frappe (distance Damerau-Levenshtein) et alias géographiques tunisiens (`"marsa"`, `"lac 2"`).
-   - **Étape 1 (`fastPath/`)** : Rapprochement instantané (`0 ms`) sur catalogues JSON symétriques (`fr`, `ar`, `en`, `derja`).
-   - **Étape 2 (`classification/` & `constraints/`)** : Classification déterministe des actes de dialogue (`dialogueAct`), de la catégorie, de l'ambiance (`vibe`), de l'urgence et extraction structurée des contraintes (`city`, `category`, `budgetLevel`, `amenities`, `excluded`).
-   - **Étape 3 (`semantic/chatMiniLmEmbedder` & `chatSemanticIntentMatcher`)** : Découpage en clauses (`clauseSegmenter`), rapprochement sémantique hybride (MiniLM `Xenova/paraphrase-multilingual-MiniLM-L12-v2` + TF-IDF cosinus) sur corpus d'ancres multilingue (FR/EN/AR/Derja).
-   - **Étape 4 (`semantic/chatLlmIntentClassifier` — Gemini 2.5 Flash / Groq)** : Appelé **uniquement si les étapes 1 à 3 sont incertaines** (`confidence < 0.58`). Le LLM (`gemini-2.5-flash` avec `thinkingBudget: 0` en n°1 pour la Derja Tounsia, `Groq llama-3.3-70b-versatile` en secours) **ne rédige jamais la réponse** : il renvoie exclusivement un JSON strict `{ intent, city, category, budgetLevel, amenities }` validé contre `supportedIntentContract.json`. La réponse finale est toujours assemblée par le dossier `responses/`.
+   - **Étape 1 (`fastPath/`)** : Rapprochement ultra-rapide (`< 0.5 ms`) en 2 passes :
+     - *Passe 1A (Exact Lookup `O(1)`)* : Table de hachage sur catalogues JSON symétriques (`fr`, `ar`, `en`, `derja`).
+     - *Passe 1B (Pattern Rules `schemaVersion: "1.0.0"`)* : Expressions régulières multilingues pré-compilées au démarrage (`fastPath/catalogs/rules/intentRules.v1.json`), triées par `priority DESC` puis `confidence DESC`, extrayant à la fois l'intention (`domain`, `intent`, `subIntent`) et les facettes de contraintes.
+   - **Étape 2 (`classification/` & `constraints/`)** : Classification déterministe des actes de dialogue (`dialogueAct`), de la catégorie, de l'ambiance (`vibe`), de l'urgence et extraction structurée des contraintes (`city`, `category`, `budgetLevel`, `maxBudget`, `nearMe`, `amenities`, `excluded`).
+   - **Étape 3 (`semantic/`)** : Découpage en clauses (`chatClauseSegmenter`), rapprochement sémantique vectoriel 100% local (`chatMiniLmEmbedder` & `chatSemanticIntentMatcher` + TF-IDF cosinus) sur corpus d'ancres multilingue (FR/EN/AR/Derja), sans aucun appel réseau.
+   - **Étape 4 (`llm/chatLlmIntentClassifier` — Gemini 2.5 Flash / Groq)** : Appelé **uniquement en dernier recours si les étapes 1 à 3 sont incertaines** (`confidence < 0.58`). Le LLM (`gemini-2.5-flash` avec `thinkingBudget: 0` en n°1 pour la Derja Tounsia, `Groq llama-3.3-70b-versatile` en secours) **ne rédige jamais la réponse** : il renvoie exclusivement un JSON strict `{ intent, city, category, budgetLevel, amenities }` validé contre `supportedIntentContract.json`.
+   - **Étape 5 (`arbiter/chatUnderstandingArbiter`)** : Arbitre souverain multi-couches produisant le contrat immuable `turnUnderstanding`.
 4. **Mémoire Conversationnelle, Historique & Statut (`memory/`)** :
    - **Verrouillage de Tour (`chatSessionTurnLock`)** : Empêche les conditions de course (*race conditions*) lorsqu'un utilisateur envoie plusieurs messages simultanément.
    - **Machine à États & Statut (`chatWorkflowStateSchema`)** : Suit le statut exact de la session (`IDLE`, `COLLECTING_CRITERIA`, `RECOMMENDING`, `REFINING`, `INSPECTING_ITEM`, `PLANNING_OUTING`, `PARTNER_ASSIST`).
@@ -82,7 +85,7 @@ backend/services/chatbot/
 │   │   │   └── normalizationCatalog.loader.js
 │   │   └── chatTextNormalizer.service.js
 │   │
-│   ├── fastPath/                                          (Étape 1 : Rapprochement rapide 0 ms)
+│   ├── fastPath/                                          (Étape 1 : Rapprochement rapide < 0.5 ms — Exact O(1) + Rules Schema 1.0.0)
 │   │   ├── catalogs/
 │   │   │   ├── fr/
 │   │   │   │   ├── common.json
@@ -94,6 +97,8 @@ backend/services/chatbot/
 │   │   │   │   └── common.json
 │   │   │   ├── derja/
 │   │   │   │   └── common.json
+│   │   │   ├── rules/
+│   │   │   │   └── intentRules.v1.json                    (Règles déclaratives Schema 1.0.0 : priority, confidence, patterns)
 │   │   │   └── supportedIntentContract.json
 │   │   ├── loaders/
 │   │   │   └── fastPathCatalog.loader.js
@@ -109,15 +114,21 @@ backend/services/chatbot/
 │   ├── constraints/                                       (Étape 2B : Extraction d'entités & filtres cumulables)
 │   │   └── chatOutingConstraints.service.js
 │   │
-│   └── semantic/                                          (Étape 3 : Similarité sémantique & Arbitre)
-│       ├── config/
-│       │   └── semanticThresholds.config.js
-│       ├── corpus/
-│       │   └── semanticIntentCorpus.json
+│   ├── semantic/                                          (Étape 3 : Recherche Sémantique Locale MiniLM — 0 Appel Externe)
+│   │   ├── config/
+│   │   │   └── semanticThresholds.config.js
+│   │   ├── corpus/
+│   │   │   └── semanticIntentCorpus.json
+│   │   ├── chatClauseSegmenter.service.js
+│   │   ├── chatMiniLmEmbedder.service.js
+│   │   └── chatSemanticIntentMatcher.service.js
+│   │
+│   ├── llm/                                               (Étape 4 : Classifieur d'Intention LLM Isolé — Dernier Recours)
+│   │   └── chatLlmIntentClassifier.service.js
+│   │
+│   └── arbiter/                                           (Étape 5 : Arbitre Souverain Multi-Couches & Contrat Canonique)
 │       ├── contracts/
 │       │   └── turnUnderstanding.contract.js
-│       ├── chatClauseSegmenter.service.js
-│       ├── chatSemanticIntentMatcher.service.js
 │       └── chatUnderstandingArbiter.service.js
 │
 ├── memory/                                                <-- GESTION CENTRALISÉE DE LA MÉMOIRE, HISTORIQUE & STATUT

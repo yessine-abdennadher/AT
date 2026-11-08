@@ -1,39 +1,28 @@
-const LABELS = {
-  fr: {
-    discover: ["Moins cher", "Avec terrasse", "Avec wifi", "Autre ville"],
-    inspect: ["Horaires", "Menu", "Adresse", "Contact"],
-    plan: ["Voir les horaires", "Autre programme"],
-    idle: ["Un café", "Un restaurant", "Une sortie en famille"],
-  },
-  en: {
-    discover: ["Cheaper", "With terrace", "With wifi", "Another city"],
-    inspect: ["Opening hours", "Menu", "Address", "Contact"],
-    plan: ["Opening hours", "Another plan"],
-    idle: ["A coffee shop", "A restaurant", "A family outing"],
-  },
-  ar: {
-    discover: ["أرخص", "مع تراس", "مع واي فاي", "مدينة أخرى"],
-    inspect: ["الأوقات", "المنيو", "العنوان", "التواصل"],
-    plan: ["الأوقات", "برنامج آخر"],
-    idle: ["قهوة", "مطعم", "خرجة عائلية"],
-  },
-  derja: {
-    discover: ["Ar5as", "M3a terrasse", "M3a wifi", "Ville o5ra"],
-    inspect: ["El wa9t", "El menu", "L'adresse", "Contact"],
-    plan: ["Chouf el wa9t", "Programme akher"],
-    idle: ["9ahwa", "Restaurant", "Kharja m3a el 3ayla"],
-  },
-};
+import { getSmartSuggestions } from "../suggestions/smartSuggestionsEngine.service.js";
 
 /**
- * Suggestions contextuelles selon le statut du dialogue.
- * Les langues sans libellés dédiés (derja) utilisent le français.
+ * Suggestions contextuelles intelligentes selon le statut du dialogue,
+ * la disponibilité GPS, la zone demandée et le niveau d'avancement (workflow par étapes).
  */
-export function buildQuickReplies({ status, lang = "fr", hasResults = false, hasPlan = false }) {
-  const labels = LABELS[lang] || LABELS.fr;
-  if (hasPlan) return labels.plan;
-  if (status === "INSPECTING_ITEM") return labels.inspect;
-  if (hasResults || ["RECOMMENDING", "REFINING"].includes(status)) return labels.discover;
-  return labels.idle;
+export function buildQuickReplies({
+  status = "IDLE",
+  lang = "fr",
+  hasResults = false,
+  hasPlan = false,
+  hasGps = false,
+  pendingField = null,
+  isZoneAlternative = false,
+  constraints = {},
+} = {}) {
+  return getSmartSuggestions({
+    status,
+    lang,
+    hasResults,
+    hasPlan,
+    hasGps,
+    pendingField,
+    isZoneAlternative,
+    constraints,
+  });
 }
 

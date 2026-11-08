@@ -58,3 +58,22 @@ test("chat session lookup requires the bearer token digest as well as the sessio
     sessionTokenHash: createHash("sha256").update("token").digest("hex"),
   });
 });
+
+test("session creation provides dynamic welcome prompt and quick replies in the requested language", async () => {
+  let created;
+  const store = storeModule.createChatSessionStore({
+    ChatSessionModel: { create: async (value) => (created = { ...value }) },
+  });
+
+  // Test en Derja
+  await store.createChatSession({ roleContext: "anonyme", language: "derja" });
+  assert.equal(created.messages.length, 1);
+  assert.equal(created.messages[0].sender, "bot");
+  assert.ok(created.messages[0].text.length > 5);
+  assert.ok(Array.isArray(created.messages[0].suggestions) && created.messages[0].suggestions.length > 0);
+  assert.deepEqual(created.messages[0].suggestions, ["Khaddem GPS 📍", "Gremda", "Chihia", "Sakiet Ezzit", "Centre-ville"]);
+
+  // Test en Français
+  await store.createChatSession({ roleContext: "anonyme", language: "fr" });
+  assert.deepEqual(created.messages[0].suggestions, ["Activer position 📍", "Gremda", "Chihia", "Sakiet Ezzit", "Centre-ville"]);
+});

@@ -5,35 +5,71 @@
     "bonsoir",
     "coucou",
     "hello",
-    "hey"
+    "hey",
+    "yo",
+    "salutations",
+    "bonne apres midi",
+    "bonjour tfarhida",
+    "bonjour le bot",
+    "allo",
+    "bonjour a tous",
+    "rebonjour"
   ],
   "THANKS": [
     "merci",
     "merci beaucoup",
     "super merci",
     "top merci",
-    "parfait merci"
+    "parfait merci",
+    "merci infiniment",
+    "merci bien",
+    "je vous remercie",
+    "c est gentil merci",
+    "merci pour ton aide",
+    "merci a toi",
+    "un grand merci",
+    "merci chef"
   ],
   "GOODBYE": [
     "au revoir",
     "a bientot",
+    "a plus",
+    "a plus tard",
     "bye",
+    "bye bye",
     "bonne soiree",
-    "bonne journee"
+    "bonne journee",
+    "bonne nuit",
+    "a la prochaine",
+    "a demain",
+    "ciao",
+    "je m en vais"
   ],
   "HELP_GENERAL": [
     "aide",
+    "aidez moi",
+    "aide moi",
     "comment ca marche",
     "que peux tu faire",
-    "aide moi",
-    "besoin d aide"
+    "que sais tu faire",
+    "besoin d aide",
+    "comment utiliser l application",
+    "mode d emploi",
+    "qui es tu",
+    "fonctionnalites",
+    "guide",
+    "peux tu m aider"
   ],
   "RESET_SEARCH": [
     "recommencer",
     "nouvelle recherche",
     "reinitialiser",
     "tout effacer",
-    "changer tout"
+    "changer tout",
+    "effacer les filtres",
+    "repartir de zero",
+    "reset",
+    "annuler les filtres",
+    "remise a zero"
   ]
 }
-
