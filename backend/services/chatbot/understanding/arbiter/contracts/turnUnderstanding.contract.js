@@ -15,6 +15,7 @@ export function createTurnUnderstanding(partial = {}) {
     urgency: partial.urgency || null,
     segments: partial.segments || [],
     normalizedText: partial.normalizedText || "",
+    ruleMetadata: partial.ruleMetadata || null,
   });
 }
 

@@ -29,6 +29,30 @@ function mergeConstraints(primary = {}, secondary = {}) {
   };
 }
 
+/**
+ * Fusionne les contraintes issues des règles déclaratives fastPath (Schema 1.0.0)
+ * dans celles de la classification. La classification reste prioritaire en cas de conflit.
+ */
+function mergeRuleConstraints(base = {}, ruleConstraints = null) {
+  if (!ruleConstraints) return base;
+  const merged = { ...base };
+
+  if (ruleConstraints.category && !merged.category) {
+    merged.category = ruleConstraints.category;
+    merged.categories = [ruleConstraints.category];
+  }
+  if (ruleConstraints.group && !merged.group) merged.group = ruleConstraints.group;
+  if (ruleConstraints.budgetLevel && !merged.budgetLevel) merged.budgetLevel = ruleConstraints.budgetLevel;
+  if (ruleConstraints.situation && !merged.situation) merged.situation = ruleConstraints.situation;
+  if (ruleConstraints.amenities?.length) {
+    merged.amenities = [...new Set([...(merged.amenities || []), ...ruleConstraints.amenities])];
+  }
+  if (Number.isFinite(ruleConstraints.maxBudget)) merged.maxBudget = ruleConstraints.maxBudget;
+  if (ruleConstraints.nearMe) merged.nearMe = true;
+
+  return merged;
+}
+
 const EXPLICIT_FRENCH_REGEX = /\b(je|nous|vous|pour|dans|avec|une|des|les|est-ce|bonjour|bonsoir|merci beaucoup|salut|svp)\b/i;
 
 /**
@@ -57,11 +81,12 @@ export function arbitrateUnderstanding({ normalized, fastPath, classification, s
   const base = {
     language: resolvedLanguage,
     dialogueAct: classification.dialogueAct,
-    constraints: classification.constraints,
+    constraints: mergeRuleConstraints(classification.constraints, fastPath?.ruleConstraints),
     vibes: classification.vibes,
     urgency: classification.urgency,
     segments,
     normalizedText: normalized.normalizedText,
+    ruleMetadata: fastPath?.ruleMetadata || null,
   };
 
   if (fastPath?.matched) {
@@ -114,7 +139,8 @@ export function arbitrateUnderstanding({ normalized, fastPath, classification, s
     }
   }
 
-  if (classification.hasConstraints || classification.dialogueAct === "SEARCH_REQUEST") {
+  const ruleSuggestsDiscovery = fastPath?.ruleMatched && fastPath.ruleIntent === "DISCOVER_ACTIVITIES";
+  if (classification.hasConstraints || classification.dialogueAct === "SEARCH_REQUEST" || ruleSuggestsDiscovery) {
     const refining = classification.dialogueAct === "REFINEMENT";
     return createTurnUnderstanding({ ...base, intent: refining ? "REFINE_CRITERIA" : "DISCOVER_ACTIVITIES", confidence: 0.85, source: "classification" });
   }

@@ -41,6 +41,7 @@ export function createChatMainGateway({
 
     const needsLlmIntent =
       !fastPath.matched &&
+      !fastPath.ruleMatched &&
       !classification.detailIntent &&
       !classification.hasConstraints &&
       classification.dialogueAct !== "RESET" &&
