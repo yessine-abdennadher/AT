@@ -20,8 +20,9 @@ export function isOutingPlanActive(plan) {
 export function savePlan(state, steps) {
   const sanitizedSteps = (steps || []).map(({ activity, ...rest }) => ({
     ...rest,
-    activityName: activity?.name || null,
+    activityName: activity?.name || activity?.title || null,
     activityCity: activity?.city || null,
+    activityPrice: Number.isFinite(activity?.price) ? activity.price : null,
   }));
 
   return {
@@ -30,6 +31,33 @@ export function savePlan(state, steps) {
       steps: sanitizedSteps,
       status: "in_progress",
       interruptStack: [],
+      updatedAt: new Date().toISOString(),
+    },
+  };
+}
+
+export function replaceOutingPlanStep(state, stepIndex, newActivity) {
+  const plan = state?.plan;
+  if (!isOutingPlanActive(plan) || !plan.steps[stepIndex]) return state;
+
+  const nextSteps = plan.steps.map((step, idx) => {
+    if (idx !== stepIndex) return step;
+    const id = newActivity ? String(newActivity._id ?? newActivity.id) : null;
+    return {
+      ...step,
+      activityId: id,
+      activityName: newActivity?.name || newActivity?.title || null,
+      activityCity: newActivity?.city || null,
+      activityPrice: Number.isFinite(newActivity?.price) ? newActivity.price : null,
+      status: newActivity ? "done" : "empty",
+    };
+  });
+
+  return {
+    ...state,
+    plan: {
+      ...plan,
+      steps: nextSteps,
       updatedAt: new Date().toISOString(),
     },
   };

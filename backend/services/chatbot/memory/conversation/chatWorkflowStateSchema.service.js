@@ -1,4 +1,4 @@
-import { TURN_STATUSES } from "../../understanding/semantic/contracts/turnUnderstanding.contract.js";
+import { TURN_STATUSES } from "../../understanding/arbiter/contracts/turnUnderstanding.contract.js";
 
 export const STATUS_TRANSITIONS = Object.freeze({
   IDLE: ["COLLECTING_CRITERIA", "RECOMMENDING", "INSPECTING_ITEM", "PLANNING_OUTING", "PARTNER_ASSIST"],
@@ -17,6 +17,8 @@ export const emptyConstraints = () => ({
   category: null,
   categories: [],
   budgetLevel: null,
+  maxBudget: null,
+  nearMe: false,
   situation: null,
   group: null,
   mood: null,

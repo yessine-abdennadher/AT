@@ -17,16 +17,24 @@ export async function runFastPathBenchmark() {
     const hit = matchFastPath(norm);
     const matchOk = hit.matched === item.expectedMatched;
     const intentOk = !item.expectedIntent || hit.intent === item.expectedIntent;
-    if (matchOk && intentOk) {
+    const rc = hit.ruleConstraints || {};
+    const ruleOk = !item.expectedRuleId || hit.ruleMetadata?.matchedRuleIds?.includes(item.expectedRuleId);
+    const catOk = !item.expectedCategory || rc.category === item.expectedCategory;
+    const amenOk = !item.expectedAmenity || rc.amenities?.includes(item.expectedAmenity);
+    const groupOk = !item.expectedGroup || rc.group === item.expectedGroup;
+    const budgetOk = item.expectedMaxBudget === undefined || rc.maxBudget === item.expectedMaxBudget;
+    const nearOk = item.expectedNearMe === undefined || rc.nearMe === item.expectedNearMe;
+    const sitOk = !item.expectedSituation || rc.situation === item.expectedSituation;
+    if (matchOk && intentOk && ruleOk && catOk && amenOk && groupOk && budgetOk && nearOk && sitOk) {
       passed += 1;
     } else {
-      failures.push({ input: item.input, expected: item.expectedIntent, got: hit.intent, matched: hit.matched });
+      failures.push({ input: item.input, expected: item, got: { intent: hit.intent, matched: hit.matched, rule: hit.ruleMetadata, constraints: hit.ruleConstraints } });
     }
   }
 
   const durationMs = performance.now() - start;
   return {
-    layer: "Couche 1 - FastPath (0 ms)",
+    layer: "Couche 1 - FastPath (Exact O(1) + Règles Schema 1.0.0)",
     passed,
     total: dataset.length,
     accuracy: Number(((passed / dataset.length) * 100).toFixed(1)),

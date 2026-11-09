@@ -132,9 +132,7 @@ export function App() {
         isOpen={isOnboardingOpen}
         onClose={() => setIsOnboardingOpen(false)}
         initialPlan={selectedPlan}
-        onCompleted={() => {
-          handleSwitchView('partner');
-        }}
+        onCompleted={() => setIsOnboardingOpen(false)}
       />
     </div>
   );

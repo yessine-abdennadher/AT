@@ -1,0 +1,211 @@
+[
+  {
+    "table": 1,
+    "theme": "Recherche d'activités et idées de sorties",
+    "cases": [
+      { "lang": "fr", "input": "Que puis-je faire aujourd'hui à Sfax ?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax" },
+      { "lang": "en", "input": "What can I do today in Sfax?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax" },
+      { "lang": "ar", "input": "ماذا يمكنني أن أفعل اليوم في صفاقس؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax" },
+      { "lang": "aradarja", "input": "شنوة نجم نعمل اليوم في صفاقس؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectAradarja": true },
+      { "lang": "fr", "input": "Propose-moi une activité sympa.", "expectedIntent": "DISCOVER_ACTIVITIES" },
+      { "lang": "en", "input": "Suggest a fun activity.", "expectedIntent": "DISCOVER_ACTIVITIES" },
+      { "lang": "ar", "input": "اقترح عليّ نشاطًا ممتعًا.", "expectedIntent": "DISCOVER_ACTIVITIES" },
+      { "lang": "aradarja", "input": "اقترح عليّا نشاط باهي.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true },
+      { "lang": "fr", "input": "Je ne sais pas où sortir ce soir.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedEvening": true },
+      { "lang": "en", "input": "I don't know where to go tonight.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedEvening": true },
+      { "lang": "ar", "input": "لا أعرف أين أخرج الليلة.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedEvening": true },
+      { "lang": "aradarja", "input": "ما نعرفش وين نخرج الليلة.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedEvening": true, "expectAradarja": true },
+      { "lang": "fr", "input": "Donne-moi des idées de sorties originales.", "expectedIntent": "DISCOVER_ACTIVITIES" },
+      { "lang": "aradarja", "input": "أعطيني أفكار خرجة موش عادية.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نحب نكتشف بلايص جديدة.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true },
+      { "lang": "aradarja", "input": "شنوة فما باش نعمل الويكاند؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نحب نخرج أما ما عنديش حتى فكرة.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 2,
+    "theme": "Sorties entre amis",
+    "cases": [
+      { "lang": "fr", "input": "Où sortir avec mes amis à Sfax ?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedGroup": "friends" },
+      { "lang": "en", "input": "Where can I go out with my friends in Sfax?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedGroup": "friends" },
+      { "lang": "ar", "input": "أين يمكنني الخروج مع أصدقائي في صفاقس؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedGroup": "friends" },
+      { "lang": "aradarja", "input": "وين نجم نخرج مع صحابي في صفاقس؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedGroup": "friends", "expectAradarja": true },
+      { "lang": "aradarja", "input": "أحنا أربعة، اقترحلنا نشاط باهي.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedGroup": "friends", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نحبّو نتفرهدو الليلة.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedEvening": true, "expectAradarja": true },
+      { "lang": "fr", "input": "Une sortie entre potes sans trop dépenser ?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedGroup": "friends", "expectedBudgetLevel": "low" },
+      { "lang": "aradarja", "input": "خرجة مع الصحاب وما نصرفوش برشا؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedGroup": "friends", "expectedBudgetLevel": "low", "expectAradarja": true },
+      { "lang": "aradarja", "input": "وين نجموا نعدّيو سهرة باهية؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedEvening": true, "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 3,
+    "theme": "Sorties en couple / Romantic",
+    "cases": [
+      { "lang": "fr", "input": "Où sortir avec ma copine à Sfax ?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedGroup": "couple" },
+      { "lang": "en", "input": "Where can I go with my girlfriend in Sfax?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedGroup": "couple" },
+      { "lang": "ar", "input": "أين أخرج مع حبيبتي في صفاقس؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedGroup": "couple" },
+      { "lang": "aradarja", "input": "وين نخرج مع صاحبتي في صفاقس؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedGroup": "couple", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نلوج على بلاصة رومانسية.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedGroup": "couple", "expectAradarja": true },
+      { "lang": "aradarja", "input": "قهوة هادئة لزوز؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "cafe", "expectedGroup": "couple", "expectedAmenity": "calme", "expectAradarja": true },
+      { "lang": "aradarja", "input": "خرجة رومانسية بميزانية صغيرة؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedGroup": "couple", "expectedBudgetLevel": "low", "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 4,
+    "theme": "Cafés et salons de thé",
+    "cases": [
+      { "lang": "fr", "input": "Trouve-moi un bon café à Sfax.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedCategory": "cafe" },
+      { "lang": "en", "input": "Find me a good café in Sfax.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedCategory": "cafe" },
+      { "lang": "ar", "input": "ابحث لي عن مقهى جيد في صفاقس.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedCategory": "cafe" },
+      { "lang": "aradarja", "input": "لوّجلي على قهوة باهية في صفاقس.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedCategory": "cafe", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نلوج على قهوة عندها تراس باهي.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "cafe", "expectedAmenity": "terrasse", "expectAradarja": true },
+      { "lang": "aradarja", "input": "قهوة هادئة نجم نخدم فيها؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "cafe", "expectedAmenity": "calme", "expectAradarja": true },
+      { "lang": "aradarja", "input": "وين نشرب كابتشينو بنين؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "cafe", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نحب قهوة تطل على البحر.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "cafe", "expectedAmenity": "vue_mer", "expectAradarja": true },
+      { "lang": "aradarja", "input": "أنهي قهاوي محلولين توّا؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "cafe", "expectedSituation": "open_now", "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 5,
+    "theme": "Restaurants et nourriture",
+    "cases": [
+      { "lang": "fr", "input": "Où manger à Sfax ?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedCategory": "restaurant" },
+      { "lang": "en", "input": "Where can I eat in Sfax?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedCategory": "restaurant" },
+      { "lang": "ar", "input": "أين يمكنني تناول الطعام في صفاقس؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax" },
+      { "lang": "aradarja", "input": "وين نجم ناكل في صفاقس؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedCategory": "restaurant", "expectAradarja": true },
+      { "lang": "aradarja", "input": "مطعم ما يغلاش؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "restaurant", "expectedBudgetLevel": "low" },
+      { "lang": "aradarja", "input": "وين ناكل بيتزا بنينة؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "restaurant", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نحب ناكل فواكه البحر.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "restaurant", "expectAradarja": true },
+      { "lang": "aradarja", "input": "اقترح عليّا بلاصة نتغدّى فيها.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "restaurant", "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 6,
+    "theme": "Budget et prix",
+    "cases": [
+      { "lang": "fr", "input": "J'ai seulement 10 dinars, que puis-je faire ?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedMaxBudget": 10 },
+      { "lang": "en", "input": "Suggest an outing under 20 TND.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedMaxBudget": 20 },
+      { "lang": "ar", "input": "اقترح عليّ خرجة بأقل من 20 دينارًا.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedMaxBudget": 20 },
+      { "lang": "aradarja", "input": "عندي كان 10 دنانير، شنوة نجم نعمل؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedMaxBudget": 10, "expectAradarja": true },
+      { "lang": "aradarja", "input": "وين نجم نخرج بميزانية 30 دينار؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedMaxBudget": 30, "expectAradarja": true },
+      { "lang": "aradarja", "input": "نلوج على أنشطة ببلاش.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedBudgetLevel": "low", "expectAradarja": true },
+      { "lang": "aradarja", "input": "شنوة أرخص الخرجات؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedBudgetLevel": "low", "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 7,
+    "theme": "Activités sportives et aventures",
+    "cases": [
+      { "lang": "fr", "input": "Où faire du karting à Sfax ?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedCategory": "sport" },
+      { "lang": "en", "input": "Where can I go karting in Sfax?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedCategory": "sport" },
+      { "lang": "ar", "input": "أبحث عن نشاط رياضي.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "sport" },
+      { "lang": "aradarja", "input": "وين نجم نلعب كارتينغ في صفاقس؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedCategory": "sport", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نلوج على نشاط رياضي.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "sport", "expectAradarja": true },
+      { "lang": "aradarja", "input": "وين نجموا نعملو دورة بالبيسكلات؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "sport", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نحب نجرب سبور جديد.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "sport", "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 8,
+    "theme": "Plage, nature et plein air",
+    "cases": [
+      { "lang": "fr", "input": "Où aller à la plage près de Sfax ?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedCategory": "plage" },
+      { "lang": "aradarja", "input": "وين نجم نمشي للبحر قريب من صفاقس؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedCategory": "plage", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نلوج على بلاصة نتفرج فيها في الغروب.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "plage", "expectAradarja": true },
+      { "lang": "aradarja", "input": "وين نجم نعمل بيكنيك؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "parc", "expectAradarja": true },
+      { "lang": "aradarja", "input": "بلاصة هادئة على البحر؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "plage", "expectedAmenity": "calme", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نحب نقضي وقت في الطبيعة.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCategory": "parc", "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 9,
+    "theme": "Localisation et proximité",
+    "cases": [
+      { "lang": "fr", "input": "Quels sont les endroits proches de moi ?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedNearMe": true },
+      { "lang": "en", "input": "What places are near me?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedNearMe": true },
+      { "lang": "ar", "input": "ما الأماكن القريبة مني؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedNearMe": true },
+      { "lang": "aradarja", "input": "شنوة فما بلايص قريبة ليا؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedNearMe": true, "expectAradarja": true },
+      { "lang": "aradarja", "input": "لوّجلي على بلاصة قريبة لصفاقس الجديدة.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedNeighborhood": "Sfax Jadida", "expectAradarja": true },
+      { "lang": "aradarja", "input": "شنوة نجم نعمل في العين؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedNeighborhood": "El Ain", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نلوج على قهوة قريبة لطريق تونس.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedNeighborhood": "Route de Tunis", "expectedCategory": "cafe", "expectAradarja": true },
+      { "lang": "aradarja", "input": "شنوة فما بلايص على أقل من 5 كلم؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedNearMe": true, "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 10,
+    "theme": "Ambiance et préférences",
+    "cases": [
+      { "lang": "fr", "input": "Je veux un endroit avec de la musique.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedAmenity": "music" },
+      { "lang": "aradarja", "input": "نحب بلاصة فيها موسيقى.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedAmenity": "music", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نلوج على جو هادئ.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedAmenity": "calme", "expectAradarja": true },
+      { "lang": "aradarja", "input": "بلاصة شيك للخرجة؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedAmenity": "chic", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نحب جو عائلي.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedGroup": "family", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نلوج على بلاصة فيها كليماتيزور.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedAmenity": "climatisation", "expectAradarja": true },
+      { "lang": "aradarja", "input": "ما نحبش البلايص المعمّرين برشا.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedAmenity": "calme", "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 11,
+    "theme": "Disponibilité et horaires",
+    "cases": [
+      { "lang": "fr", "input": "Quels établissements sont ouverts maintenant ?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedSituation": "open_now" },
+      { "lang": "aradarja", "input": "أنهي بلايص محلولين توّا؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedSituation": "open_now", "expectAradarja": true },
+      { "lang": "aradarja", "input": "القهوة هاذي محلولة اليوم؟", "expectedIntent": "ASK_OPENING_HOURS", "expectAradarja": true },
+      { "lang": "aradarja", "input": "وين نجم نخرج بعد العشرة متاع الليل؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedEvening": true, "expectAradarja": true },
+      { "lang": "aradarja", "input": "البلاصة هاذي محلولة نهار الأحد؟", "expectedIntent": "ASK_OPENING_HOURS", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نلوج على بلاصة تسكر متأخر.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedEvening": true, "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 12,
+    "theme": "Recommandations personnalisées avec IA",
+    "cases": [
+      { "lang": "aradarja", "input": "اختارلي خرجة على ذوقك.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true },
+      { "lang": "aradarja", "input": "فاجئني بفكرة باهية.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true },
+      { "lang": "aradarja", "input": "حسب ذوقي، وين تنصحني نمشي؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نحب حاجة ما جربتهاش قبل.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true },
+      { "lang": "aradarja", "input": "قارنلي بين الثلاث بلايص هاذم.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true },
+      { "lang": "aradarja", "input": "أعطيني أحسن ثلاثة اختيارات.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 13,
+    "theme": "Bons plans et promotions",
+    "cases": [
+      { "lang": "fr", "input": "Quelles sont les promotions du moment ?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedPromo": true },
+      { "lang": "en", "input": "What promotions are available right now?", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedPromo": true },
+      { "lang": "aradarja", "input": "شنوة فما عروض توّا؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedPromo": true, "expectAradarja": true },
+      { "lang": "aradarja", "input": "نلوج على بون بلانات في صفاقس.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedCity": "Sfax", "expectedPromo": true, "expectAradarja": true },
+      { "lang": "aradarja", "input": "وين نجم نستفاد من تخفيض؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedPromo": true, "expectAradarja": true },
+      { "lang": "aradarja", "input": "اقترحلي خرجة فيها بروموسيون.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedPromo": true, "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 14,
+    "theme": "Questions sur les établissements et leurs services",
+    "cases": [
+      { "lang": "aradarja", "input": "البلاصة هاذي فيها واي فاي؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedAmenity": "wifi", "expectAradarja": true },
+      { "lang": "aradarja", "input": "فما باركينغ؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedAmenity": "parking", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نجم نتصل بالمسؤول؟", "expectedIntent": "ASK_CONTACT_OR_SOCIAL", "expectAradarja": true },
+      { "lang": "aradarja", "input": "نجم نحجز طاولة؟", "expectedIntent": "ASK_CONTACT_OR_SOCIAL", "expectAradarja": true },
+      { "lang": "aradarja", "input": "البلاصة فيها كليماتيزور؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedAmenity": "climatisation", "expectAradarja": true },
+      { "lang": "aradarja", "input": "فما بلاصة البرّا؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedAmenity": "terrasse", "expectAradarja": true },
+      { "lang": "aradarja", "input": "البلاصة تقبل العايلات؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedGroup": "family", "expectAradarja": true }
+    ]
+  },
+  {
+    "table": 15,
+    "theme": "Conversations naturelles et demandes imprécises",
+    "cases": [
+      { "lang": "aradarja", "input": "جاني الجو نخرج.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true },
+      { "lang": "aradarja", "input": "راني مقلق وملّيت.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedMood": "boredom_relief", "expectAradarja": true },
+      { "lang": "aradarja", "input": "السخانة قوية، وين نمشي؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedSituation": "hot", "expectAradarja": true },
+      { "lang": "aradarja", "input": "تصب الشتا، اقترحلي حاجة.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedSituation": "rain", "expectAradarja": true },
+      { "lang": "aradarja", "input": "ما يكونش غالي برشا، أما يكون باهي.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectedBudgetLevel": "low", "expectAradarja": true },
+      { "lang": "aradarja", "input": "حاجة أخرى.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true },
+      { "lang": "aradarja", "input": "عندك فكرة خير؟", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true },
+      { "lang": "aradarja", "input": "موش هذا اللي نلوج عليه.", "expectedIntent": "DISCOVER_ACTIVITIES", "expectAradarja": true }
+    ]
+  }
+]
+

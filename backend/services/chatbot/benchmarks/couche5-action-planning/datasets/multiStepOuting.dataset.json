@@ -1,0 +1,52 @@
+[
+  {
+    "id": "dag-linear-two-steps",
+    "description": "Programme linéaire café puis restaurant",
+    "categories": ["cafe", "restaurant"],
+    "expectedStepsCount": 2,
+    "expectValidDag": true
+  },
+  {
+    "id": "dag-three-steps",
+    "description": "Programme café puis restaurant puis lounge",
+    "categories": ["cafe", "restaurant", "lounge"],
+    "expectedStepsCount": 3,
+    "expectValidDag": true
+  },
+  {
+    "id": "guidance-resume-on-affirmation",
+    "description": "Reprise de programme en pause lors d'une affirmation",
+    "planStatus": "paused",
+    "dialogueAct": "AFFIRMATION",
+    "expectedDecision": "RESUME_PLAN"
+  },
+  {
+    "id": "guidance-next-step-on-affirmation",
+    "description": "Passage à l'étape suivante lors d'une affirmation en cours",
+    "planStatus": "in_progress",
+    "dialogueAct": "AFFIRMATION",
+    "expectedDecision": "NEXT_STEP"
+  },
+  {
+    "id": "guidance-refine-step",
+    "description": "Affinement d'une étape en cours",
+    "planStatus": "in_progress",
+    "dialogueAct": "REFINEMENT",
+    "expectedDecision": "CHANGE_STEP"
+  },
+  {
+    "id": "guidance-interrupt-on-detail",
+    "description": "Interruption pour question incidente de détail",
+    "planStatus": "in_progress",
+    "dialogueAct": "DETAIL_QUESTION",
+    "expectedDecision": "INTERRUPT_PLAN"
+  },
+  {
+    "id": "execution-mock-outing",
+    "description": "Exécution d'un plan multi-étapes avec exclusion de doublons",
+    "categories": ["cafe", "restaurant"],
+    "city": "Tunis",
+    "expectNonDuplicateActivities": true
+  }
+]
+

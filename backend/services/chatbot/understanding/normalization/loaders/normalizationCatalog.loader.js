@@ -29,6 +29,7 @@ export function loadNormalizationCatalogs() {
     arabizi: {
       dictionary: readJson("arabizi/tunisianDerjaDictionary.json"),
     },
+    aradarja: readJson("aradarja/tunisianAradarjaDictionary.json"),
     geo: {
       citiesAliases: readJson("geo/tunisiaCitiesAliases.json"),
       sfaxNeighborhoods: readJson("sfaxNeighborhoods.json"),

@@ -13,6 +13,9 @@ export const parseAllowedOrigins = ({ nodeEnv = "development", corsOrigin = "" }
   return origins.map((origin) => {
     let parsed;
     try { parsed = new URL(origin); } catch { throw new Error(`Origine CORS invalide : ${origin}`); }
+    if (nodeEnv === "production" && parsed.protocol !== "https:") {
+      throw new Error(`CORS_ORIGIN doit utiliser HTTPS en production : ${origin}`);
+    }
     if (!["http:", "https:"].includes(parsed.protocol) || parsed.username || parsed.password ||
       parsed.pathname !== "/" || parsed.search || parsed.hash || parsed.origin === "null") {
       throw new Error(`CORS_ORIGIN doit contenir uniquement des origines HTTP(S) : ${origin}`);

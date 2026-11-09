@@ -10,7 +10,7 @@ import { stripDiacritics } from "../../shared/textUtils.js";
  */
 const SPLIT_REGEX = /\s+(?:puis|ensuite|et apres|apres ca|apres|d'abord|et plus tard|plus tard|then|and then|after that|afterwards|later on|next|w mba3ed|w mba3d|w mba3edha|mba3ed|mba3d|men ba3d|men ba3ed|w men ba3d|w ba3dha|w ba3d|ba3dha|ومن بعد|و من بعد|ثم|و بعدها|و بعد|من بعد|و مبعد)\s+|[;,|\n\r]+|\s*(?:->|=>|\+)\s*/iu;
 
-const SEQUENTIAL_REGEX = /(?:\b(?:puis|ensuite|et apres|apres|then|and then|after that|w mba3ed|w mba3d|mba3ed|mba3d|men ba3d|ba3dha)\b|ومن بعد|و من بعد|ثم|و بعدها|->|=>)/iu;
+const SEQUENTIAL_REGEX = /(?:\b(?:puis|ensuite|et apres|apres|then|and then|after that|w mba3ed|w mba3d|w ba3d|mba3ed|mba3d|men ba3d|ba3dha)\b|ومن بعد|و من بعد|ثم|و بعدها|و بعد|->|=>)/iu;
 
 /**
  * Découpe une requête multi-intentions / multi-étapes en clauses :

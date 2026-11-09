@@ -1,0 +1,400 @@
+[
+  {
+    "scenario": 1,
+    "title": "Affiner une recommandation (Aradarja Sfaxia)",
+    "turns": [
+      "نحب نخرج الليلة في صفاقس.",
+      "مع صحابي.",
+      "أحنا ثلاثة.",
+      "عنا 30 دينار للشخص.",
+      "ما نحبوش قهوة عادية، نحبّو نشاط فيه جو.",
+      "يكون قريب لصفاقس الجديدة.",
+      "أعطيني أحسن ثلاثة اختيارات."
+    ],
+    "expectedFinalState": {
+      "city": "Sfax",
+      "group": "friends",
+      "maxBudget": 30,
+      "neighborhood": "Sfax Jadida",
+      "excludedCategory": "cafe"
+    }
+  },
+  {
+    "scenario": 2,
+    "title": "Sortie romantique (Aradarja Sfaxia)",
+    "turns": [
+      "نحب نعمل خرجة مع صاحبتي.",
+      "نحب بلاصة رومانسية وهادية.",
+      "الميزانية 50 دينار للزوز.",
+      "نحب بلاصة فيها تراس.",
+      "تكون محلولة الليلة.",
+      "عندك اقتراح آخر؟"
+    ],
+    "expectedFinalState": {
+      "group": "couple",
+      "maxBudget": 50,
+      "amenities": ["calme", "terrasse"]
+    }
+  },
+  {
+    "scenario": 3,
+    "title": "Sortie économique avec double exclusion (Aradarja Sfaxia)",
+    "turns": [
+      "عندي 15 دينار برك.",
+      "نحب نتفرهد مع صاحبي.",
+      "ما نحبش مطعم ولا قهوة.",
+      "فما نشاط ببلاش ولا رخيص؟",
+      "يكون قريب ليا."
+    ],
+    "expectedFinalState": {
+      "maxBudget": 15,
+      "group": "friends",
+      "nearMe": true,
+      "excludedCategories": ["restaurant", "cafe"]
+    }
+  },
+  {
+    "scenario": 4,
+    "title": "Demande de précision familiale (Aradarja Sfaxia)",
+    "turns": [
+      "وين نخرج؟",
+      "نحب حاجة باهية.",
+      "موش غالية.",
+      "مع العايلة.",
+      "ما نبعدوش برشا.",
+      "اقترح علينا حاجة أخرى."
+    ],
+    "expectedFinalState": {
+      "budgetLevel": "low",
+      "group": "family",
+      "nearMe": true
+    }
+  },
+  {
+    "scenario": 5,
+    "title": "Comparaison de 3 cafés (Aradarja Sfaxia)",
+    "turns": [
+      "أعطيني ثلاثة قهاوي في صفاقس.",
+      "أنهي وحدة أرخص؟",
+      "أنهي وحدة أهدى؟",
+      "أنهي وحدة عندها تراس؟",
+      "شكون تنصحني بيها؟"
+    ],
+    "expectedFinalState": {
+      "city": "Sfax",
+      "category": "cafe",
+      "amenities": ["calme", "terrasse"]
+    }
+  },
+  {
+    "scenario": 6,
+    "title": "Changement de catégorie en conservant budget et groupe (Aradarja Sfaxia)",
+    "turns": [
+      "نحب نمشي لمطعم.",
+      "الميزانية 40 دينار.",
+      "مع صحابي.",
+      "لا، بدلت رأيي، نحب نشاط رياضي.",
+      "أما نفس الميزانية ونفس عدد الأشخاص."
+    ],
+    "expectedFinalState": {
+      "category": "sport",
+      "maxBudget": 40,
+      "group": "friends"
+    }
+  },
+  {
+    "scenario": 7,
+    "title": "Changement progressif avec exclusion d'effort physique (Aradarja Sfaxia)",
+    "turns": [
+      "نحب نخرج الليلة في صفاقس.",
+      "مع زوز صحابي.",
+      "عنا 60 دينار للثلاثة.",
+      "ما نحبوش مطعم.",
+      "نحبّو حاجة فيها حركة.",
+      "أما واحد من صحابي ما ينجمش يعمل مجهود بدني.",
+      "بدّل الاقتراح، نحب حاجة تناسبنا الكل.",
+      "وتكون محلولة بعد الثمانية."
+    ],
+    "expectedFinalState": {
+      "city": "Sfax",
+      "group": "friends",
+      "maxBudget": 60,
+      "isEvening": true,
+      "excludedCategories": ["restaurant", "sport"]
+    }
+  },
+  {
+    "scenario": 8,
+    "title": "Contradiction volontaire (Français)",
+    "turns": [
+      "Je veux un endroit très calme avec beaucoup d'ambiance.",
+      "Je veux aussi de la musique forte.",
+      "Mais je dois pouvoir discuter tranquillement.",
+      "Et je ne veux pas un endroit bondé.",
+      "Qu'est-ce que tu me proposes ?"
+    ],
+    "expectContradictionClarification": true
+  },
+  {
+    "scenario": 9,
+    "title": "Modification de quartier et équipements sans perdre le budget (Aradarja Sfaxia)",
+    "turns": [
+      "نحب نمشي لقهوة في صفاقس الجديدة.",
+      "تكون فيها تراس.",
+      "الميزانية 20 دينار.",
+      "لا، خليها في طريق تونس.",
+      "ونحبها تكون فيها كليماتيزور.",
+      "أما ما نحبش نبدّل الميزانية.",
+      "أعطيني 3 اقتراحات."
+    ],
+    "expectedFinalState": {
+      "neighborhood": "Route de Tunis",
+      "maxBudget": 20,
+      "amenities": ["terrasse", "climatisation"]
+    }
+  },
+  {
+    "scenario": 10,
+    "title": "Utilisateur indécis (Français)",
+    "turns": [
+      "Salut, je veux sortir.",
+      "Je ne sais pas si je préfère un café ou une activité.",
+      "Je suis avec deux amis.",
+      "On veut quelque chose de différent.",
+      "Pas trop cher.",
+      "On a déjà fait du bowling et du karting.",
+      "Donne-nous quelque chose qu'on n'a probablement pas essayé."
+    ],
+    "expectedFinalState": {
+      "group": "friends",
+      "budgetLevel": "low"
+    }
+  },
+  {
+    "scenario": 11,
+    "title": "Trois personnes, trois préférences (Aradarja Sfaxia)",
+    "turns": [
+      "إحنا ثلاثة صحاب.",
+      "أنا نحب الأنشطة الرياضية.",
+      "صاحبي يحب القهاوي الهادية.",
+      "والثالث يحب البلايص اللي فيها موسيقى.",
+      "نحبّو نلقاو حل يرضي الثلاثة.",
+      "والميزانية 30 دينار للشخص."
+    ],
+    "expectedFinalState": {
+      "group": "friends",
+      "maxBudget": 30,
+      "amenities": ["calme", "music"]
+    }
+  },
+  {
+    "scenario": 12,
+    "title": "Sortie familiale avec enfants (Français)",
+    "turns": [
+      "Je cherche une sortie familiale à Sfax.",
+      "Nous sommes 2 adultes et 3 enfants.",
+      "Les enfants ont 4, 7 et 10 ans.",
+      "Je veux éviter les endroits bruyants.",
+      "Il faut un espace sécurisé et adapté aux enfants.",
+      "Budget maximum : 80 DT pour tout le monde.",
+      "Pas plus de 20 minutes de déplacement."
+    ],
+    "expectedFinalState": {
+      "city": "Sfax",
+      "group": "family",
+      "maxBudget": 80,
+      "nearMe": true,
+      "amenities": ["calme"]
+    }
+  },
+  {
+    "scenario": 13,
+    "title": "Préférences multiples en groupe de 4 (Aradarja Sfaxia)",
+    "turns": [
+      "إحنا أربعة.",
+      "زوز يحبّو البحر.",
+      "واحد يحب الألعاب.",
+      "وأنا نحب المطاعم.",
+      "ما نحبوش نتفرّقو.",
+      "عنا 3 ساعات فقط."
+    ],
+    "expectedFinalState": {
+      "group": "friends",
+      "category": "restaurant"
+    }
+  },
+  {
+    "scenario": 14,
+    "title": "Recherche par proximité et déplacement à Sfax Jadida (Français)",
+    "turns": [
+      "Je suis à Sfax Jadida.",
+      "Je ne veux pas utiliser ma voiture.",
+      "Je peux marcher 15 minutes maximum.",
+      "Trouve-moi un endroit pour sortir.",
+      "Si rien d'intéressant n'est disponible, élargis à 10 minutes en voiture."
+    ],
+    "expectedFinalState": {
+      "city": "Sfax",
+      "neighborhood": "Sfax Jadida",
+      "nearMe": true
+    }
+  },
+  {
+    "scenario": 15,
+    "title": "Changement de quartier : El Ain -> Afrane -> Sfax Jadida (Aradarja Sfaxia)",
+    "turns": [
+      "وين فما قهوة باهية في العين؟",
+      "لا، أقصد طريق الأفران.",
+      "نحبها قريبة، ما نحبش نمشي بعيد.",
+      "وإذا ما فماش، شوفلي في صفاقس الجديدة."
+    ],
+    "expectedFinalState": {
+      "city": "Sfax",
+      "neighborhood": "Sfax Jadida",
+      "nearMe": true
+    }
+  },
+  {
+    "scenario": 16,
+    "title": "Plusieurs lieux, distance et budget (Français)",
+    "turns": [
+      "Compare-moi des activités à Sfax Jadida, El Ain et Route de Tunis.",
+      "Je pars du centre-ville.",
+      "Je veux éviter les déplacements longs.",
+      "Mon budget transport compris est de 40 DT.",
+      "Quel secteur est le plus intéressant ?"
+    ],
+    "expectedFinalState": {
+      "city": "Sfax",
+      "nearMe": true,
+      "maxBudget": 40
+    }
+  },
+  {
+    "scenario": 17,
+    "title": "Demander une justification factuelle sans avis inventés (Aradarja Sfaxia)",
+    "turns": [
+      "اقترحلي أحسن قهوة في صفاقس.",
+      "علاش اخترتلي القهوة هاذي؟",
+      "على شنوة بنيت الاختيار متاعك؟",
+      "فما قهوة خير منها؟",
+      "قارنلي بينهم من ناحية السعر والجو والموقع."
+    ],
+    "expectedFinalState": {
+      "city": "Sfax",
+      "category": "cafe"
+    }
+  },
+  {
+    "scenario": 18,
+    "title": "Recommandation selon les habitudes vs demande actuelle (English)",
+    "turns": [
+      "I usually prefer quiet cafés.",
+      "Today I want something more energetic.",
+      "I don't want a nightclub.",
+      "Suggest something different from my usual preferences."
+    ],
+    "expectedFinalState": {
+      "excludedCategory": "nightclub"
+    }
+  },
+  {
+    "scenario": 19,
+    "title": "Recommandation avec 4 exclusions successives (Aradarja Sfaxia)",
+    "turns": [
+      "نحب نخرج في صفاقس.",
+      "ما نحبش قهاوي.",
+      "ما نحبش مطاعم.",
+      "ما نحبش نمشي للبحر.",
+      "وما نحبش نشاط رياضي.",
+      "شنوة بقى عندك من اقتراحات؟"
+    ],
+    "expectedFinalState": {
+      "city": "Sfax",
+      "excludedCategories": ["cafe", "restaurant", "plage", "sport"]
+    }
+  },
+  {
+    "scenario": 20,
+    "title": "Trouver le meilleur compromis (Aradarja Sfaxia)",
+    "turns": [
+      "نحب بلاصة شيك.",
+      "تكون رخيصة.",
+      "قريبة للوسط.",
+      "ما تكونش معمّرة.",
+      "فيها جو.",
+      "أعطيني الاختيار اللي يوازن بين الحاجات هاذم الكل."
+    ],
+    "expectedFinalState": {
+      "budgetLevel": "low",
+      "neighborhood": "Centre-ville",
+      "amenities": ["chic", "calme"]
+    }
+  },
+  {
+    "scenario": 21,
+    "title": "Refus répété des cafés (Aradarja Sfaxia)",
+    "turns": [
+      "نحب نخرج مع صحابي.",
+      "نقلك ما نحبش قهوة.",
+      "لا، قلتلك ما نحبش قهاوي.",
+      "أعطيني نشاط آخر."
+    ],
+    "expectedFinalState": {
+      "group": "friends",
+      "excludedCategory": "cafe"
+    }
+  },
+  {
+    "scenario": 22,
+    "title": "Ne pas répéter les mêmes établissements (Français)",
+    "turns": [
+      "Donne-moi 3 cafés à Sfax.",
+      "Je connais déjà les trois.",
+      "Propose-moi 3 autres endroits.",
+      "Pas ceux que tu viens de citer.",
+      "Encore 2, mais dans un autre quartier."
+    ],
+    "expectDistinctShownActivities": true
+  },
+  {
+    "scenario": 23,
+    "title": "Correction d'une mauvaise interprétation : صاحبي -> صاحبتي (Aradarja + Code-switch)",
+    "turns": [
+      "نحب نخرج مع صاحبي.",
+      "لا، نقصد صاحبيتي، نحب خرجة romantique.",
+      "الميزانية 60 دينار للزوز."
+    ],
+    "expectedFinalState": {
+      "group": "couple",
+      "maxBudget": 60
+    }
+  },
+  {
+    "scenario": 24,
+    "title": "Conversation longue de 12 tours avec remplacement d'étape du programme (Français)",
+    "turns": [
+      "Salut, je cherche une sortie à Sfax.",
+      "Avec trois amis.",
+      "On a 100 DT au total.",
+      "On préfère les activités en extérieur.",
+      "On ne veut pas aller à la plage.",
+      "On préfère rester près du centre.",
+      "Il faut terminer avant 22h.",
+      "Propose-moi un programme.",
+      "Remplace la première activité.",
+      "Garde les autres activités.",
+      "Est-ce que le nouveau programme respecte toujours notre budget ?",
+      "Résume-moi le programme final."
+    ],
+    "expectedFinalState": {
+      "city": "Sfax",
+      "group": "friends",
+      "maxBudget": 100,
+      "neighborhood": "Centre-ville",
+      "excludedCategory": "plage",
+      "hasActivePlan": true
+    }
+  }
+]
+

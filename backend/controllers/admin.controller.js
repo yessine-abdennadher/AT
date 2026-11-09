@@ -45,13 +45,22 @@ export const getUsers = async (req, res, next) => {
   }
 };
 
+export const getSecurityAudit = async (req, res, next) => {
+  try {
+    const audit = await adminService.getAdminSecurityAudit(req.query);
+    res.json({ success: true, ...audit });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Activer ou suspendre un compte utilisateur
 // @route   PATCH /api/admin/users/:id/status
 // @access  Private (Admin)
 export const changeUserStatus = async (req, res, next) => {
   try {
     const { isActive } = req.body;
-    const user = await adminService.updateUserStatus(req.params.id, isActive, req.user._id);
+    const user = await adminService.updateUserStatus(req.params.id, isActive, req.user._id, { ip: req.ip, userAgent: req.get("user-agent") });
     res.json({
       success: true,
       message: `Compte ${user.isActive ? "activé" : "suspendu"} avec succès.`,
@@ -68,7 +77,7 @@ export const changeUserStatus = async (req, res, next) => {
 export const changeUserRole = async (req, res, next) => {
   try {
     const { role } = req.body;
-    const user = await adminService.updateUserRole(req.params.id, role, req.user._id);
+    const user = await adminService.updateUserRole(req.params.id, role, req.user._id, { ip: req.ip, userAgent: req.get("user-agent") });
     res.json({
       success: true,
       message: `Rôle mis à jour avec succès : ${user.role}`,
@@ -120,7 +129,7 @@ export const setActivityApproval = async (req, res, next) => {
 export const toggleHighlight = async (req, res, next) => {
   try {
     const { field } = req.body; // 'isFeatured' ou 'isPopular'
-    const activity = await adminService.toggleActivityHighlight(req.params.id, field);
+    const activity = await adminService.toggleActivityHighlight(req.params.id, field, req.user._id, { ip: req.ip, userAgent: req.get("user-agent") });
     res.json({
       success: true,
       message: `Statut ${field} mis à jour : ${activity[field]}`,
@@ -136,7 +145,7 @@ export const toggleHighlight = async (req, res, next) => {
 // @access  Private (Admin)
 export const removeActivity = async (req, res, next) => {
   try {
-    await adminService.deleteActivityByAdmin(req.params.id);
+    await adminService.deleteActivityByAdmin(req.params.id, req.user._id, { ip: req.ip, userAgent: req.get("user-agent") });
     res.json({
       success: true,
       message: "Activité et ses avis supprimés avec succès par l'administrateur.",
@@ -167,7 +176,7 @@ export const getDiagnostics = async (req, res, next) => {
 export const changePartnerTier = async (req, res, next) => {
   try {
     const { tier } = req.body;
-    const partner = await adminService.updatePartnerTier(req.params.id, tier);
+    const partner = await adminService.updatePartnerTier(req.params.id, tier, req.user._id, { ip: req.ip, userAgent: req.get("user-agent") });
     res.json({
       success: true,
       message: `Tier partenaire mis à jour : ${partner.partnerTier}`,
@@ -183,7 +192,7 @@ export const changePartnerTier = async (req, res, next) => {
 // @access  Private (Admin)
 export const managePartnerSubscription = async (req, res, next) => {
   try {
-    const result = await updatePartnerSubscription(req.params.id, req.body);
+    const result = await updatePartnerSubscription(req.params.id, req.body, req.user._id, { ip: req.ip, userAgent: req.get("user-agent") });
     res.json(result);
   } catch (error) {
     next(error);

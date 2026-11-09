@@ -2,9 +2,9 @@ import { normalizeChatText } from "../understanding/normalization/chatTextNormal
 import { matchFastPath } from "../understanding/fastPath/chatFastPathMatcher.service.js";
 import { classifyTurn } from "../understanding/classification/chatClassification.facade.js";
 import { matchSemanticIntent } from "../understanding/semantic/chatSemanticIntentMatcher.service.js";
-import { classifyIntentWithLlm } from "../understanding/semantic/chatLlmIntentClassifier.service.js";
+import { classifyIntentWithLlm } from "../understanding/llm/chatLlmIntentClassifier.service.js";
 import { SEMANTIC_THRESHOLDS } from "../understanding/semantic/config/semanticThresholds.config.js";
-import { arbitrateUnderstanding } from "../understanding/semantic/chatUnderstandingArbiter.service.js";
+import { arbitrateUnderstanding } from "../understanding/arbiter/chatUnderstandingArbiter.service.js";
 import { createInitialState, normalizeState } from "../memory/conversation/chatWorkflowStateSchema.service.js";
 import { projectMemoryFrame } from "../memory/conversation/chatMemoryFrameProjector.service.js";
 import { appendTurn } from "../memory/conversation/chatConversationHistory.service.js";
@@ -12,6 +12,7 @@ import { recordResponseUsage } from "../memory/recommendations/chatResponseUsage
 import { createInMemoryStateStore } from "../memory/persistence/chatSessionStatePersistence.service.js";
 import { withTurnLock } from "../memory/persistence/chatSessionTurnLock.service.js";
 import { createMongoActivityRepository } from "../capabilities/recommendations/activityRepository.mongo.js";
+import { evaluateChatSafety } from "../capabilities/safety/chatSafety.service.js";
 import { validateChatResponseDto } from "../responses/validation/chatResponseDtoValidator.service.js";
 import { outputGuard } from "../guards/outputGuard.service.js";
 import { runExplorerTurn } from "./explorer/chatExplorerOrchestrator.service.js";
@@ -31,6 +32,17 @@ export function createChatMainGateway({
   compose = {},
 } = {}) {
   const processTurn = async ({ sessionId, text, userContext = {} }) => {
+    // 0. Filtrage de sécurité en amont (0 LLM)
+    const safety = evaluateChatSafety(text, userContext.lang || "fr");
+    if (!safety.isSafe) {
+      return validateChatResponseDto({
+        sender: "bot",
+        text: safety.fallbackText,
+        suggestions: safety.suggestions,
+        metadata: { guardFlags: [safety.flag] },
+      });
+    }
+
     const state = normalizeState(await stateStore.get(sessionId)) || createInitialState();
     const memory = projectMemoryFrame(state);
 
@@ -126,7 +138,8 @@ export function createChatMainGateway({
       state,
       repository,
       compose,
-      hasGps: Boolean(userContext.hasGps),
+      hasGps: Boolean(userContext.hasGps || userContext.coords),
+      userCoords: userContext.coords || null,
     });
     const { resolution, message } = result.composed;
 
@@ -144,7 +157,52 @@ export function createChatMainGateway({
     });
     await stateStore.set(sessionId, next);
 
-    const guarded = outputGuard(message, { activities: result.grounding });
+    const trace = {
+      understanding: {
+        source: understanding.source,
+        intent: understanding.intent,
+        confidence: understanding.confidence,
+        language: understanding.language,
+        isAradarja: Boolean(normalized.isAradarja),
+        usedMiniLm: Boolean(semantic?.intent && semantic.confidence >= SEMANTIC_THRESHOLDS.LOW_CONFIDENCE),
+        miniLmScore: semantic?.confidence ? Number(semantic.confidence.toFixed(3)) : 0,
+        miniLmIntent: semantic?.intent || null,
+        usedLlm: Boolean(needsLlmIntent && llmClassification?.intent),
+        llmModel: needsLlmIntent ? (process.env.GROQ_API_KEY ? "groq-llama-3.3" : "gemini-2.5-flash") : null,
+        llmIntent: llmClassification?.intent || null,
+        extractedConstraints: understanding.constraints,
+      },
+      memory: {
+        status: next.status,
+        activeConstraints: next.activeConstraints,
+        pendingQuestion: next.pendingQuestion,
+        shownActivityCount: next.shownActivityIds?.length || 0,
+      },
+      actionPlan: {
+        hasPlan: Boolean(next.plan),
+        planStatus: next.plan?.status || null,
+        stepsCount: next.plan?.steps?.length || 0,
+        steps: (next.plan?.steps || []).map((s) => ({
+          id: s.id,
+          category: s.category,
+          activityName: s.activityName,
+          status: s.status,
+        })),
+      },
+    };
+
+    const enrichedMessage = {
+      ...message,
+      metadata: {
+        ...message.metadata,
+        trace,
+      },
+    };
+
+    const guarded = outputGuard(enrichedMessage, {
+      activities: result.grounding,
+      role: userContext.role || "explorer",
+    });
     return validateChatResponseDto(guarded);
   };
 

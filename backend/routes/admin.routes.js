@@ -2,6 +2,7 @@ import express from "express";
 import {
   getStats,
   getUsers,
+  getSecurityAudit,
   changeUserStatus,
   changeUserRole,
   getActivitiesForModeration,
@@ -30,6 +31,7 @@ router.patch("/electricity-mode", changeGlobalElectricityMode);
 
 // Gestion des Utilisateurs & Partenaires
 router.get("/users", getUsers);
+router.get("/security-audit", getSecurityAudit);
 router.patch("/users/:id/status", changeUserStatus);
 router.patch("/users/:id/role", changeUserRole);
 router.patch("/partners/:id/tier", changePartnerTier);

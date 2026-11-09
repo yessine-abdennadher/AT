@@ -6,6 +6,15 @@
   { "input": "hello", "expectedIntent": "GREETING", "expectedMatched": true },
   { "input": "السلام عليكم", "expectedIntent": "GREETING", "expectedMatched": true },
   { "input": "recommencer", "expectedIntent": "RESET_SEARCH", "expectedMatched": true },
-  { "input": "une phrase inconnue qui doit rater le fastpath", "expectedIntent": null, "expectedMatched": false }
-]
+  { "input": "une phrase inconnue qui doit rater le fastpath", "expectedIntent": null, "expectedMatched": false },
 
+  { "input": "je cherche un cafe calme", "expectedMatched": false, "expectedRuleId": "tf-place-discovery-cafes-001", "expectedCategory": "cafe", "expectedAmenity": "calme" },
+  { "input": "find me a coffee shop near me", "expectedMatched": false, "expectedRuleId": "tf-place-discovery-cafes-001", "expectedNearMe": true },
+  { "input": "nlawwej 3la 9ahwa m3a s7abi budget max 20dt", "expectedMatched": false, "expectedCategory": "cafe", "expectedGroup": "friends", "expectedMaxBudget": 20 },
+  { "input": "je veux un restaurant moins de 35 dinars", "expectedMatched": false, "expectedRuleId": "tf-place-discovery-restaurants-001", "expectedCategory": "restaurant", "expectedMaxBudget": 35 },
+  { "input": "أبحث عن مطعم في مكان هادئ", "expectedMatched": false, "expectedRuleId": "tf-place-discovery-restaurants-001", "expectedAmenity": "calme" },
+  { "input": "nheb lounge 9rib lia", "expectedMatched": false, "expectedRuleId": "tf-place-discovery-lounges-001", "expectedNearMe": true },
+  { "input": "ma7loul taw", "expectedMatched": false, "expectedSituation": "open_now" },
+  { "input": "give me the whatsapp number", "expectedIntent": "ASK_CONTACT_OR_SOCIAL", "expectedMatched": true, "expectedRuleId": "tf-contact-whatsapp-001" },
+  { "input": "bonjour je cherche un restaurant a tunis", "expectedMatched": false, "expectedRuleId": "tf-place-discovery-restaurants-001" }
+]

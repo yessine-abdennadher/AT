@@ -48,8 +48,13 @@ export function buildActivityQuery(constraints = {}, { skip = [] } = {}) {
     const neighRx = rx(neighborhood);
     and.push({ $or: [{ address: neighRx }, { locationName: neighRx }, { name: neighRx }, { description: neighRx }] });
   }
-  if (constraints.budgetLevel === "low" && !skip.includes("budget")) {
-    and.push({ price: { $lte: 35 } });
+  if (!skip.includes("budget")) {
+    // Un montant explicite ("moins de 20 dt") prime sur le palier générique "low".
+    if (Number.isFinite(constraints.maxBudget) && constraints.maxBudget > 0) {
+      and.push({ price: { $lte: constraints.maxBudget } });
+    } else if (constraints.budgetLevel === "low") {
+      and.push({ price: { $lte: 35 } });
+    }
   }
   if ((constraints.situation === "cold" || constraints.situation === "rain") && !skip.includes("situation")) {
     and.push({ $or: [{ isIndoor: true }, { category: { $ne: "outdoor" } }] });
@@ -64,11 +69,31 @@ export function buildActivityQuery(constraints = {}, { skip = [] } = {}) {
       ],
     });
   }
+  if (constraints.hasPromo && !skip.includes("promo")) {
+    and.push({ "promotion.isPromo": true });
+  }
   if (!skip.includes("amenities")) {
     for (const amenity of constraints.amenities || []) and.push(amenityClause(amenity));
   }
   for (const category of constraints.excluded?.categories || []) {
-    and.push({ category: { $not: categoryRegex(category) } });
+    if (category === "cafe") {
+      and.push({
+        type: { $not: rx("cafe|café") },
+        name: { $not: rx("café|cafe|coffee|salon de thé") },
+        category: { $not: categoryRegex("cafe") },
+      });
+    } else if (category === "restaurant") {
+      and.push({
+        type: { $not: rx("restaurant|resto") },
+        name: { $not: rx("restaurant|resto|pizzeria") },
+        category: { $not: categoryRegex("restaurant") },
+      });
+    } else {
+      and.push({
+        category: { $not: categoryRegex(category) },
+        name: { $not: categoryRegex(category) },
+      });
+    }
   }
   return and.length ? { $and: and } : {};
 }

@@ -18,4 +18,4 @@ export const getJwtSecrets = (env = process.env) => {
 const configuredSecrets = getJwtSecrets();
 export const JWT_SECRET = configuredSecrets.accessSecret;
 export const JWT_REFRESH_SECRET = configuredSecrets.refreshSecret;
-export const JWT_EXPIRE = process.env.JWT_EXPIRE || "30d";
+export const JWT_EXPIRE = "15m";

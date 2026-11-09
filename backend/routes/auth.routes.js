@@ -2,6 +2,7 @@ import express from "express";
 import {
   registerUser,
   loginUser,
+  verifyAdminLoginOtp,
   refreshToken,
   logoutUser,
   getMe,
@@ -22,9 +23,10 @@ router.post("/partner/verify-otp", authLimiter, verifyPartnerOtp);
 
 router.post("/register", authLimiter, registerUser);
 router.post("/login", authLimiter, loginUser);
+router.post("/admin/mfa/verify", authLimiter, verifyAdminLoginOtp);
 router.post("/google", authLimiter, googleAuth);
 router.post("/refresh", authLimiter, refreshToken);
-router.post("/logout", protect, logoutUser);
+router.post("/logout", authLimiter, logoutUser);
 router.get("/me", protect, getMe);
 router.get("/favorites", protect, getFavorites);
 router.put("/profile", protect, updateProfile);

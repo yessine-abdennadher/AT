@@ -1,6 +1,8 @@
-import { SEMANTIC_THRESHOLDS } from "./config/semanticThresholds.config.js";
+import { SEMANTIC_THRESHOLDS } from "../semantic/config/semanticThresholds.config.js";
 import { createTurnUnderstanding } from "./contracts/turnUnderstanding.contract.js";
-import { segmentClauses, hasSequentialConnector } from "./chatClauseSegmenter.service.js";
+import { segmentClauses, hasSequentialConnector } from "../semantic/chatClauseSegmenter.service.js";
+import { resolveLanguage } from "./policies/languageContinuity.policy.js";
+import { resolvePendingQuestion } from "./policies/pendingQuestionResolution.policy.js";
 
 const PARTNER_INTENTS = new Set(["PARTNER_MANAGE_ACTIVITY", "PARTNER_HOURS_HELP", "PARTNER_PROMOTION_HELP"]);
 
@@ -53,8 +55,6 @@ function mergeRuleConstraints(base = {}, ruleConstraints = null) {
   return merged;
 }
 
-const EXPLICIT_FRENCH_REGEX = /\b(je|nous|vous|pour|dans|avec|une|des|les|est-ce|bonjour|bonsoir|merci beaucoup|salut|svp)\b/i;
-
 /**
  * Arbitre final :
  * 1. FastPath (0 ms)
@@ -66,17 +66,7 @@ const EXPLICIT_FRENCH_REGEX = /\b(je|nous|vous|pour|dans|avec|une|des|les|est-ce
 export function arbitrateUnderstanding({ normalized, fastPath, classification, semantic, llmClassification = null, memory = {} }) {
   const segments = segmentClauses(normalized.normalizedText);
 
-  let resolvedLanguage = fastPath?.matched && fastPath.lang
-    ? fastPath.lang
-    : normalized.detectedLanguage;
-
-  // Si l'utilisateur parlait déjà en derja/arabe et envoie un mot court (ex. "horaires", "menu", "oui"),
-  // on conserve sa langue de conversation pour répondre dans la même langue.
-  if (resolvedLanguage === "fr" && memory.preferredLanguage && memory.preferredLanguage !== "fr") {
-    if (!EXPLICIT_FRENCH_REGEX.test(normalized.originalText || "")) {
-      resolvedLanguage = memory.preferredLanguage;
-    }
-  }
+  const resolvedLanguage = resolveLanguage({ fastPath, normalized, memory });
 
   const base = {
     language: resolvedLanguage,
@@ -97,9 +87,15 @@ export function arbitrateUnderstanding({ normalized, fastPath, classification, s
     return createTurnUnderstanding({ ...base, intent: "RESET_SEARCH", confidence: 0.95, source: "classification" });
   }
 
+  const explicitPlanRequest =
+    /\b(?:propose[- ]moi un programme|organise[- ]moi une petite sortie|plan a full saturday)\b/i.test(normalized.normalizedText) ||
+    normalized.normalizedText.includes("برنامج من الصباح") ||
+    normalized.normalizedText.includes("برنامج من صباح");
+
   const multiCategory =
-    classification.constraints.categories.length >= 2 &&
-    (segments.length >= 2 || hasSequentialConnector(normalized.normalizedText) || classification.dto?.isMultiStepOuting);
+    !classification.constraints.hasContradiction &&
+    (explicitPlanRequest ||
+      (classification.constraints.categories.length >= 2 && hasSequentialConnector(normalized.normalizedText)));
   if (multiCategory) {
     return createTurnUnderstanding({ ...base, intent: "PLAN_MULTI_STEP_OUTING", confidence: 0.9, source: "classification" });
   }
@@ -109,38 +105,18 @@ export function arbitrateUnderstanding({ normalized, fastPath, classification, s
   }
 
   // Résolution ciblée si le bot avait posé une question de clarification (pendingQuestion)
-  if (memory.pendingQuestion) {
-    const field = memory.pendingQuestion.field;
-    if (field === "city" && (classification.constraints.city || normalized.detectedCities?.length)) {
-      const city = classification.constraints.city || normalized.detectedCities[0];
-      return createTurnUnderstanding({
-        ...base,
-        intent: "REFINE_CRITERIA",
-        confidence: 0.92,
-        source: "pending_question_resolved",
-        constraints: { ...classification.constraints, city, cities: [city] },
-      });
-    }
-    if (field === "category" && classification.constraints.category) {
-      return createTurnUnderstanding({
-        ...base,
-        intent: "REFINE_CRITERIA",
-        confidence: 0.92,
-        source: "pending_question_resolved",
-      });
-    }
-    if (field === "budgetLevel" && classification.constraints.budgetLevel) {
-      return createTurnUnderstanding({
-        ...base,
-        intent: "REFINE_CRITERIA",
-        confidence: 0.92,
-        source: "pending_question_resolved",
-      });
-    }
+  const pendingResolution = resolvePendingQuestion({ memory, classification, normalized });
+  if (pendingResolution) {
+    return createTurnUnderstanding({ ...base, ...pendingResolution });
   }
 
   const ruleSuggestsDiscovery = fastPath?.ruleMatched && fastPath.ruleIntent === "DISCOVER_ACTIVITIES";
-  if (classification.hasConstraints || classification.dialogueAct === "SEARCH_REQUEST" || ruleSuggestsDiscovery) {
+  if (
+    classification.hasConstraints ||
+    classification.dialogueAct === "SEARCH_REQUEST" ||
+    classification.dialogueAct === "REFINEMENT" ||
+    ruleSuggestsDiscovery
+  ) {
     const refining = classification.dialogueAct === "REFINEMENT";
     return createTurnUnderstanding({ ...base, intent: refining ? "REFINE_CRITERIA" : "DISCOVER_ACTIVITIES", confidence: 0.85, source: "classification" });
   }

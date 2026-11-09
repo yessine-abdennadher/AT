@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import { segmentClauses, hasSequentialConnector } from "../services/chatbot/understanding/semantic/chatClauseSegmenter.service.js";
 import { matchSemanticIntent } from "../services/chatbot/understanding/semantic/chatSemanticIntentMatcher.service.js";
-import { arbitrateUnderstanding } from "../services/chatbot/understanding/semantic/chatUnderstandingArbiter.service.js";
+import { arbitrateUnderstanding } from "../services/chatbot/understanding/arbiter/chatUnderstandingArbiter.service.js";
 import { normalizeChatText } from "../services/chatbot/understanding/normalization/chatTextNormalizer.service.js";
 import { classifyTurn } from "../services/chatbot/understanding/classification/chatClassification.facade.js";
 import { extractOutingConstraints } from "../services/chatbot/understanding/constraints/chatOutingConstraints.service.js";

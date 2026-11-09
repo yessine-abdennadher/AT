@@ -1,17 +1,43 @@
 import * as authService from "../services/auth.service.js";
 
+const readCookie = (req, name) => {
+  const item = String(req.headers.cookie || "").split(";").map((part) => part.trim()).find((part) => part.startsWith(`${name}=`));
+  return item ? item.slice(name.length + 1) : null;
+};
+
+const setBrowserSession = (req, res, result) => {
+  const origin = req.get("origin");
+  const allowedOrigins = req.app.locals.allowedOrigins || [];
+  if (!origin || !allowedOrigins.includes(origin)) return false;
+  const secure = process.env.NODE_ENV === "production";
+  const sameSite = secure ? "none" : "lax";
+  res.cookie("activitytn_access", result.accessToken, {
+    httpOnly: true, secure, sameSite, path: "/api", maxAge: 15 * 60 * 1000,
+  });
+  res.cookie("activitytn_refresh", result.refreshToken, {
+    httpOnly: true, secure, sameSite, path: "/api/auth", maxAge: 7 * 24 * 60 * 60 * 1000,
+  });
+  return true;
+};
+
+const clearBrowserSession = (res) => {
+  const secure = process.env.NODE_ENV === "production";
+  const sameSite = secure ? "none" : "lax";
+  res.clearCookie("activitytn_access", { httpOnly: true, secure, sameSite, path: "/api" });
+  res.clearCookie("activitytn_refresh", { httpOnly: true, secure, sameSite, path: "/api/auth" });
+};
+
 // @desc    Inscription d'un nouvel utilisateur (user ou partner)
 // @route   POST /api/auth/register
 // @access  Public
 export const registerUser = async (req, res, next) => {
   try {
     const result = await authService.registerUser(req.body);
+    const browserSession = setBrowserSession(req, res, result);
     res.status(201).json({
       success: true,
       message: "Compte créé avec succès",
-      token: result.accessToken,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
+      ...(!browserSession ? { token: result.accessToken, accessToken: result.accessToken, refreshToken: result.refreshToken } : {}),
       user: result.user,
     });
   } catch (error) {
@@ -25,12 +51,29 @@ export const registerUser = async (req, res, next) => {
 export const loginUser = async (req, res, next) => {
   try {
     const result = await authService.loginUser(req.body);
+    if (result.mfaRequired) {
+      return res.status(202).json({ success: true, mfaRequired: true, challengeId: result.challengeId, maskedEmail: result.maskedEmail });
+    }
+    const browserSession = setBrowserSession(req, res, result);
     res.json({
       success: true,
       message: "Connexion réussie",
-      token: result.accessToken,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
+      ...(!browserSession ? { token: result.accessToken, accessToken: result.accessToken, refreshToken: result.refreshToken } : {}),
+      user: result.user,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const verifyAdminLoginOtp = async (req, res, next) => {
+  try {
+    const result = await authService.verifyAdminLoginOtp(req.body);
+    const browserSession = setBrowserSession(req, res, result);
+    res.json({
+      success: true,
+      message: "Authentification administrateur confirmée.",
+      ...(!browserSession ? { accessToken: result.accessToken, refreshToken: result.refreshToken } : {}),
       user: result.user,
     });
   } catch (error) {
@@ -43,7 +86,10 @@ export const loginUser = async (req, res, next) => {
 // @access  Public
 export const refreshToken = async (req, res, next) => {
   try {
-    const result = await authService.refreshAccessToken(req.body.refreshToken);
+    const result = await authService.refreshAccessToken(req.body?.refreshToken || readCookie(req, "activitytn_refresh"));
+    if (setBrowserSession(req, res, result)) {
+      return res.json({ success: true });
+    }
     res.json({
       success: true,
       token: result.accessToken,
@@ -60,7 +106,8 @@ export const refreshToken = async (req, res, next) => {
 // @access  Private
 export const logoutUser = async (req, res, next) => {
   try {
-    await authService.logoutUser(req.user?.id, req.body.refreshToken);
+    await authService.logoutUser(null, req.body?.refreshToken || readCookie(req, "activitytn_refresh"));
+    clearBrowserSession(res);
     res.json({ success: true, message: "Déconnexion réussie." });
   } catch (error) {
     next(error);
@@ -125,11 +172,10 @@ export const getFavorites = async (req, res, next) => {
 export const googleAuth = async (req, res, next) => {
   try {
     const result = await authService.authenticateWithGoogle(req.body);
+    const browserSession = setBrowserSession(req, res, result);
     res.status(200).json({
       success: true,
-      token: result.accessToken,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
+      ...(!browserSession ? { token: result.accessToken, accessToken: result.accessToken, refreshToken: result.refreshToken } : {}),
       user: result.user,
     });
   } catch (error) {
@@ -147,7 +193,6 @@ export const sendPartnerOtp = async (req, res, next) => {
       success: true,
       message: `Code de sécurité envoyé à l'adresse ${result.email}`,
       email: result.email,
-      demoCode: result.demoCode,
     });
   } catch (error) {
     next(error);
@@ -160,12 +205,11 @@ export const sendPartnerOtp = async (req, res, next) => {
 export const verifyPartnerOtp = async (req, res, next) => {
   try {
     const result = await authService.verifyPartnerOtp(req.body);
+    const browserSession = setBrowserSession(req, res, result);
     res.status(201).json({
       success: true,
       message: "Adresse email vérifiée et Espace Partenaire créé avec succès.",
-      token: result.accessToken,
-      accessToken: result.accessToken,
-      refreshToken: result.refreshToken,
+      ...(!browserSession ? { token: result.accessToken, accessToken: result.accessToken, refreshToken: result.refreshToken } : {}),
       user: result.user,
     });
   } catch (error) {

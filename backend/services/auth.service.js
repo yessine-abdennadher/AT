@@ -1,21 +1,64 @@
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { createHash, randomBytes, randomInt, randomUUID } from "node:crypto";
 import { User } from "../models/User.js";
 import { OtpVerification } from "../models/OtpVerification.js";
-import { sendPartnerOtpEmail } from "./mail.service.js";
+import { AdminLoginChallenge } from "../models/AdminLoginChallenge.js";
+import { sendAdminLoginOtpEmail, sendPartnerOtpEmail } from "./mail.service.js";
 import { JWT_SECRET, JWT_REFRESH_SECRET, JWT_EXPIRE } from "../config/jwt.config.js";
 
 // Génération de tokens JWT
-export const generateAccessToken = (id) => {
-  return jwt.sign({ id }, JWT_SECRET, {
-    expiresIn: JWT_EXPIRE || "1h",
-  });
+const hashRefreshToken = (token) => createHash("sha256").update(token).digest("hex");
+
+const issueSessionTokens = (id, sessionId = randomUUID(), { mfa = false } = {}) => ({
+  sessionId,
+  accessToken: jwt.sign({ id, sid: sessionId, ...(mfa ? { mfa: true } : {}) }, JWT_SECRET, {
+    expiresIn: JWT_EXPIRE,
+  }),
+  refreshToken: jwt.sign({ id, sid: sessionId, ...(mfa ? { mfa: true } : {}) }, JWT_REFRESH_SECRET, {
+    expiresIn: "7d",
+  }),
+});
+
+const maskEmail = (email) => {
+  const [name, domain] = email.split("@");
+  return `${name.slice(0, 1)}${"*".repeat(Math.max(2, name.length - 1))}@${domain}`;
 };
 
-export const generateRefreshToken = (id) => {
-  return jwt.sign({ id }, JWT_REFRESH_SECRET, {
-    expiresIn: process.env.JWT_REFRESH_EXPIRE || "7d",
+const createAdminLoginChallenge = async (user) => {
+  const challengeId = randomBytes(32).toString("base64url");
+  const otpCode = randomInt(100000, 1000000).toString();
+  const otpHash = await bcrypt.hash(otpCode, await bcrypt.genSalt(10));
+  const challengeHash = hashRefreshToken(challengeId);
+  await AdminLoginChallenge.deleteMany({ userId: user._id });
+  await AdminLoginChallenge.create({
+    userId: user._id,
+    challengeHash,
+    otpHash,
+    expiresAt: new Date(Date.now() + 10 * 60 * 1000),
   });
+  try {
+    await sendAdminLoginOtpEmail({ email: user.email, otpCode });
+  } catch (error) {
+    await AdminLoginChallenge.deleteOne({ challengeHash });
+    throw error;
+  }
+  return { mfaRequired: true, challengeId, maskedEmail: maskEmail(user.email) };
+};
+
+const rememberSession = (user, session) => {
+  const refreshHashes = Array.isArray(user.refreshTokens) ? user.refreshTokens : [];
+  const sessionIds = Array.isArray(user.activeAccessSessionIds) ? user.activeAccessSessionIds : [];
+  const aligned = refreshHashes.length === sessionIds.length && refreshHashes.every((value) => /^[a-f0-9]{64}$/i.test(value));
+  user.refreshTokens = aligned ? refreshHashes : [];
+  user.activeAccessSessionIds = aligned ? sessionIds : [];
+
+  while (user.refreshTokens.length >= 5) {
+    user.refreshTokens.shift();
+    user.activeAccessSessionIds.shift();
+  }
+  user.refreshTokens.push(hashRefreshToken(session.refreshToken));
+  user.activeAccessSessionIds.push(session.sessionId);
 };
 
 // Formateur de données utilisateur sécurisé
@@ -44,35 +87,35 @@ export const formatUserResponse = (user) => ({
 /**
  * Inscription d'un nouvel utilisateur
  */
-export const registerUser = async ({ name, email, password, role, establishmentName, bio }) => {
-  const existingUser = await User.findOne({ email });
+export const registerUser = async ({ name, email, password, bio }) => {
+  if (typeof email !== "string" || !email.trim() || email.length > 254 || typeof password !== "string" || password.length < 12 || password.length > 128) {
+    const error = new Error("Une adresse email valide et un mot de passe de 12 à 128 caractères sont obligatoires.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const normalizedEmail = email.trim().toLowerCase();
+  const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) {
     const error = new Error("Cet email est déjà enregistré.");
     error.statusCode = 400;
     throw error;
   }
 
-  // Le rôle admin est strictement interdit à l'inscription publique
-  const assignedRole = role === "partner" ? "partner" : "user";
-
   const user = await User.create({
     name,
-    email,
+    email: normalizedEmail,
     password,
-    role: assignedRole,
-    establishmentName: assignedRole === "partner" ? (establishmentName || "") : "",
+    role: "user",
     bio: bio || "",
   });
 
-  const accessToken = generateAccessToken(user._id);
-  const refreshToken = generateRefreshToken(user._id);
-
-  user.refreshTokens.push(refreshToken);
+  const session = issueSessionTokens(user._id.toString());
+  rememberSession(user, session);
   await user.save({ validateBeforeSave: false });
 
   return {
-    accessToken,
-    refreshToken,
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
     user: formatUserResponse(user),
   };
 };
@@ -81,14 +124,14 @@ export const registerUser = async ({ name, email, password, role, establishmentN
  * Connexion avec email & mot de passe
  */
 export const loginUser = async ({ email, password }) => {
-  if (!email || !password) {
+  if (typeof email !== "string" || !email.trim() || email.length > 254 || typeof password !== "string" || !password || password.length > 128) {
     const error = new Error("Veuillez fournir un email et un mot de passe.");
     error.statusCode = 400;
     throw error;
   }
 
   const normalizedEmail = email ? email.trim().toLowerCase() : "";
-  const user = await User.findOne({ email: normalizedEmail }).select("+password");
+  const user = await User.findOne({ email: normalizedEmail }).select("+password +refreshTokens +activeAccessSessionIds");
   if (!user || !(await user.matchPassword(password))) {
     const error = new Error("Email ou mot de passe incorrect.");
     error.statusCode = 401;
@@ -101,24 +144,72 @@ export const loginUser = async ({ email, password }) => {
     throw error;
   }
 
+  if (user.role === "admin") {
+    return createAdminLoginChallenge(user);
+  }
+
   user.lastLogin = new Date();
 
-  const accessToken = generateAccessToken(user._id);
-  const refreshToken = generateRefreshToken(user._id);
-
-  // Conserver au maximum 5 sessions actives
-  if (user.refreshTokens.length >= 5) {
-    user.refreshTokens.shift();
-  }
-  user.refreshTokens.push(refreshToken);
+  const session = issueSessionTokens(user._id.toString());
+  rememberSession(user, session);
 
   await user.save({ validateBeforeSave: false });
 
   return {
-    accessToken,
-    refreshToken,
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
     user: formatUserResponse(user),
   };
+};
+
+export const verifyAdminLoginOtp = async ({ challengeId, otp }) => {
+  if (typeof challengeId !== "string" || challengeId.length < 32 || typeof otp !== "string" || !/^\d{6}$/.test(otp)) {
+    const error = new Error("Un code de connexion administrateur valide est obligatoire.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const challengeHash = hashRefreshToken(challengeId);
+  const challenge = await AdminLoginChallenge.findOne({ challengeHash }).select("+otpHash");
+  if (!challenge || challenge.expiresAt <= new Date()) {
+    const error = new Error("Code de connexion invalide ou expiré.");
+    error.statusCode = 401;
+    throw error;
+  }
+  if (challenge.attempts >= 5) {
+    await AdminLoginChallenge.deleteOne({ _id: challenge._id });
+    const error = new Error("Trop de tentatives. Recommencez la connexion.");
+    error.statusCode = 429;
+    throw error;
+  }
+  if (!(await bcrypt.compare(otp, challenge.otpHash))) {
+    const updated = await AdminLoginChallenge.findOneAndUpdate(
+      { _id: challenge._id, attempts: { $lt: 5 } },
+      { $inc: { attempts: 1 } },
+      { new: true }
+    );
+    if (!updated) await AdminLoginChallenge.deleteOne({ _id: challenge._id });
+    const error = new Error(updated ? "Code de connexion incorrect." : "Trop de tentatives. Recommencez la connexion.");
+    error.statusCode = updated ? 401 : 429;
+    throw error;
+  }
+
+  const claimed = await AdminLoginChallenge.findOneAndDelete({ _id: challenge._id, attempts: { $lt: 5 } });
+  if (!claimed) {
+    const error = new Error("Ce code a déjà été utilisé.");
+    error.statusCode = 401;
+    throw error;
+  }
+  const user = await User.findById(challenge.userId).select("+refreshTokens +activeAccessSessionIds");
+  if (!user || !user.isActive || user.role !== "admin") {
+    const error = new Error("Le compte administrateur n’est plus actif.");
+    error.statusCode = 403;
+    throw error;
+  }
+  user.lastLogin = new Date();
+  const session = issueSessionTokens(user._id.toString(), randomUUID(), { mfa: true });
+  rememberSession(user, session);
+  await user.save({ validateBeforeSave: false });
+  return { accessToken: session.accessToken, refreshToken: session.refreshToken, user: formatUserResponse(user) };
 };
 
 /**
@@ -140,24 +231,47 @@ export const refreshAccessToken = async (tokenFromReq) => {
     throw error;
   }
 
-  const user = await User.findById(decoded.id);
-  if (!user || !user.refreshTokens.includes(tokenFromReq)) {
+  if (!decoded.sid) {
+    const error = new Error("Refresh token invalide ou expiré.");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const nextSession = issueSessionTokens(decoded.id, randomUUID(), { mfa: decoded.mfa === true });
+  const user = await User.findOneAndUpdate(
+    {
+      _id: decoded.id,
+      isActive: true,
+      refreshTokens: hashRefreshToken(tokenFromReq),
+      activeAccessSessionIds: decoded.sid,
+    },
+    [{
+      $set: {
+        refreshTokens: {
+          $concatArrays: [
+            { $filter: { input: { $ifNull: ["$refreshTokens", []] }, as: "token", cond: { $ne: ["$$token", hashRefreshToken(tokenFromReq)] } } },
+            [hashRefreshToken(nextSession.refreshToken)],
+          ],
+        },
+        activeAccessSessionIds: {
+          $concatArrays: [
+            { $filter: { input: { $ifNull: ["$activeAccessSessionIds", []] }, as: "sid", cond: { $ne: ["$$sid", decoded.sid] } } },
+            [nextSession.sessionId],
+          ],
+        },
+      },
+    }],
+    { new: true }
+  );
+  if (!user) {
     const error = new Error("Refresh token non reconnu ou révoqué.");
     error.statusCode = 401;
     throw error;
   }
 
-  const newAccessToken = generateAccessToken(user._id);
-  const newRefreshToken = generateRefreshToken(user._id);
-
-  // Rotation des tokens
-  user.refreshTokens = user.refreshTokens.filter((t) => t !== tokenFromReq);
-  user.refreshTokens.push(newRefreshToken);
-  await user.save({ validateBeforeSave: false });
-
   return {
-    accessToken: newAccessToken,
-    refreshToken: newRefreshToken,
+    accessToken: nextSession.accessToken,
+    refreshToken: nextSession.refreshToken,
   };
 };
 
@@ -165,11 +279,26 @@ export const refreshAccessToken = async (tokenFromReq) => {
  * Déconnexion / Révocation de session
  */
 export const logoutUser = async (userId, refreshToken) => {
-  if (userId && refreshToken) {
-    const user = await User.findById(userId);
-    if (user) {
-      user.refreshTokens = user.refreshTokens.filter((t) => t !== refreshToken);
-      await user.save({ validateBeforeSave: false });
+  if (refreshToken) {
+    try {
+      const decoded = jwt.verify(refreshToken, JWT_REFRESH_SECRET);
+      if ((!userId || decoded.id?.toString() === userId.toString()) && decoded.sid) {
+        await User.updateOne(
+          {
+            _id: decoded.id,
+            refreshTokens: hashRefreshToken(refreshToken),
+            activeAccessSessionIds: decoded.sid,
+          },
+          {
+            $pull: {
+              refreshTokens: hashRefreshToken(refreshToken),
+              activeAccessSessionIds: decoded.sid,
+            },
+          }
+        );
+      }
+    } catch {
+      // A bad or expired refresh token cannot revoke another user's session.
     }
   }
   return true;
@@ -236,100 +365,96 @@ export const getUserFavorites = async (userId) => {
 /**
  * Authentification avec Google OAuth
  */
-export const authenticateWithGoogle = async ({
-  idToken,
-  accessToken: googleAccessToken,
-  email,
-  name,
-  avatar,
-  googleId,
-}) => {
-  let verifiedEmail = email;
-  let verifiedName = name;
-  let verifiedAvatar = avatar;
-  let verifiedGoogleId = googleId;
-
-  // 1. Validation de l'idToken auprès de Google
-  if (idToken) {
-    try {
-      const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
-      if (response.ok) {
-        const payload = await response.json();
-        if (payload && payload.email) {
-          verifiedEmail = payload.email;
-          verifiedName = payload.name || verifiedName;
-          verifiedAvatar = payload.picture || verifiedAvatar;
-          verifiedGoogleId = payload.sub || verifiedGoogleId;
-        }
-      }
-    } catch (tokenErr) {
-      console.warn("[AuthService] Erreur validation idToken Google:", tokenErr.message);
-    }
-  } else if (googleAccessToken) {
-    // 2. Validation avec Access Token Google
-    try {
-      const response = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
-        headers: { Authorization: `Bearer ${googleAccessToken}` },
-      });
-      if (response.ok) {
-        const payload = await response.json();
-        if (payload && payload.email) {
-          verifiedEmail = payload.email;
-          verifiedName = payload.name || verifiedName;
-          verifiedAvatar = payload.picture || verifiedAvatar;
-          verifiedGoogleId = payload.sub || verifiedGoogleId;
-        }
-      }
-    } catch (oauthErr) {
-      console.warn("[AuthService] Erreur récupération userinfo Google:", oauthErr.message);
-    }
+export const authenticateWithGoogle = async ({ idToken }) => {
+  const allowedClientIds = String(process.env.GOOGLE_CLIENT_IDS || "")
+    .split(",")
+    .map((clientId) => clientId.trim())
+    .filter(Boolean);
+  if (!allowedClientIds.length) {
+    const error = new Error("La connexion Google n'est pas configurée sur le serveur.");
+    error.statusCode = 503;
+    throw error;
   }
-
-  if (!verifiedEmail) {
-    const error = new Error("Email Google manquant ou invalide.");
-    error.statusCode = 400;
+  if (typeof idToken !== "string" || !idToken.trim()) {
+    const error = new Error("Un jeton d'identité Google valide est obligatoire.");
+    error.statusCode = 401;
     throw error;
   }
 
-  // 3. Recherche de l'utilisateur dans MongoDB
-  const query = verifiedGoogleId
-    ? { $or: [{ email: verifiedEmail.toLowerCase() }, { googleId: verifiedGoogleId }] }
-    : { email: verifiedEmail.toLowerCase() };
+  let verificationResponse;
+  try {
+    const tokenInfoUrl = new URL("https://oauth2.googleapis.com/tokeninfo");
+    tokenInfoUrl.searchParams.set("id_token", idToken);
+    verificationResponse = await fetch(tokenInfoUrl, { signal: AbortSignal.timeout(5000) });
+  } catch {
+    const error = new Error("La vérification Google est temporairement indisponible.");
+    error.statusCode = 503;
+    throw error;
+  }
+  if (!verificationResponse.ok) {
+    const error = new Error("Jeton d'identité Google invalide ou expiré.");
+    error.statusCode = 401;
+    throw error;
+  }
 
-  let user = await User.findOne(query);
+  const identity = await verificationResponse.json();
+  const allowedIssuers = new Set(["accounts.google.com", "https://accounts.google.com"]);
+  const isVerified = identity.email_verified === true || identity.email_verified === "true";
+  const expiresAt = Number(identity.exp) * 1000;
+  if (
+    !allowedClientIds.includes(identity.aud) ||
+    !allowedIssuers.has(identity.iss) ||
+    !isVerified ||
+    !identity.sub ||
+    !identity.email ||
+    !Number.isFinite(expiresAt) ||
+    expiresAt <= Date.now()
+  ) {
+    const error = new Error("L'identité Google n'a pas pu être vérifiée pour cette application.");
+    error.statusCode = 401;
+    throw error;
+  }
+
+  const verifiedEmail = String(identity.email).trim().toLowerCase();
+  let user = await User.findOne({
+    $or: [{ email: verifiedEmail }, { googleId: identity.sub }],
+  }).select("+refreshTokens +activeAccessSessionIds");
+
+  if (user && !user.isActive) {
+    const error = new Error("Votre compte est désactivé. Veuillez contacter un administrateur.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  if (user?.role === "admin") {
+    const error = new Error("Les comptes administrateur doivent se connecter avec mot de passe et code email.");
+    error.statusCode = 403;
+    throw error;
+  }
 
   if (user) {
-    if (!user.googleId && verifiedGoogleId) {
-      user.googleId = verifiedGoogleId;
-    }
-    if (verifiedAvatar && (!user.avatar || user.avatar.includes("unsplash"))) {
-      user.avatar = verifiedAvatar;
-    }
+    if (!user.googleId) user.googleId = identity.sub;
+    if (identity.picture && (!user.avatar || user.avatar.includes("unsplash"))) user.avatar = identity.picture;
     user.lastLogin = new Date();
-    await user.save({ validateBeforeSave: false });
   } else {
     user = await User.create({
-      name: verifiedName || verifiedEmail.split("@")[0],
-      email: verifiedEmail.toLowerCase(),
-      avatar: verifiedAvatar || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200",
+      name: identity.name || verifiedEmail.split("@")[0],
+      email: verifiedEmail,
+      avatar: identity.picture || "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200",
       role: "user",
       provider: "google",
-      googleId: verifiedGoogleId || null,
+      googleId: identity.sub,
       lastLogin: new Date(),
     });
   }
 
-  // 4. Génération des tokens JWT sécurisés
-  const appAccessToken = generateAccessToken(user._id);
-  const appRefreshToken = generateRefreshToken(user._id);
-
-  user.refreshTokens = user.refreshTokens || [];
-  user.refreshTokens.push(appRefreshToken);
+  const session = issueSessionTokens(user._id.toString());
+  rememberSession(user, session);
   await user.save({ validateBeforeSave: false });
 
   return {
-    accessToken: appAccessToken,
-    refreshToken: appRefreshToken,
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
     user: formatUserResponse(user),
   };
 };
@@ -340,7 +465,6 @@ export const authenticateWithGoogle = async ({
 export const sendPartnerOtp = async ({
   managerName,
   email,
-  password,
   establishmentName,
   whatsapp,
   city = "Sfax",
@@ -348,8 +472,17 @@ export const sendPartnerOtp = async ({
   plan = "standard",
   billingCycle = "monthly",
 }) => {
+  if (
+    typeof email !== "string" || !email.trim() || email.length > 254 ||
+    typeof managerName !== "string" || !managerName.trim() ||
+    typeof establishmentName !== "string" || !establishmentName.trim() ||
+    typeof whatsapp !== "string"
+  ) {
+    const error = new Error("Les informations du partenaire sont incomplètes ou invalides.");
+    error.statusCode = 400;
+    throw error;
+  }
   const normalizedEmail = email.trim().toLowerCase();
-
   // 1. Vérifier si l'utilisateur existe déjà
   const existingUser = await User.findOne({ email: normalizedEmail });
   if (existingUser) {
@@ -359,7 +492,7 @@ export const sendPartnerOtp = async ({
   }
 
   // 2. Générer un code OTP cryptographique à 6 chiffres
-  const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
+  const rawOtp = randomInt(100000, 1000000).toString();
   const salt = await bcrypt.genSalt(10);
   const otpHash = await bcrypt.hash(rawOtp, salt);
 
@@ -374,33 +507,40 @@ export const sendPartnerOtp = async ({
       phone: whatsapp.trim(),
       city,
       category,
-      password,
       plan,
       billingCycle,
     },
   });
 
   // 4. Déclencher l'envoi de l'email officiel (Resend / Log local)
-  const mailResult = await sendPartnerOtpEmail({
-    email: normalizedEmail,
-    managerName,
-    establishmentName,
-    otpCode: rawOtp,
-  });
+  try {
+    await sendPartnerOtpEmail({ email: normalizedEmail, managerName, establishmentName, otpCode: rawOtp });
+  } catch (error) {
+    await OtpVerification.deleteMany({ email: normalizedEmail });
+    throw error;
+  }
 
   return {
     success: true,
     email: normalizedEmail,
-    demoCode: rawOtp, // Pratique pour le test rapide
-    mailResult,
   };
 };
 
 /**
  * Étape 2 : Vérification du code OTP & Création sécurisée du compte Partenaire
  */
-export const verifyPartnerOtp = async ({ email, otp }) => {
+export const verifyPartnerOtp = async ({ email, otp, password }) => {
+  if (typeof email !== "string" || typeof otp !== "string" || !/^\d{6}$/.test(otp)) {
+    const error = new Error("Un email et un code de vérification à 6 chiffres sont obligatoires.");
+    error.statusCode = 400;
+    throw error;
+  }
   const normalizedEmail = email.trim().toLowerCase();
+  if (typeof password !== "string" || password.length < 12 || password.length > 128) {
+    const error = new Error("Le mot de passe doit contenir entre 12 et 128 caractères.");
+    error.statusCode = 400;
+    throw error;
+  }
 
   const otpRecord = await OtpVerification.findOne({ email: normalizedEmail });
   if (!otpRecord) {
@@ -419,21 +559,41 @@ export const verifyPartnerOtp = async ({ email, otp }) => {
 
   const isMatch = await bcrypt.compare(otp.trim(), otpRecord.otpHash);
   if (!isMatch) {
-    otpRecord.attempts += 1;
-    await otpRecord.save();
+    const updatedOtp = await OtpVerification.findOneAndUpdate(
+      { _id: otpRecord._id, attempts: { $lt: 3 } },
+      { $inc: { attempts: 1 } },
+      { new: true }
+    );
+    if (!updatedOtp) {
+      await OtpVerification.deleteOne({ _id: otpRecord._id });
+      const error = new Error("Trop de tentatives incorrectes. Veuillez demander un nouveau code.");
+      error.statusCode = 429;
+      throw error;
+    }
     const error = new Error("Code de vérification incorrect.");
     error.statusCode = 400;
     throw error;
   }
 
-  const data = otpRecord.partnerData;
+  const claimedOtp = await OtpVerification.findOneAndDelete({
+    _id: otpRecord._id,
+    otpHash: otpRecord.otpHash,
+    attempts: { $lt: 3 },
+  });
+  if (!claimedOtp) {
+    const error = new Error("Ce code a déjà été utilisé ou a expiré. Veuillez recommencer.");
+    error.statusCode = 409;
+    throw error;
+  }
+
+  const data = claimedOtp.partnerData;
   const isPaidPlan = data.plan === "pro" || data.plan === "premium";
 
   // Création du compte Partenaire : partnerTier est TOUJOURS "standard" par défaut !
   const newUser = await User.create({
     name: data.name,
     email: normalizedEmail,
-    password: data.password,
+    password,
     phone: data.phone,
     establishmentName: data.establishmentName,
     city: data.city,
@@ -445,19 +605,15 @@ export const verifyPartnerOtp = async ({ email, otp }) => {
     isEmailVerified: true,
   });
 
-  // Nettoyage de l'OTP
-  await OtpVerification.deleteOne({ _id: otpRecord._id });
-
   // Génération des JWT
-  const accessToken = generateAccessToken(newUser._id);
-  const refreshToken = generateRefreshToken(newUser._id);
-  newUser.refreshTokens = [refreshToken];
+  const session = issueSessionTokens(newUser._id.toString());
+  rememberSession(newUser, session);
   newUser.lastLogin = new Date();
   await newUser.save({ validateBeforeSave: false });
 
   return {
-    accessToken,
-    refreshToken,
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken,
     user: formatUserResponse(newUser),
   };
 };

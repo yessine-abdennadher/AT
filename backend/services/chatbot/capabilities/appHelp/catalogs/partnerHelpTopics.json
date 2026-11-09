@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "topics": {
+    "create_activity": {
+      "id": "create_activity",
+      "action": "OPEN_PARTNER_DASHBOARD",
+      "actionParams": { "section": "activities", "mode": "create" },
+      "fr": {
+        "title": "Ajouter un établissement ou une activité",
+        "description": "Publiez votre café, restaurant ou espace de loisirs avec photos, tags d'ambiance et description.",
+        "actionLabel": "Ajouter une activité"
+      },
+      "derja": {
+        "title": "Zid blassa walla activité",
+        "description": "Habat el 9ahwa walla el resto mte3ek m3a tsawer w el jaw mte3ha.",
+        "actionLabel": "Zid activité"
+      },
+      "ar": {
+        "title": "إضافة نشاط أو مكان",
+        "description": "قم بنشر المقهى أو المطعم الخاص بك مع الصور والتفاصيل والأجواء.",
+        "actionLabel": "إضافة نشاط"
+      },
+      "en": {
+        "title": "Add a place or activity",
+        "description": "List your cafe, restaurant or leisure spot with photos, atmosphere tags, and description.",
+        "actionLabel": "Add activity"
+      }
+    },
+    "manage_hours": {
+      "id": "manage_hours",
+      "action": "OPEN_PARTNER_DASHBOARD",
+      "actionParams": { "section": "hours" },
+      "fr": {
+        "title": "Horaires d'ouverture",
+        "description": "Configurez vos heures d'ouverture quotidiennes et gérez vos fermetures exceptionnelles.",
+        "actionLabel": "Modifier les horaires"
+      },
+      "derja": {
+        "title": "Awe9at el 7ellena",
+        "description": "Rague7 wa9tech t7el w wa9tech tsaker koll youm.",
+        "actionLabel": "Baddel el wa9t"
+      },
+      "ar": {
+        "title": "أوقات العمل",
+        "description": "قم بضبط ساعات العمل اليومية والإجازات الاستثنائية.",
+        "actionLabel": "تعديل الأوقات"
+      },
+      "en": {
+        "title": "Opening hours",
+        "description": "Configure your daily open hours and manage special holidays.",
+        "actionLabel": "Edit hours"
+      }
+    },
+    "promotions": {
+      "id": "promotions",
+      "action": "OPEN_PARTNER_DASHBOARD",
+      "actionParams": { "section": "promotions" },
+      "fr": {
+        "title": "Offres et promotions",
+        "description": "Créez des offres spéciales, réductions 'Happy Hour' ou menus spéciaux visibles par les utilisateurs.",
+        "actionLabel": "Gérer les promos"
+      },
+      "derja": {
+        "title": "Les promos w les offres",
+        "description": "A3mel des remises walla offres Happy Hour ychoufouhom el kleyafa.",
+        "actionLabel": "Chouf les promos"
+      },
+      "ar": {
+        "title": "العروض والتخفيضات",
+        "description": "قم بإنشاء عروض ترويجية وتخفيضات تجذب زوار المنصة.",
+        "actionLabel": "إدارة العروض"
+      },
+      "en": {
+        "title": "Deals and promotions",
+        "description": "Create special offers, happy hour deals, or set menus for users.",
+        "actionLabel": "Manage deals"
+      }
+    },
+    "analytics": {
+      "id": "analytics",
+      "action": "OPEN_PARTNER_DASHBOARD",
+      "actionParams": { "section": "stats" },
+      "fr": {
+        "title": "Statistiques et visibilité",
+        "description": "Suivez le nombre de vues, clics de contact (téléphone, WhatsApp, itinéraire) de vos fiches.",
+        "actionLabel": "Voir les statistiques"
+      },
+      "derja": {
+        "title": "Les statistiques mte3ek",
+        "description": "Chouf 9adeh men we7ed chef el fiche mte3ek w nzel 3la numrouk.",
+        "actionLabel": "Chouf les stats"
+      },
+      "ar": {
+        "title": "الإحصائيات ونسب المشاهدة",
+        "description": "تابع عدد المشاهدات والنقرات على أرقام الاتصال والتوجيه الجغرافي.",
+        "actionLabel": "عرض الإحصائيات"
+      },
+      "en": {
+        "title": "Analytics and visits",
+        "description": "Track view counts, call clicks, and navigation requests on your listings.",
+        "actionLabel": "View stats"
+      }
+    }
+  }
+}
+

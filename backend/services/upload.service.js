@@ -6,6 +6,37 @@ import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const UPLOADS_DIR = path.join(__dirname, "..", "uploads");
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+const normalizeImageData = (input) => {
+  const match = input.match(/^data:(image\/(?:jpeg|png|webp));base64,([a-zA-Z0-9+/]+={0,2})$/);
+  const base64 = match ? match[2] : input;
+  if (!/^[a-zA-Z0-9+/]+={0,2}$/.test(base64) || base64.length % 4 !== 0) {
+    const error = new Error("L’image doit être encodée en base64 valide.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const estimatedBytes = Math.floor((base64.length * 3) / 4) - (base64.endsWith("==") ? 2 : base64.endsWith("=") ? 1 : 0);
+  if (!estimatedBytes || estimatedBytes > MAX_IMAGE_BYTES) {
+    const error = new Error("L’image doit faire 5 Mo maximum.");
+    error.statusCode = 413;
+    throw error;
+  }
+
+  const buffer = Buffer.from(base64, "base64");
+  const signatures = [
+    { mime: "image/jpeg", ext: "jpg", valid: buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff },
+    { mime: "image/png", ext: "png", valid: buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])) },
+    { mime: "image/webp", ext: "webp", valid: buffer.toString("ascii", 0, 4) === "RIFF" && buffer.toString("ascii", 8, 12) === "WEBP" },
+  ];
+  const detected = signatures.find((signature) => signature.valid);
+  if (!detected || (match && match[1] !== detected.mime)) {
+    const error = new Error("Le contenu fourni n’est pas une image JPG, PNG ou WEBP valide.");
+    error.statusCode = 400;
+    throw error;
+  }
+  return { buffer, ext: detected.ext, dataUri: `data:${detected.mime};base64,${base64}` };
+};
 
 // S'assurer que le dossier uploads existe
 async function ensureUploadsDir() {
@@ -71,36 +102,7 @@ async function uploadToCloudinary(base64Data, folder = "tfarhida") {
  */
 async function saveLocally(base64Data, reqHost, folder = "activities") {
   await ensureUploadsDir();
-
-  // Extraction du type MIME et des données brutes
-  const matches = base64Data.match(/^data:image\/([a-zA-Z0-9+]+);base64,(.+)$/);
-  let ext = "jpg";
-  let buffer;
-
-  if (matches) {
-    const rawExt = matches[1].toLowerCase();
-    ext = rawExt === "jpeg" ? "jpg" : rawExt;
-    buffer = Buffer.from(matches[2], "base64");
-  } else {
-    // Si c'est directement une chaîne base64 sans en-tête data URI
-    buffer = Buffer.from(base64Data, "base64");
-  }
-
-  // Liste blanche stricte d'extensions d'images (blocage des SVG exécutables, HTML ou binaires)
-  const ALLOWED_EXTENSIONS = ["jpg", "png", "webp"];
-  if (!ALLOWED_EXTENSIONS.includes(ext)) {
-    const error = new Error("Format d'image non autorisé. Formats acceptés : JPG, PNG, WEBP.");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  // Vérification de taille (5 Mo max)
-  const maxSize = 5 * 1024 * 1024;
-  if (buffer.length > maxSize) {
-    const error = new Error("L'image dépasse la taille maximale autorisée (5 Mo).");
-    error.statusCode = 400;
-    throw error;
-  }
+  const { buffer, ext } = normalizeImageData(base64Data);
 
   // Nettoyage strict du nom de dossier contre les traversées de répertoire
   const sanitizedFolder = String(folder || "activities").replace(/[^a-zA-Z0-9_-]/g, "");
@@ -133,6 +135,13 @@ export async function processImageUpload(data, reqHost, user) {
     throw error;
   }
 
+  if (!["activities", "avatars"].includes(folder)) {
+    const error = new Error("Dossier d’image invalide.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const normalizedImage = normalizeImageData(image);
+
   const isProduction = process.env.NODE_ENV === "production";
   const hasCloudinaryConfig = Boolean(
     process.env.CLOUDINARY_CLOUD_NAME?.trim() &&
@@ -149,7 +158,7 @@ export async function processImageUpload(data, reqHost, user) {
   // 1. Tenter l'upload Cloudinary si configuré
   if (hasCloudinaryConfig) {
     try {
-      const cloudinaryResult = await uploadToCloudinary(image, `tfarhida/${folder}`);
+      const cloudinaryResult = await uploadToCloudinary(normalizedImage.dataUri, `tfarhida/${folder}`);
       if (cloudinaryResult) {
         console.log(`[UploadService] ✅ Image uploadée sur Cloudinary par ${user?.email || 'anonyme'}: ${cloudinaryResult.url}`);
         return cloudinaryResult;
@@ -168,7 +177,7 @@ export async function processImageUpload(data, reqHost, user) {
   }
 
   // 2. Basculement sur stockage local sécurisé en développement
-  const localResult = await saveLocally(image, reqHost, folder);
+  const localResult = await saveLocally(normalizedImage.dataUri, reqHost, folder);
   console.log(`[UploadService] 💾 Image stockée localement par ${user?.email || 'anonyme'}: ${localResult.url}`);
   return localResult;
 }

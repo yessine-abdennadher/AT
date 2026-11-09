@@ -4,6 +4,7 @@ import { User } from "../models/User.js";
 import { Activity } from "../models/Activity.js";
 import { City } from "../models/City.js";
 import { Category } from "../models/Category.js";
+import { getDevelopmentAdminSeed } from "./developmentAdminSeed.js";
 
 dotenv.config();
 
@@ -11,15 +12,7 @@ const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || "mongodb:/
 
 // Liste des utilisateurs de démo
 const demoUsers = [
-  {
-    name: "Administrateur ActivityTN",
-    email: "admin@activitytn.tn",
-    password: "Admin123456!",
-    role: "admin",
-    city: "صفاقس (Sfax)",
-    bio: "Gestionnaire système et modérateur officiel de la plateforme ActivityTN.",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
-  },
+  getDevelopmentAdminSeed(),
   {
     name: "Le Moulin Cafe & Lounge",
     email: "partner.moulin@activitytn.tn",
@@ -39,7 +32,7 @@ const demoUsers = [
     bio: "Passionné d'activités outdoor, de sorties entre amis et de bons cafés à Sfax.",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200",
   },
-];
+].filter(Boolean);
 
 // Liste des activités de démonstration à insérer (EXCLUSIVEMENT SFAX avec FR, AR, EN)
 const demoActivities = [
@@ -870,6 +863,7 @@ const demoCategories = [
 
 const seedDatabase = async () => {
   try {
+    if (process.env.NODE_ENV !== "development") throw new Error("Le seeding de démonstration est autorisé uniquement en développement.");
     console.log("🔌 [Seeder] Connexion à MongoDB...");
     await mongoose.connect(MONGO_URI);
     console.log("✅ [Seeder] Connecté à MongoDB.");
@@ -914,7 +908,7 @@ const seedDatabase = async () => {
     // 5. Seeding des activités de Sfax avec support multilingue (FR, AR, EN)
     console.log("\n📍 [Seeder] Initialisation & synchronisation des activités de Sfax [FR / AR / EN]...");
     for (const actData of demoActivities) {
-      const owner = (actData.type === "cafe" || actData.city === "Sfax") ? partnerUser : adminUser;
+      const owner = (actData.type === "cafe" || actData.city === "Sfax") ? partnerUser : (adminUser || partnerUser);
 
       const existingActivity = await Activity.findOne({ name: actData.name, city: "Sfax" });
       if (!existingActivity) {
@@ -934,7 +928,6 @@ const seedDatabase = async () => {
 
     console.log("\n🎉 [Seeder] Seeding Sfax, Villes & Catégories exécuté avec succès !");
     console.log("===============================================================");
-    console.log("👑 Admin     : admin@activitytn.tn / Admin123456!");
     console.log("☕ Partner   : partner.moulin@activitytn.tn / Partner123456!");
     console.log("👤 User      : user.sfax@activitytn.tn / User123456!");
     console.log("===============================================================\n");

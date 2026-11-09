@@ -1,27 +1,26 @@
 /**
  * Service d'Envoi d'Email Tfarhida (Resend API)
  * Utilise l'API HTTPS officielle de Resend avec template HTML officiel Brand Book
- * Intègre un fallback transparent pour le développement local si aucune clé n'est encore configurée
+ * N'expose jamais les codes de vérification dans les réponses ou les logs.
  */
 
 export async function sendPartnerOtpEmail({ email, managerName, establishmentName, otpCode }) {
   const apiKey = process.env.RESEND_API_KEY;
 
-  console.log(`\n======================================================`);
-  console.log(`🔐 [OTP TFARHIDA] Code de sécurité généré pour ${email}`);
-  console.log(`👉 Établissement : ${establishmentName} | Gérant : ${managerName}`);
-  console.log(`👉 CODE OTP : [ ${otpCode} ] (Valable 10 minutes)`);
-  console.log(`======================================================\n`);
-
-  // Si aucune clé API n'est configurée, on s'arrête au log console sans planter
+  // Refuser l'émission si l'email n'est pas réellement envoyé.
   if (!apiKey || apiKey === "re_test_dummy_key" || apiKey.trim() === "") {
-    return {
-      success: true,
-      delivered: false,
-      mode: "development_console",
-      message: "Code OTP affiché dans la console locale (ajouter RESEND_API_KEY dans .env pour envoi réel)",
-    };
+    const error = new Error("Le service d'envoi d'emails n'est pas configuré.");
+    error.statusCode = 503;
+    throw error;
   }
+
+  const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (character) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[character]);
 
   // Template HTML aux couleurs du Brand Book officiel (Navy #060B24, Cyan #00D2FF, Violet #7C3AED)
   const htmlContent = `
@@ -52,8 +51,8 @@ export async function sendPartnerOtpEmail({ email, managerName, establishmentNam
         </div>
         <div class="content">
           <p class="greeting">
-            Bonjour <strong>${managerName}</strong>,<br><br>
-            Vous venez de configurer l'Espace Partenaire pour l'établissement <strong>« ${establishmentName} »</strong>.
+            Bonjour <strong>${escapeHtml(managerName)}</strong>,<br><br>
+            Vous venez de configurer l'Espace Partenaire pour l'établissement <strong>« ${escapeHtml(establishmentName)} »</strong>.
             Voici votre code de sécurité à 6 chiffres pour valider votre adresse email :
           </p>
           <div class="otp-box">
@@ -89,14 +88,41 @@ export async function sendPartnerOtpEmail({ email, managerName, establishmentNam
 
     const data = await res.json();
     if (!res.ok) {
-      console.warn("[Resend Warning] Échec d'envoi d'email :", data);
-      return { success: false, error: data.message || "Erreur Resend" };
+      const error = new Error("Impossible d'envoyer le code de vérification.");
+      error.statusCode = 503;
+      throw error;
     }
 
     return { success: true, delivered: true, id: data.id };
   } catch (err) {
-    console.error("[Resend Error] Exception réseau :", err.message);
-    return { success: false, error: err.message };
+    if (!err.statusCode) err.statusCode = 503;
+    throw err;
+  }
+}
+
+export async function sendAdminLoginOtpEmail({ email, otpCode }) {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey || apiKey === "re_test_dummy_key") {
+    const error = new Error("Le service d’envoi des codes admin n’est pas configuré.");
+    error.statusCode = 503;
+    throw error;
+  }
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: process.env.RESEND_FROM || "Tfarhida <onboarding@resend.dev>",
+      to: [email],
+      subject: "Code de connexion administrateur ActivityTN",
+      text: `Votre code de connexion administrateur est ${otpCode}. Il expire dans 10 minutes. Si vous n’êtes pas à l’origine de cette demande, ignorez cet email.`,
+    }),
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok) {
+    const error = new Error("Impossible d’envoyer le code de connexion administrateur.");
+    error.statusCode = 503;
+    throw error;
   }
 }
 

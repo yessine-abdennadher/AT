@@ -3,7 +3,10 @@ import { runFastPathBenchmark } from "./couche1-fastpath/fastPath.benchmark.js";
 import { runClassificationBenchmark } from "./couche2-classification/classification.benchmark.js";
 import { runSemanticBenchmark } from "./couche3-semantic/semanticMatcher.benchmark.js";
 import { runMemoryBenchmark } from "./couche4-memory/memoryIntegrity.benchmark.js";
+import { runActionPlanningBenchmark } from "./couche5-action-planning/actionPlanning.benchmark.js";
 import { runResponsesBenchmark } from "./couche5-responses/responses.benchmark.js";
+import { runSafetyAndGuardsBenchmark } from "./couche6-safety-guards/safetyAndGuards.benchmark.js";
+import { runComprehensiveScenariosBenchmark } from "./couche7-scenarios-complets/comprehensiveScenarios.benchmark.js";
 import { runArchitectureCheck } from "./architectureCheck.js";
 
 async function runAll() {
@@ -19,7 +22,10 @@ async function runAll() {
     await runClassificationBenchmark(),
     await runSemanticBenchmark(),
     await runMemoryBenchmark(),
+    await runActionPlanningBenchmark(),
     await runResponsesBenchmark(),
+    await runSafetyAndGuardsBenchmark(),
+    await runComprehensiveScenariosBenchmark(),
   ];
 
   const totalPassed = results.reduce((acc, r) => acc + r.passed, 0);

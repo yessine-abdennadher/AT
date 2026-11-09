@@ -20,7 +20,8 @@ const userSchema = new mongoose.Schema(
       required: function () {
         return this.provider === "local";
       },
-      minlength: 6,
+      minlength: 12,
+      maxlength: 128,
       select: false,
     },
     googleId: {
@@ -88,11 +89,16 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    refreshTokens: [
-      {
-        type: String,
-      },
-    ],
+    refreshTokens: {
+      type: [String],
+      default: [],
+      select: false,
+    },
+    activeAccessSessionIds: {
+      type: [String],
+      default: [],
+      select: false,
+    },
     isActive: {
       type: Boolean,
       default: true,

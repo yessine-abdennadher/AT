@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "title": "TfarhidaMobileDeepLinkActionsContract",
+  "description": "Contrat standard pour les actions d'aide et boutons interactifs de l'application mobile et web Tfarhida.",
+  "actions": {
+    "OPEN_TAB": {
+      "type": "OPEN_TAB",
+      "allowedTabs": ["explore", "map", "favorites", "profile", "partner"],
+      "description": "Bascule vers l'un des onglets principaux de navigation."
+    },
+    "OPEN_INTERACTIVE_MAP": {
+      "type": "OPEN_INTERACTIVE_MAP",
+      "allowedParams": ["city", "coords", "category"],
+      "description": "Ouvre la vue cartographique interactive avec filtres optionnels."
+    },
+    "OPEN_ACTIVITY_DETAIL": {
+      "type": "OPEN_ACTIVITY_DETAIL",
+      "requiredParams": ["activityId"],
+      "description": "Ouvre la fiche détaillée d'un établissement ou d'une activité."
+    },
+    "OPEN_PARTNER_DASHBOARD": {
+      "type": "OPEN_PARTNER_DASHBOARD",
+      "allowedSections": ["activities", "hours", "promotions", "stats"],
+      "description": "Ouvre l'espace partenaire sur la section demandée."
+    },
+    "OPEN_FILTERS_MODAL": {
+      "type": "OPEN_FILTERS_MODAL",
+      "allowedParams": ["preset"],
+      "description": "Ouvre la modale de filtres avancés (ScrollableModal)."
+    }
+  }
+}
+

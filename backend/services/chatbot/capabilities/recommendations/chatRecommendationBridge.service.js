@@ -8,6 +8,7 @@ import mongoose from "mongoose";
 import { Activity } from "../../../../models/Activity.js";
 import { formatActivityCards } from "./chatCardFormatter.service.js";
 import { findWithRelaxation } from "./fallbackRelaxation.service.js";
+import { prioritizeNearby } from "./activityRanker.service.js";
 
 const CATEGORY_CANONICAL_MAP = {
   restaurant: "food",
@@ -45,7 +46,10 @@ export function buildCentralRecommendationFilters(constraints = {}) {
     }
   }
 
-  if (constraints.budgetMax !== null && constraints.budgetMax !== undefined && Number.isFinite(Number(constraints.budgetMax))) {
+  // Montant explicite extrait ("moins de 20 dt") : prioritaire sur budgetMax hérité et sur le palier "low".
+  if (constraints.maxBudget !== null && constraints.maxBudget !== undefined && Number.isFinite(Number(constraints.maxBudget)) && Number(constraints.maxBudget) > 0) {
+    filters.budgetMax = Number(constraints.maxBudget);
+  } else if (constraints.budgetMax !== null && constraints.budgetMax !== undefined && Number.isFinite(Number(constraints.budgetMax))) {
     filters.budgetMax = Number(constraints.budgetMax);
   } else if (constraints.budgetLevel === "low") {
     filters.budgetMax = 35;
@@ -90,6 +94,7 @@ export async function findChatRecommendations({
   constraints = {},
   limit = 5,
   excludeIds = [],
+  userCoords = null,
 } = {}) {
   const exclude = new Set(excludeIds.map(String));
   const targetNeighborhood = constraints.neighborhood || (constraints.neighborhoods?.[0]);
@@ -184,6 +189,11 @@ export async function findChatRecommendations({
         }
       }
 
+      // `nearMe` + coordonnées utilisateur : lieux du rayon proche d'abord (sans jamais retirer de résultat).
+      if (constraints.nearMe && userCoords) {
+        activities = prioritizeNearby(activities, userCoords);
+      }
+
       const topActivities = activities.slice(0, limit);
       const cards = formatActivityCards(topActivities);
       return {
@@ -204,6 +214,7 @@ export async function findChatRecommendations({
     constraints,
     limit,
     excludeIds,
+    userCoords,
   });
 
   if (targetNeighborhood && relaxed.includes("neighborhood")) {

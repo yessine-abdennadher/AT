@@ -1,21 +1,14 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { User } from "../models/User.js";
+import { getDevelopmentAdminSeed } from "./developmentAdminSeed.js";
 
 dotenv.config();
 
 const MONGO_URI = process.env.MONGODB_URI || process.env.MONGO_URI || "mongodb://localhost:27017/activitytn_db";
 
 const demoUsers = [
-  {
-    name: "Administrateur ActivityTN",
-    email: "admin@activitytn.tn",
-    password: "Admin123456!",
-    role: "admin",
-    city: "تونس (Tunis)",
-    bio: "Gestionnaire système et modérateur officiel de la plateforme ActivityTN.",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
-  },
+  getDevelopmentAdminSeed(),
   {
     name: "Le Moulin Cafe & Lounge",
     email: "partner.moulin@activitytn.tn",
@@ -46,10 +39,11 @@ const demoUsers = [
     bio: "Passionné d'activités outdoor, de sorties entre amis et de bons cafés à Sfax.",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
   },
-];
+].filter(Boolean);
 
 const seedUsers = async () => {
   try {
+    if (process.env.NODE_ENV !== "development") throw new Error("Le seeding des comptes de démonstration est autorisé uniquement en développement.");
     console.log("🔌 [Seeder] Connexion à MongoDB...");
     await mongoose.connect(MONGO_URI);
     console.log("✅ [Seeder] Connecté à MongoDB.");
@@ -66,7 +60,6 @@ const seedUsers = async () => {
 
     console.log("\n🎉 [Seeder] Initialisation des utilisateurs terminée avec succès !");
     console.log("---------------------------------------------------------------");
-    console.log("👑 Admin       : admin@activitytn.tn / Admin123456!");
     console.log("🍽️ Restaurant  : restaurant.pirate@activitytn.tn / Partner123456!");
     console.log("☕ Café Lounge : partner.moulin@activitytn.tn / Partner123456!");
     console.log("👤 Utilisateur : user.sfax@activitytn.tn / User123456!");

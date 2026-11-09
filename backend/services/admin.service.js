@@ -4,6 +4,33 @@ import { Activity } from "../models/Activity.js";
 import { Review } from "../models/Review.js";
 import { createNotification } from "./notification.service.js";
 import { ActivityApprovalAudit } from "../models/ActivityApprovalAudit.js";
+import { AdminSecurityAudit } from "../models/AdminSecurityAudit.js";
+
+const writeSecurityAudit = async ({ actorId, targetId, targetType = "user", action, previousValue, newValue, request = {} }) => {
+  if (!actorId) return null;
+  await AdminSecurityAudit.create({
+    actorId,
+    targetId,
+    targetType,
+    action,
+    previousValue,
+    newValue,
+    ipAddress: String(request.ip || "").slice(0, 64),
+    userAgent: String(request.userAgent || "").slice(0, 512),
+  });
+};
+
+export const recordAdminSecurityAudit = writeSecurityAudit;
+
+export const getAdminSecurityAudit = async ({ page = 1, limit = 50 } = {}) => {
+  const safePage = Math.max(1, Number.parseInt(page, 10) || 1);
+  const safeLimit = Math.min(100, Math.max(1, Number.parseInt(limit, 10) || 50));
+  const [entries, total] = await Promise.all([
+    AdminSecurityAudit.find().sort({ createdAt: -1 }).skip((safePage - 1) * safeLimit).limit(safeLimit).lean(),
+    AdminSecurityAudit.countDocuments(),
+  ]);
+  return { entries, total, page: safePage, totalPages: Math.ceil(total / safeLimit) };
+};
 
 export const validateApprovalInput = (isApproved) => {
   if (typeof isApproved !== "boolean") {
@@ -111,22 +138,40 @@ export const getUsersList = async ({
 /**
  * Activer ou suspendre un utilisateur (avec protection anti-auto-suspension)
  */
-export const updateUserStatus = async (targetUserId, isActive, adminUserId) => {
+export const updateUserStatus = async (targetUserId, isActive, adminUserId, request) => {
+  if (typeof isActive !== "boolean") {
+    const error = new Error("Le statut du compte doit être un booléen.");
+    error.statusCode = 400;
+    throw error;
+  }
   if (targetUserId.toString() === adminUserId.toString()) {
     const error = new Error("Impossible de modifier le statut de votre propre compte administrateur.");
     error.statusCode = 400;
     throw error;
   }
 
-  const user = await User.findById(targetUserId);
+  const user = await User.findById(targetUserId).select("+refreshTokens +activeAccessSessionIds");
   if (!user) {
     const error = new Error("Utilisateur introuvable.");
     error.statusCode = 404;
     throw error;
   }
 
-  user.isActive = Boolean(isActive);
+  if (user.role === "admin" && user.isActive && !isActive) {
+    const activeAdminCount = await User.countDocuments({ role: "admin", isActive: true });
+    if (activeAdminCount <= 1) {
+      const error = new Error("Impossible de suspendre le dernier compte administrateur actif.");
+      error.statusCode = 409;
+      throw error;
+    }
+  }
+
+  const previousValue = user.isActive;
+  user.isActive = isActive;
+  user.refreshTokens = [];
+  user.activeAccessSessionIds = [];
   await user.save();
+  await writeSecurityAudit({ actorId: adminUserId, targetId: user._id, action: "user.status.changed", previousValue, newValue: isActive, request });
 
   return {
     id: user._id,
@@ -139,7 +184,7 @@ export const updateUserStatus = async (targetUserId, isActive, adminUserId) => {
 /**
  * Mettre à jour le rôle d'un utilisateur
  */
-export const updateUserRole = async (targetUserId, newRole, adminUserId) => {
+export const updateUserRole = async (targetUserId, newRole, adminUserId, request) => {
   if (targetUserId.toString() === adminUserId.toString()) {
     const error = new Error("Impossible de modifier le rôle de votre propre compte administrateur.");
     error.statusCode = 400;
@@ -152,15 +197,28 @@ export const updateUserRole = async (targetUserId, newRole, adminUserId) => {
     throw error;
   }
 
-  const user = await User.findById(targetUserId);
+  const user = await User.findById(targetUserId).select("+refreshTokens +activeAccessSessionIds");
   if (!user) {
     const error = new Error("Utilisateur introuvable.");
     error.statusCode = 404;
     throw error;
   }
 
+  if (user.role === "admin" && newRole !== "admin") {
+    const activeAdminCount = await User.countDocuments({ role: "admin", isActive: true });
+    if (user.isActive && activeAdminCount <= 1) {
+      const error = new Error("Impossible de retirer le rôle du dernier compte administrateur actif.");
+      error.statusCode = 409;
+      throw error;
+    }
+  }
+
+  const previousValue = user.role;
   user.role = newRole;
+  user.refreshTokens = [];
+  user.activeAccessSessionIds = [];
   await user.save();
+  await writeSecurityAudit({ actorId: adminUserId, targetId: user._id, action: "user.role.changed", previousValue, newValue: newRole, request });
 
   return {
     id: user._id,
@@ -293,7 +351,7 @@ export const toggleActivityApproval = async (activityId, isApprovedInput, actorU
 /**
  * Mettre en avant (Featured) ou marquer populaire
  */
-export const toggleActivityHighlight = async (activityId, field) => {
+export const toggleActivityHighlight = async (activityId, field, actorId, request) => {
   if (!["isFeatured", "isPopular"].includes(field)) {
     const error = new Error("Champ invalide. Seuls isFeatured et isPopular sont autorisés.");
     error.statusCode = 400;
@@ -307,15 +365,17 @@ export const toggleActivityHighlight = async (activityId, field) => {
     throw error;
   }
 
+  const previousValue = activity[field];
   activity[field] = !activity[field];
   await activity.save();
+  await writeSecurityAudit({ actorId, targetId: activity._id, targetType: "activity", action: "activity.highlight.changed", previousValue: { [field]: previousValue }, newValue: { [field]: activity[field] }, request });
   return activity;
 };
 
 /**
  * Suppression administrative définitive d'une activité
  */
-export const deleteActivityByAdmin = async (activityId) => {
+export const deleteActivityByAdmin = async (activityId, actorId, request) => {
   const activity = await Activity.findById(activityId);
   if (!activity) {
     const error = new Error("Activité introuvable.");
@@ -327,6 +387,7 @@ export const deleteActivityByAdmin = async (activityId) => {
     Activity.findByIdAndDelete(activityId),
     Review.deleteMany({ activity: activityId }),
   ]);
+  await writeSecurityAudit({ actorId, targetId: activity._id, targetType: "activity", action: "activity.deleted", previousValue: { name: activity.name, isApproved: activity.isApproved }, newValue: { deleted: true }, request });
 
   return true;
 };
@@ -334,7 +395,7 @@ export const deleteActivityByAdmin = async (activityId) => {
 /**
  * Modifier le niveau / tier d'un partenaire (standard ou pro)
  */
-export const updatePartnerTier = async (userId, tier) => {
+export const updatePartnerTier = async (userId, tier, actorId, request) => {
   if (!["standard", "pro", "premium"].includes(tier)) {
     const error = new Error("Tier invalide. Valeurs autorisées : standard, pro, premium");
     error.statusCode = 400;
@@ -348,8 +409,15 @@ export const updatePartnerTier = async (userId, tier) => {
     throw error;
   }
 
+  if (user.role !== "partner") {
+    const error = new Error("Le compte cible n’est pas un partenaire.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const previousValue = user.partnerTier;
   user.partnerTier = tier;
   await user.save();
+  await writeSecurityAudit({ actorId, targetId: user._id, action: "partner.tier.changed", previousValue, newValue: tier, request });
   return user;
 };
 
@@ -365,7 +433,7 @@ export const getPlatformDiagnostics = async () => {
   ]);
 
   const partners = await User.find({ role: "partner" }).select(
-    "name email establishmentName partnerTier lastLogin lastActivityUpdate createdAt city phone"
+    "name email establishmentName partnerTier requestedTier requestedBillingCycle subscriptionStatus subscriptionStartedAt subscriptionExpiresAt lastLogin lastActivityUpdate createdAt city phone isActive"
   );
 
   const now = new Date();
@@ -374,24 +442,65 @@ export const getPlatformDiagnostics = async () => {
 
   const partnersStatus = await Promise.all(
     partners.map(async (p) => {
-      const activityCount = await Activity.countDocuments({ createdBy: p._id });
+      const activities = await Activity.find({ createdBy: p._id })
+        .select("name category price rating isApproved isFeatured isPopular promotion events openingHours address imageUrl")
+        .lean();
+
+      const activityCount = activities.length;
       const isInactive = !p.lastLogin || (now.getTime() - new Date(p.lastLogin).getTime() > sevenDaysMs);
       const hasStaleData =
         !p.lastActivityUpdate || (now.getTime() - new Date(p.lastActivityUpdate).getTime() > fourteenDaysMs);
 
+      // Extraire toutes les offres promotionnelles avec leur expiration
+      const offers = [];
+      activities.forEach((act) => {
+        if (act.promotion && (act.promotion.isPromo || act.promotion.discountPercent > 0 || act.promotion.promoLabel)) {
+          offers.push({
+            activityId: act._id ? act._id.toString() : "",
+            activityName: act.name,
+            promoLabel: act.promotion.promoLabel || "Promotion spéciale",
+            discountPercent: act.promotion.discountPercent || 0,
+            targetItem: act.promotion.targetItem || "",
+            promoType: act.promotion.promoType || "all",
+            validUntil: act.promotion.validUntil || "",
+          });
+        }
+      });
+
       return {
-        id: p._id,
+        id: p._id.toString(),
         name: p.name,
         email: p.email,
         establishmentName: p.establishmentName || p.name,
         partnerTier: p.partnerTier || "standard",
+        requestedTier: p.requestedTier || "standard",
+        requestedBillingCycle: p.requestedBillingCycle || "monthly",
+        subscriptionStatus: p.subscriptionStatus || (p.partnerTier === "premium" || p.partnerTier === "pro" ? "active" : "none"),
+        subscriptionStartedAt: p.subscriptionStartedAt || p.createdAt,
+        subscriptionExpiresAt: p.subscriptionExpiresAt || null,
         lastLogin: p.lastLogin,
         lastActivityUpdate: p.lastActivityUpdate,
+        createdAt: p.createdAt,
         activityCount,
         isInactive,
         hasStaleData,
         city: p.city,
         phone: p.phone,
+        isActive: p.isActive,
+        activities: activities.map((a) => ({
+          id: a._id ? a._id.toString() : "",
+          name: a.name,
+          category: a.category,
+          price: a.price,
+          rating: a.rating,
+          isApproved: a.isApproved,
+          isFeatured: a.isFeatured,
+          isPopular: a.isPopular,
+          openingHours: a.openingHours,
+          promotion: a.promotion,
+          eventsCount: Array.isArray(a.events) ? a.events.length : 0,
+        })),
+        offers,
       };
     })
   );

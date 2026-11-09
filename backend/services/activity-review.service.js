@@ -4,6 +4,7 @@ import { User } from "../models/User.js";
 import { Review } from "../models/Review.js";
 import { createNotification } from "./notification.service.js";
 import { MAX_REACTIONS_PER_REVIEW } from "../constants/review.js";
+import { recordAdminSecurityAudit } from "./admin-security-audit.service.js";
 
 export { MAX_REACTIONS_PER_REVIEW };
 const SUPPORTED_REACTIONS = ["like", "love", "haha", "wow", "sad", "angry"];
@@ -207,6 +208,7 @@ export const moderateReview = async (reviewId, status, moderatorId) => {
     error.statusCode = 400;
     throw error;
   }
+  const before = await Review.findById(reviewId).select("status");
   const review = await Review.findOneAndUpdate(
     { _id: reviewId, status: { $ne: status } },
     { $set: { status, moderatedAt: new Date(), moderatedBy: moderatorId } },
@@ -218,6 +220,16 @@ export const moderateReview = async (reviewId, status, moderatorId) => {
     const error = new Error("Avis introuvable.");
     error.statusCode = 404;
     throw error;
+  }
+  if (before && before.status !== status) {
+    await recordAdminSecurityAudit({
+      actorId: moderatorId,
+      targetId: review._id,
+      targetType: "review",
+      action: "review.status.changed",
+      previousValue: before.status || "pending",
+      newValue: status,
+    });
   }
   await recalculateActivityRating(review.activity);
   return review;

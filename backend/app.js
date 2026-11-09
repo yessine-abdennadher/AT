@@ -16,6 +16,7 @@ import adminRoutes from "./routes/admin.routes.js";
 import telemetryRoutes from "./routes/telemetry.routes.js";
 import notificationRoutes from "./routes/notification.routes.js";
 import { parseAllowedOrigins, parseTrustProxyHops } from "./config/runtimeConfig.js";
+import { cookieCsrfGuard } from "./middlewares/cookieCsrf.middleware.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -24,6 +25,7 @@ export const createApp = ({ connectionState = mongoose.connection, env = process
   const proxyHops = parseTrustProxyHops(env.TRUST_PROXY_HOPS);
   if (proxyHops !== undefined) app.set("trust proxy", proxyHops);
   const allowedOrigins = parseAllowedOrigins({ nodeEnv: env.NODE_ENV, corsOrigin: env.CORS_ORIGIN });
+  app.locals.allowedOrigins = allowedOrigins;
 
   app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
   app.use(cors({
@@ -33,6 +35,7 @@ export const createApp = ({ connectionState = mongoose.connection, env = process
     },
     credentials: true,
   }));
+  app.use(cookieCsrfGuard);
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true, limit: "10mb" }));
   app.use("/uploads", express.static(path.join(__dirname, "uploads")));

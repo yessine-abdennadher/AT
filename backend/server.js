@@ -15,10 +15,10 @@ export const startServer = async ({
 } = {}) => {
   const app = appFactory({ env });
   await connect();
-  if (env.NODE_ENV !== "production" || env.AUTO_SEED === "true") {
+  if (env.NODE_ENV === "development") {
     await seed();
   } else {
-    console.log("🔒 [Security] Auto-seed désactivé en mode production.");
+    console.log("🔒 [Security] Seeding désactivé hors développement.");
   }
   const server = listen(app, port);
   console.log(`🚀 [Server] Serveur backend démarré sur http://0.0.0.0:${port} (${env.NODE_ENV || "development"})`);

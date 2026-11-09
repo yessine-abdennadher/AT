@@ -1,17 +1,10 @@
 import { User } from "../models/User.js";
 import { Activity } from "../models/Activity.js";
+import { getDevelopmentAdminSeed } from "./developmentAdminSeed.js";
 
 // Liste des utilisateurs de démo
 const demoUsers = [
-  {
-    name: "Administrateur ActivityTN",
-    email: "admin@activitytn.tn",
-    password: "Admin123456!",
-    role: "admin",
-    city: "تونس (Tunis)",
-    bio: "Gestionnaire système et modérateur officiel de la plateforme ActivityTN.",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
-  },
+  getDevelopmentAdminSeed(),
   {
     name: "Le Moulin Cafe & Lounge",
     email: "partner.moulin@activitytn.tn",
@@ -42,7 +35,7 @@ const demoUsers = [
     bio: "Passionné d'activités outdoor, de sorties entre amis et de bons cafés à Sfax.",
     avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
   },
-];
+].filter(Boolean);
 
 const demoActivities = [
   {
@@ -216,6 +209,7 @@ const demoActivities = [
 ];
 
 export const autoSeedIfEmpty = async () => {
+  if (process.env.NODE_ENV !== "development") return;
   try {
     const count = await Activity.countDocuments();
     if (count > 0) {
@@ -238,7 +232,7 @@ export const autoSeedIfEmpty = async () => {
     const partnerUser = createdUsersMap["partner"];
 
     for (const actData of demoActivities) {
-      const owner = (actData.type === "cafe" || actData.city === "Sfax") ? partnerUser : adminUser;
+      const owner = (actData.type === "cafe" || actData.city === "Sfax") ? partnerUser : (adminUser || partnerUser);
       await Activity.create({
         ...actData,
         createdBy: owner._id,

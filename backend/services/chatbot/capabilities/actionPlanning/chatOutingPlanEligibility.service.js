@@ -1,4 +1,5 @@
 import { isOutingPlanActive } from "./chatOutingPlanMemory.service.js";
+import { resolvePlanGuidance } from "./chatOutingPlanGuidance.service.js";
 import { stripDiacritics, includesAny } from "../../shared/textUtils.js";
 
 const RESUME_KEYWORDS = [
@@ -32,9 +33,10 @@ const CANCEL_PLAN_KEYWORDS = [
  * @param {Object} options.plan Le plan de sortie en mémoire
  * @param {string} options.userText Texte normalisé de l'utilisateur
  * @param {string} options.intent Intention courante
- * @returns {{ decision: "RESUME_PLAN" | "CANCEL_PLAN" | "INTERRUPT_PLAN" | "CONTINUE" | "NONE", reason: string }}
+ * @param {string} [options.dialogueAct] Acte de dialogue courant (consommé par la table de guidage)
+ * @returns {{ decision: "RESUME_PLAN" | "CANCEL_PLAN" | "INTERRUPT_PLAN" | "NEXT_STEP" | "CHANGE_STEP" | "CONTINUE" | "NONE", reason: string }}
  */
-export function evaluateOutingPlanEligibility({ plan, userText = "", intent = "" } = {}) {
+export function evaluateOutingPlanEligibility({ plan, userText = "", intent = "", dialogueAct = "" } = {}) {
   if (!isOutingPlanActive(plan)) {
     return { decision: "NONE", reason: "no_active_plan" };
   }
@@ -53,6 +55,10 @@ export function evaluateOutingPlanEligibility({ plan, userText = "", intent = ""
   if (intent.startsWith("ASK_") && plan.status !== "paused") {
     return { decision: "INTERRUPT_PLAN", reason: "detail_question_on_step" };
   }
+
+  // Table de décision pure basée sur l'acte de dialogue (0 mot-clé)
+  const guidance = resolvePlanGuidance({ plan, dialogueAct });
+  if (guidance.decision !== "NONE") return guidance;
 
   return { decision: "CONTINUE", reason: "in_plan_flow" };
 }

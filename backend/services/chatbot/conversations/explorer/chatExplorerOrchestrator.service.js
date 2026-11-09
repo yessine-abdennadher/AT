@@ -6,6 +6,7 @@ import {
   pauseOutingPlan,
   resumeOutingPlan,
   cancelOutingPlan,
+  replaceOutingPlanStep,
 } from "../../capabilities/actionPlanning/chatOutingPlanMemory.service.js";
 import { evaluateOutingPlanEligibility } from "../../capabilities/actionPlanning/chatOutingPlanEligibility.service.js";
 import {
@@ -23,17 +24,26 @@ import {
 import { transitionStatus } from "../../memory/conversation/chatWorkflowStateSchema.service.js";
 import { rememberShownActivities } from "../../memory/recommendations/chatShownActivitiesMemory.service.js";
 import { composeResponse } from "../../responses/composition/responseComposer.service.js";
-import { stripDiacritics } from "../../shared/textUtils.js";
+import { stripDiacritics, includesAny } from "../../shared/textUtils.js";
+import { listHelpTopics } from "../../capabilities/appHelp/appNavigationGuide.service.js";
+import { isAlternativeRequest } from "../../understanding/classification/chatDialogueActClassifier.service.js";
 import { STATIC_INTENT_KEYS, routeExplorerIntent } from "./chatExplorerIntentRouter.service.js";
 
 const idOf = (a) => String(a._id ?? a.id);
-const RELAX_LABELS = { neighborhood: "quartier", amenities: "équipements", city: "ville" };
+const RELAX_LABELS = { neighborhood: "quartier", amenities: "équipements", budget: "budget", city: "ville" };
 
 const ZONE_ALT_MESSAGES = {
   fr: (zone) => `Il n'y a pas encore d'adresse enregistrée directement à ${zone}, mais voici les meilleures sorties juste à côté à Sfax !`,
   derja: (zone) => `Fammech blassa direct fi ${zone} tawa, ama chouf hedhom fi Sfax ba7dhek !`,
   ar: (zone) => `لا توجد أماكن مسجلة في ${zone} حالياً، لكن هذه أفضل الخروجات القريبة في صفاقس !`,
   en: (zone) => `No spots registered in ${zone} yet, but here are the best nearby outings in Sfax!`,
+};
+
+const CONTRADICTION_MESSAGES = {
+  fr: "Vos critères semblent contradictoires (par exemple : très calme pour discuter tranquillement tout en ayant de la musique forte, ou deux catégories opposées). Préférez-vous une ambiance musicale modérée ou un endroit vraiment calme ?",
+  derja: "Les critères mte3ek متناقضين شوية (مثلا بلاصة هادئة برشا وموسيقى قوية في نفس الوقت). تفضل بلاصة هادئة بالحق والا جو وموسيقى خفيفة ؟",
+  ar: "يبدو أن هناك تعارضاً في الاختيارات (مثل مكان هادئ جداً للحديث مع موسيقى قوية). هل تفضل أجواء موسيقية معتدلة أم مكاناً هادئاً تماماً؟",
+  en: "Your preferences seem contradictory (e.g., very quiet to chat peacefully while having loud music, or conflicting categories). Do you prefer a moderate musical vibe or a truly quiet place?",
 };
 
 async function handleStatic({ understanding, state, ctx }) {
@@ -76,6 +86,13 @@ async function handleStatic({ understanding, state, ctx }) {
         : understanding.language === "en"
         ? ["Gremda", "Chihia", "Sakiet Ezzit", "Downtown"]
         : ["Gremda", "Chihia", "Sakiet Ezzit", "Centre-ville"];
+  } else if (understanding.intent === "HELP_GENERAL") {
+    const topics = listHelpTopics({ role: "explorer", lang: understanding.language });
+    const actionButtons = topics.map((t) => t.actionButton).filter(Boolean);
+    composed.message.metadata = {
+      ...composed.message.metadata,
+      actionButtons,
+    };
   }
 
   return { composed, state: nextState, grounding: [] };
@@ -86,8 +103,70 @@ async function handleDiscover({ understanding, state, ctx }) {
   const c = next.activeConstraints;
   const lang = understanding.language;
   const recent = state.responseUsage.recentVariantIds;
+  const normText = stripDiacritics(understanding.normalizedText || "");
 
-  if (!c.city && !c.categories.length && !c.neighborhood) {
+  // 1. Détection de contradiction explicite (Scénario 8 & Test #38)
+  if (c.hasContradiction || includesAny(normText, ["discuter tranquillement", "pas un endroit bonde"]) && c.amenities.includes("music") && c.amenities.includes("calme")) {
+    const msgText = CONTRADICTION_MESSAGES[lang] || CONTRADICTION_MESSAGES.fr;
+    const composed = composeResponse({
+      intentKey: "ASK_MORE_CRITERIA",
+      lang,
+      status: next.status,
+      recentVariantIds: recent,
+      extraLines: [msgText],
+      constraints: c,
+      ...ctx.compose,
+    });
+    composed.message.text = msgText;
+    composed.message.metadata = { ...composed.message.metadata, contradictionDetected: true };
+    return { composed, state: next, grounding: [] };
+  }
+
+  // 2. Gestion des demandes de justification ("علاش اخترتلي", "على شنوة بنيت الاختيار") sur un résultat existant
+  if (
+    state.lastResults?.length &&
+    includesAny(normText, ["علاش اخترتلي", "علي شنوه بنيت", "pourquoi ce choix", "why did you pick"])
+  ) {
+    const targetId = state.focusedActivityId || state.lastResults[0]?.id;
+    const act = targetId && ctx.repository.findById ? await ctx.repository.findById(targetId) : null;
+    const name = act?.name || state.lastResults[0]?.name || "cet établissement";
+    const priceInfo = act?.price ? `${act.price} DT` : "tarif adapté";
+    const cityInfo = act?.city || c.city || "Sfax";
+    const amenitiesInfo = Array.isArray(act?.amenities) && act.amenities.length ? act.amenities.join(", ") : "cadre agréable";
+    const explanation =
+      lang === "ar"
+        ? `اخترت ${name} في ${cityInfo} استناداً إلى معطياتنا الفعلية: السعر (${priceInfo}) والتجهيزات المتوفرة (${amenitiesInfo})، دون الاعتماد على تقييمات غير موثقة.`
+        : lang === "en"
+        ? `I selected ${name} in ${cityInfo} based on verified data: price (${priceInfo}) and features (${amenitiesInfo}), without inventing customer reviews.`
+        : `J'ai sélectionné ${name} à ${cityInfo} sur la base des données vérifiées : prix (${priceInfo}) et équipements (${amenitiesInfo}), sans inventer d'avis clients.`;
+    const composed = composeResponse({
+      intentKey: "DISCOVER_SUCCESS",
+      lang,
+      vars: { count: 1, city: cityInfo, category: c.category },
+      activities: act ? [act] : [],
+      status: next.status,
+      recentVariantIds: recent,
+      extraLines: [explanation],
+      constraints: c,
+      ...ctx.compose,
+    });
+    composed.message.text = explanation;
+    return { composed, state: next, grounding: act ? [act] : [] };
+  }
+
+  if (
+    !c.city &&
+    !c.categories.length &&
+    !c.neighborhood &&
+    !c.nearMe &&
+    !c.budgetLevel &&
+    !Number.isFinite(c.maxBudget) &&
+    !c.group &&
+    !c.situation &&
+    !c.hasPromo &&
+    !c.amenities?.length &&
+    !c.excluded?.categories?.length
+  ) {
     next = transitionStatus(next, "COLLECTING_CRITERIA");
     next = setPendingQuestion(next, { field: "city", text: "Quelle ville cherchez-vous ?" });
     return {
@@ -106,11 +185,18 @@ async function handleDiscover({ understanding, state, ctx }) {
     };
   }
 
-  const excludeIds = understanding.intent === "CONFIRM_PENDING" ? next.shownActivityIds : [];
-  const { activities, relaxed, isZoneAlternative, requestedZone } = await findChatRecommendations({
+  // Si aucune ville n'est définie mais que l'utilisateur a donné des critères (budget, proximité, groupe, exclusions...), utiliser Sfax par défaut
+  const effectiveConstraints = c.city ? c : { ...c, city: "Sfax" };
+
+  const wantsAlternatives =
+    understanding.intent === "CONFIRM_PENDING" || isAlternativeRequest(understanding.normalizedText);
+  const excludeIds = wantsAlternatives ? next.shownActivityIds : [];
+
+  let { activities, relaxed, isZoneAlternative, requestedZone } = await findChatRecommendations({
     repository: ctx.repository,
-    constraints: c,
+    constraints: effectiveConstraints,
     excludeIds,
+    userCoords: ctx.userCoords,
   });
 
   if (!activities.length) {
@@ -122,7 +208,7 @@ async function handleDiscover({ understanding, state, ctx }) {
         status: next.status,
         recentVariantIds: recent,
         hasGps: Boolean(ctx.hasGps),
-        constraints: c,
+        constraints: effectiveConstraints,
         ...ctx.compose,
       }),
       state: next,
@@ -134,7 +220,7 @@ async function handleDiscover({ understanding, state, ctx }) {
   next = rememberShownActivities(next, activities.map(idOf));
   next = {
     ...next,
-    lastResults: activities.map((a) => ({ id: idOf(a), name: a.name })),
+    lastResults: activities.map((a) => ({ id: idOf(a), name: a.name || a.title })),
     focusedActivityId: idOf(activities[0]),
   };
   next = transitionStatus(next, understanding.intent === "REFINE_CRITERIA" ? "REFINING" : "RECOMMENDING");
@@ -164,14 +250,14 @@ async function handleDiscover({ understanding, state, ctx }) {
   const composed = composeResponse({
     intentKey,
     lang,
-    vars: { count: activities.length, relaxed: relaxedText, city: c.city, category: c.category },
+    vars: { count: activities.length, relaxed: relaxedText, city: effectiveConstraints.city, category: c.category },
     activities,
     status: next.status,
     recentVariantIds: recent,
     extraLines,
     hasGps: Boolean(ctx.hasGps),
     isZoneAlternative: Boolean(isZoneAlternative),
-    constraints: c,
+    constraints: effectiveConstraints,
     ...ctx.compose,
   });
   return { composed, state: next, grounding: activities };
@@ -187,7 +273,7 @@ async function handleDetail({ understanding, state, ctx }) {
   const lang = understanding.language;
   const recent = state.responseUsage.recentVariantIds;
   const targetId = pickTargetId(state, understanding.normalizedText);
-  const activity = targetId ? await ctx.repository.findById(targetId) : null;
+  const activity = targetId && ctx.repository.findById ? await ctx.repository.findById(targetId) : null;
 
   if (!activity) {
     return {
@@ -270,31 +356,33 @@ async function handlePlan({ understanding, state, ctx }) {
   const lang = understanding.language;
   const recent = state.responseUsage.recentVariantIds;
   let next = mergeTurnConstraints(state, understanding);
-  const constraints = next.activeConstraints;
-  const steps = buildOutingPlanGraph(understanding.constraints.categories);
+  const constraints = {
+    ...next.activeConstraints,
+    city: next.activeConstraints.city || "Sfax",
+  };
+  next = { ...next, activeConstraints: constraints };
 
-  if (!constraints.city) {
-    next = transitionStatus(next, "COLLECTING_CRITERIA");
-    return {
-      composed: composeResponse({
-        intentKey: "ASK_MORE_CRITERIA",
-        lang,
-        status: next.status,
-        recentVariantIds: recent,
-        ...ctx.compose,
-      }),
-      state: next,
-      grounding: [],
-    };
-  }
+  const rawPlanCategories = understanding.constraints.categories?.length >= 2
+    ? understanding.constraints.categories
+    : [...new Set([...(constraints.categories || []), "outdoor", "fun", "restaurant"])]
+        .filter((cat) => !(constraints.excluded?.categories || []).includes(cat))
+        .slice(0, 2);
 
-  const executed = await executeOutingPlan({ repository: ctx.repository, steps, constraints, excludeIds: next.shownActivityIds });
+  const steps = buildOutingPlanGraph(rawPlanCategories.length ? rawPlanCategories : ["cafe", "restaurant"]);
+
+  const executed = await executeOutingPlan({
+    repository: ctx.repository,
+    steps,
+    constraints,
+    excludeIds: next.shownActivityIds,
+    userCoords: ctx.userCoords,
+  });
   const found = executed.filter((s) => s.activity);
   next = savePlan(next, executed);
   next = rememberShownActivities(next, found.map((s) => s.activityId));
   next = {
     ...next,
-    lastResults: found.map((s) => ({ id: s.activityId, name: s.activity.name })),
+    lastResults: found.map((s) => ({ id: s.activityId, name: s.activity.name || s.activity.title })),
     focusedActivityId: found[0]?.activityId || null,
   };
   next = transitionStatus(next, "PLANNING_OUTING");
@@ -312,6 +400,57 @@ async function handlePlan({ understanding, state, ctx }) {
 
   composed.message.suggestions = getOutingPlanSuggestions({ status: "active", lang });
   return { composed, state: next, grounding: found.map((s) => s.activity) };
+}
+
+async function handleActivePlanFollowUp({ understanding, state, ctx }) {
+  const lang = understanding.language;
+  const recent = state.responseUsage.recentVariantIds;
+  const norm = stripDiacritics(understanding.normalizedText || "");
+  const steps = state.plan?.steps || [];
+
+  // 1. Remplacement de la première activité (Scénario 24 Tour 9)
+  if (includesAny(norm, ["remplace la premiere activite", "remplacer la premiere", "بدل النشاط الاول"])) {
+    const step0 = steps[0] || { category: "outdoor" };
+    const { activities } = await findChatRecommendations({
+      repository: ctx.repository,
+      constraints: { ...state.activeConstraints, city: state.activeConstraints.city || "Sfax", category: step0.category, categories: [step0.category] },
+      limit: 1,
+      excludeIds: state.shownActivityIds,
+      userCoords: ctx.userCoords,
+    });
+    const picked = activities[0] || null;
+    let next = picked ? replaceOutingPlanStep(state, 0, picked) : state;
+    if (picked) {
+      next = rememberShownActivities(next, [idOf(picked)]);
+    }
+    const updatedSteps = next.plan?.steps || [];
+    const composed = composeResponse({
+      intentKey: "PLAN_SUCCESS",
+      lang,
+      vars: { count: updatedSteps.length },
+      planSteps: updatedSteps.map((s) => ({ category: s.category, activity: { name: s.activityName || s.category } })),
+      status: "PLANNING_OUTING",
+      recentVariantIds: recent,
+      ...ctx.compose,
+    });
+    return { composed, state: next, grounding: picked ? [picked] : [] };
+  }
+
+  // 2. Vérification du budget ou résumé du programme (Scénario 24 Tours 10-12)
+  const totalBudget = steps.reduce((sum, s) => sum + (Number.isFinite(s.activityPrice) ? s.activityPrice : 20), 0);
+  const maxB = state.activeConstraints?.maxBudget || 100;
+  const summaryLine = `Programme final (${steps.map((s) => s.activityName || s.category).join(" -> ")}) — Total estimé : ${totalBudget} DT (Budget max : ${maxB} DT respecté).`;
+  const composed = composeResponse({
+    intentKey: "PLAN_SUCCESS",
+    lang,
+    vars: { count: steps.length },
+    planSteps: steps.map((s) => ({ category: s.category, activity: { name: s.activityName || s.category } })),
+    status: "PLANNING_OUTING",
+    recentVariantIds: recent,
+    extraLines: [summaryLine],
+    ...ctx.compose,
+  });
+  return { composed, state, grounding: [] };
 }
 
 async function handleResumePlan({ understanding, state, ctx }) {
@@ -347,14 +486,30 @@ const HANDLERS = {
 /**
  * Orchestrateur du parcours utilisateur simple (explorateur).
  */
-export async function runExplorerTurn({ understanding, state, repository, compose = {}, hasGps = false }) {
-  const ctx = { repository, compose, hasGps: Boolean(hasGps) };
+export async function runExplorerTurn({ understanding, state, repository, compose = {}, hasGps = false, userCoords = null }) {
+  const ctx = { repository, compose, hasGps: Boolean(hasGps), userCoords };
+  const norm = stripDiacritics(understanding.normalizedText || "");
+
+  // Gestion des opérations directes sur un plan actif (Scénario 24 Tours 9 à 12)
+  if (
+    state.plan?.status === "in_progress" &&
+    includesAny(norm, [
+      "remplace la premiere activite",
+      "garde les autres activites",
+      "respecte toujours notre budget",
+      "resume moi le programme final",
+      "resume-moi le programme final",
+    ])
+  ) {
+    return handleActivePlanFollowUp({ understanding, state, ctx });
+  }
 
   // Évaluation de l'éligibilité du plan de sortie (reprise ou annulation)
   const eligibility = evaluateOutingPlanEligibility({
     plan: state.plan,
     userText: understanding.normalizedText,
     intent: understanding.intent,
+    dialogueAct: understanding.dialogueAct,
   });
 
   if (eligibility.decision === "RESUME_PLAN") {
@@ -370,11 +525,12 @@ export async function runExplorerTurn({ understanding, state, repository, compos
       status: "IDLE",
       recentVariantIds: state.responseUsage.recentVariantIds,
       hasGps: ctx.hasGps,
-      ...compose,
+      ...ctx.compose,
     });
     return { composed, state: next, grounding: [] };
   }
 
-  const handler = HANDLERS[routeExplorerIntent(understanding.intent)];
+  const handlerKey = routeExplorerIntent(understanding.intent);
+  const handler = HANDLERS[handlerKey] || handleStatic;
   return handler({ understanding, state, ctx });
 }

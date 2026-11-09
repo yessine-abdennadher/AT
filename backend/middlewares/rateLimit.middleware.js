@@ -9,7 +9,9 @@ export const createRateLimiter = ({
   now = Date.now,
 } = {}) => async (req, res, next) => {
   const route = req.route?.path || req.baseUrl || "/";
-  const key = `${scope}:${req.method || "GET"}:${route}:${req.ip || "unknown_ip"}`;
+  const email = typeof req.body?.email === "string" ? req.body.email.trim().toLowerCase() : "";
+  const accountId = req.user?._id?.toString() || email;
+  const key = `${scope}:${req.method || "GET"}:${route}:${req.ip || "unknown_ip"}:${accountId}`;
   let counter;
 
   try {
@@ -41,8 +43,15 @@ export const createRateLimiter = ({
 export const authLimiter = createRateLimiter({
   scope: "auth",
   windowMs: 15 * 60 * 1000,
-  max: 30,
+  max: 10,
   message: "Trop de tentatives de connexion ou d'inscription. Veuillez patienter 15 minutes.",
+});
+
+export const uploadLimiter = createRateLimiter({
+  scope: "image-upload",
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: "Limite d’envoi d’images atteinte. Réessayez dans 15 minutes.",
 });
 
 export const chatSessionLimiter = createRateLimiter({

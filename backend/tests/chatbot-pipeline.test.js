@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createChatMainGateway } from "../services/chatbot/conversations/chatMainGateway.service.js";
-import { classifyIntentWithLlm } from "../services/chatbot/understanding/semantic/chatLlmIntentClassifier.service.js";
+import { classifyIntentWithLlm } from "../services/chatbot/understanding/llm/chatLlmIntentClassifier.service.js";
 import { createInMemoryStateStore, deepMergeConstraints } from "../services/chatbot/memory/persistence/chatSessionStatePersistence.service.js";
 import { normalizeChatText } from "../services/chatbot/understanding/normalization/chatTextNormalizer.service.js";
 import { dynamicResponseStore } from "../services/chatbot/responses/dynamicPool/dynamicResponseStore.service.js";

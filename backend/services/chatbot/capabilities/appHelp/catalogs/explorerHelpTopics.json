@@ -1,0 +1,132 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "topics": {
+    "search": {
+      "id": "search",
+      "action": "OPEN_TAB",
+      "actionParams": { "tab": "explore" },
+      "fr": {
+        "title": "Rechercher des sorties",
+        "description": "Vous pouvez rechercher par ville (ex: Sfax, Tunis), quartier, catégorie (café, resto) ou budget (ex: max 20 dt).",
+        "actionLabel": "Ouvrir l'explorateur"
+      },
+      "derja": {
+        "title": "Lawaj 3la kharjet",
+        "description": "Tnajjem tlawej bel wleye (Sfax, Tounes), 7ouma, naw3 (9ahwa, resto) walla budget (ex: max 20 dt).",
+        "actionLabel": "7el l'explorateur"
+      },
+      "ar": {
+        "title": "البحث عن الخروجات",
+        "description": "يمكنك البحث حسب المدينة (تونس، صفاقس)، الحي، التصنيف (مقهى، مطعم) أو الميزانية.",
+        "actionLabel": "فتح المستكشف"
+      },
+      "en": {
+        "title": "Search outings",
+        "description": "You can search by city (e.g., Sfax, Tunis), neighborhood, category (cafe, restaurant) or budget.",
+        "actionLabel": "Open Explorer"
+      }
+    },
+    "interactive_map": {
+      "id": "interactive_map",
+      "action": "OPEN_INTERACTIVE_MAP",
+      "actionParams": {},
+      "fr": {
+        "title": "Carte interactive",
+        "description": "Affichez tous les établissements et activités sur une carte interactive géolocalisée.",
+        "actionLabel": "Voir la carte"
+      },
+      "derja": {
+        "title": "El 5aritta el interactive",
+        "description": "Chouf les adresses el kol 3la el 5aritta ba7dhek direct.",
+        "actionLabel": "Chouf el carte"
+      },
+      "ar": {
+        "title": "الخريطة التفاعلية",
+        "description": "اكتشف جميع الأماكن والأنشطة على خريطة تفاعلية محددة جغرافياً.",
+        "actionLabel": "عرض الخريطة"
+      },
+      "en": {
+        "title": "Interactive Map",
+        "description": "Browse all spots and activities on a geolocated interactive map.",
+        "actionLabel": "Open map"
+      }
+    },
+    "favorites": {
+      "id": "favorites",
+      "action": "OPEN_TAB",
+      "actionParams": { "tab": "favorites" },
+      "fr": {
+        "title": "Mes favoris",
+        "description": "Retrouvez vos adresses sauvegardées pour vos prochaines sorties.",
+        "actionLabel": "Mes favoris"
+      },
+      "derja": {
+        "title": "El favoris mte3i",
+        "description": "Tal9a les adresses elli sajjalthom lel kharjet el jeyya.",
+        "actionLabel": "Chouf el favoris"
+      },
+      "ar": {
+        "title": "المفضلات",
+        "description": "اطلع على الأماكن التي قمت بحفظها لخروجاتك القادمة.",
+        "actionLabel": "الأماكن المفضلة"
+      },
+      "en": {
+        "title": "My favorites",
+        "description": "Find all the saved spots for your next outings.",
+        "actionLabel": "View favorites"
+      }
+    },
+    "filters": {
+      "id": "filters",
+      "action": "OPEN_FILTERS_MODAL",
+      "actionParams": {},
+      "fr": {
+        "title": "Filtres avancés",
+        "description": "Affinez par ambiance (calme, vue mer, terrasse, famille), équipements ou horaires d'ouverture.",
+        "actionLabel": "Filtrer"
+      },
+      "derja": {
+        "title": "Filtres el jaw",
+        "description": "Na9i 7asb el jaw (raye9, vue mer, terrasse, famille) walla el wa9t.",
+        "actionLabel": "Filtri"
+      },
+      "ar": {
+        "title": "الفلاتر المتقدمة",
+        "description": "قم بتخصيص البحث حسب الأجواء (مكان هادئ، إطلالة على البحر، عائلي) أو التوقيت.",
+        "actionLabel": "تخصيص الفلاتر"
+      },
+      "en": {
+        "title": "Advanced filters",
+        "description": "Filter by atmosphere (quiet, sea view, terrace, family friendly), amenities or open hours.",
+        "actionLabel": "Filter"
+      }
+    },
+    "profile": {
+      "id": "profile",
+      "action": "OPEN_TAB",
+      "actionParams": { "tab": "profile" },
+      "fr": {
+        "title": "Profil & Préférences",
+        "description": "Gérez vos préférences de langue, localisation favorite et compte utilisateur.",
+        "actionLabel": "Mon profil"
+      },
+      "derja": {
+        "title": "El profil mte3ek",
+        "description": "Baddel el lougha, el ville el mofadhla w les paramètres mte3ek.",
+        "actionLabel": "El profil"
+      },
+      "ar": {
+        "title": "الملف الشخصي",
+        "description": "إدارة إعدادات اللغة، المدينة المفضلة وتفاصيل حسابك.",
+        "actionLabel": "الملف الشخصي"
+      },
+      "en": {
+        "title": "Profile & Settings",
+        "description": "Manage your language preferences, favorite city, and account details.",
+        "actionLabel": "Profile"
+      }
+    }
+  }
+}
+

@@ -1,4 +1,5 @@
 import { User } from "../models/User.js";
+import { recordAdminSecurityAudit } from "./admin-security-audit.service.js";
 
 /**
  * Calcule les métriques d'abonnement pour un partenaire
@@ -41,7 +42,7 @@ export function getSubscriptionDetails(user) {
  * @param {string} partnerId ID de l'utilisateur partenaire
  * @param {Object} options { action: 'approve' | 'extend' | 'reject', duration: 'monthly' | 'yearly' | number, tier: string }
  */
-export async function updatePartnerSubscription(partnerId, { action, duration, tier }) {
+export async function updatePartnerSubscription(partnerId, { action, duration, tier }, adminId, request) {
   const user = await User.findById(partnerId);
   if (!user) {
     throw new Error("Partenaire non trouvé");
@@ -51,7 +52,29 @@ export async function updatePartnerSubscription(partnerId, { action, duration, t
     throw new Error("Cet utilisateur n'est pas un compte partenaire");
   }
 
+  if (!["approve", "extend", "reject"].includes(action)) {
+    const error = new Error("Action d’abonnement invalide.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (tier !== undefined && !["standard", "pro", "premium"].includes(tier)) {
+    const error = new Error("Niveau d’abonnement invalide.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (action === "extend" && !(duration === "monthly" || duration === "yearly" || (Number.isInteger(duration) && duration >= 1 && duration <= 365))) {
+    const error = new Error("La prolongation doit être comprise entre 1 et 365 jours.");
+    error.statusCode = 400;
+    throw error;
+  }
+  if (action === "approve" && duration !== undefined && !["monthly", "yearly"].includes(duration)) {
+    const error = new Error("La durée d’approbation doit être mensuelle ou annuelle.");
+    error.statusCode = 400;
+    throw error;
+  }
+
   const now = new Date();
+  const previousValue = { partnerTier: user.partnerTier, subscriptionStatus: user.subscriptionStatus, subscriptionExpiresAt: user.subscriptionExpiresAt };
 
   if (action === "approve") {
     const chosenTier = tier || user.requestedTier || "pro";
@@ -63,6 +86,7 @@ export async function updatePartnerSubscription(partnerId, { action, duration, t
     user.subscriptionStartedAt = now;
     user.subscriptionExpiresAt = new Date(now.getTime() + durationDays * 24 * 60 * 60 * 1000);
     await user.save();
+    await recordAdminSecurityAudit({ actorId: adminId, targetId: user._id, action: "partner.subscription.changed", previousValue, newValue: { partnerTier: user.partnerTier, subscriptionStatus: user.subscriptionStatus, subscriptionExpiresAt: user.subscriptionExpiresAt }, request });
 
     return {
       success: true,
@@ -72,7 +96,7 @@ export async function updatePartnerSubscription(partnerId, { action, duration, t
   }
 
   if (action === "extend") {
-    const daysToAdd = typeof duration === "number" ? duration : 30;
+    const daysToAdd = duration === "yearly" ? 365 : duration === "monthly" || duration === undefined ? 30 : duration;
     const baseDate = user.subscriptionExpiresAt && new Date(user.subscriptionExpiresAt) > now
       ? new Date(user.subscriptionExpiresAt)
       : now;
@@ -80,6 +104,7 @@ export async function updatePartnerSubscription(partnerId, { action, duration, t
     user.subscriptionExpiresAt = new Date(baseDate.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
     user.subscriptionStatus = "active";
     await user.save();
+    await recordAdminSecurityAudit({ actorId: adminId, targetId: user._id, action: "partner.subscription.changed", previousValue, newValue: { partnerTier: user.partnerTier, subscriptionStatus: user.subscriptionStatus, subscriptionExpiresAt: user.subscriptionExpiresAt }, request });
 
     return {
       success: true,
@@ -93,6 +118,7 @@ export async function updatePartnerSubscription(partnerId, { action, duration, t
     user.subscriptionStatus = "cancelled";
     user.subscriptionExpiresAt = null;
     await user.save();
+    await recordAdminSecurityAudit({ actorId: adminId, targetId: user._id, action: "partner.subscription.changed", previousValue, newValue: { partnerTier: user.partnerTier, subscriptionStatus: user.subscriptionStatus, subscriptionExpiresAt: user.subscriptionExpiresAt }, request });
 
     return {
       success: true,

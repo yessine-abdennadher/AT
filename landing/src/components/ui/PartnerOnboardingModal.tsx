@@ -21,12 +21,13 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { sendPartnerOtp, verifyPartnerOtp } from '../../services/partnerAuthService';
+import type { VerifiedPartner } from '../../services/partnerAuthService';
 
 interface PartnerOnboardingModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialPlan?: 'standard' | 'pro' | 'premium';
-  onCompleted?: (partnerData: any) => void;
+  onCompleted?: (partnerData: VerifiedPartner) => void;
 }
 
 export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
@@ -40,8 +41,7 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'yearly'>('monthly');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [partnerId, setPartnerId] = useState<string>('');
-  const [demoCode, setDemoCode] = useState<string>('123456');
+  const [verifiedPartner, setVerifiedPartner] = useState<VerifiedPartner | null>(null);
 
   const [formData, setFormData] = useState({
     managerName: '',
@@ -119,8 +119,8 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
       setErrorMsg('Veuillez renseigner un email professionnel valide.');
       return;
     }
-    if (!formData.password || formData.password.length < 6) {
-      setErrorMsg('Le mot de passe doit contenir au moins 6 caractères.');
+    if (!formData.password || formData.password.length < 12 || formData.password.length > 128) {
+      setErrorMsg('Le mot de passe doit contenir entre 12 et 128 caractères.');
       return;
     }
 
@@ -131,7 +131,6 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
       const res = await sendPartnerOtp({
         managerName: formData.managerName,
         email: formData.email,
-        password: formData.password,
         establishmentName: formData.establishmentName,
         whatsapp: formData.whatsapp,
         city: formData.city,
@@ -139,10 +138,6 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
         plan,
         billingCycle,
       });
-
-      if (res.demoCode) {
-        setDemoCode(res.demoCode);
-      }
 
       setStep(2);
       setOtpTimer(60);
@@ -191,16 +186,6 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
     otpInputsRef.current[nextIndex]?.focus();
   };
 
-  // Remplissage rapide 1-clic pour tester sans friction
-  const handleAutoFillOtp = () => {
-    const digits = demoCode.split('').slice(0, 6);
-    setOtp(digits);
-    setErrorMsg('');
-    setTimeout(() => {
-      otpInputsRef.current[5]?.focus();
-    }, 50);
-  };
-
   const handleVerifyOtp = async () => {
     const code = otp.join('');
     if (code.length < 6) {
@@ -215,11 +200,10 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
       const res = await verifyPartnerOtp({
         email: formData.email,
         otp: code,
+        password: formData.password,
       });
 
-      if (res.user?.id) {
-        setPartnerId(res.user.id);
-      }
+      setVerifiedPartner(res.user);
 
       setStep(3);
     } catch (err: any) {
@@ -231,31 +215,8 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
 
   // Étape 3 -> Étape 4 : Finalisation du workflow
   const handleCompleteWorkflow = () => {
-    const generatedId = `TF-${Math.floor(10000 + Math.random() * 90000)}`;
-    setPartnerId(generatedId);
-
-    const partnerSession = {
-      id: generatedId,
-      establishmentName: formData.establishmentName,
-      managerName: formData.managerName,
-      email: formData.email,
-      whatsapp: formData.whatsapp.replace(/[^0-9+]/g, ''),
-      city: formData.city,
-      category: formData.category,
-      plan,
-      status: 'active_verified',
-      registeredAt: new Date().toISOString(),
-    };
-
-    try {
-      localStorage.setItem('tfarhida_partner_session', JSON.stringify(partnerSession));
-    } catch (e) {
-      console.warn('LocalStorage non disponible', e);
-    }
-
-    if (onCompleted) {
-      onCompleted(partnerSession);
-    }
+    if (!verifiedPartner) return;
+    onCompleted?.(verifiedPartner);
 
     confetti({
       particleCount: 110,
@@ -812,28 +773,6 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
               <strong style={{ color: 'var(--color-primary)' }}>{formData.email}</strong>
             </p>
 
-            {/* Bouton d'auto-remplissage rapide en 1 clic */}
-            <button
-              type="button"
-              onClick={handleAutoFillOtp}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '5px 14px',
-                backgroundColor: 'rgba(2, 132, 199, 0.08)',
-                border: '1px dashed var(--color-primary)',
-                borderRadius: 'var(--radius-full)',
-                fontSize: '0.8rem',
-                color: 'var(--color-primary)',
-                fontWeight: 700,
-                cursor: 'pointer',
-                marginBottom: '12px',
-              }}
-            >
-              <span>Code démo reçu : <strong>{demoCode}</strong> (Cliquer pour remplir)</span>
-            </button>
-
             {/* Saisie OTP 6 chiffres */}
             <div className="otp-container" onPaste={handleOtpPaste}>
               {otp.map((digit, idx) => (
@@ -948,7 +887,7 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
                 marginBottom: '10px',
               }}
             >
-              DOSSIER VÉRIFIÉ · ACTIVATION EN COURS
+              COMPTE PARTENAIRE CRÉÉ
             </span>
 
             <h3 style={{ fontSize: '1.35rem', fontWeight: 900, color: 'var(--color-navy)', letterSpacing: '-0.02em', marginBottom: '8px' }}>
@@ -956,7 +895,7 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
             </h3>
 
             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', lineHeight: 1.6, maxWidth: '460px', margin: '0 auto 18px' }}>
-              Email et coordonnées certifiés pour <strong>« {formData.establishmentName} »</strong>. Votre fiche est prête pour publication immédiate.
+              L’adresse email de <strong>« {formData.establishmentName} »</strong> est vérifiée et le compte partenaire a été créé. L’accès à l’espace web sera disponible après la mise en place de la connexion sécurisée.
             </p>
 
             {/* Encart d'Assistance Directe WhatsApp */}
@@ -973,11 +912,11 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                 <MessageCircle size={18} color="#059669" />
                 <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: '#065F46' }}>
-                  Validation prioritaire en 5 minutes
+                  Besoin d’aide pour l’activation ?
                 </h4>
               </div>
               <p style={{ fontSize: '0.825rem', color: 'var(--text-secondary)', marginBottom: '12px', lineHeight: 1.5 }}>
-                Envoyez un message direct à l'administration Tfarhida sur WhatsApp pour confirmer l'ouverture et activer vos créneaux.
+                Contactez l’administration Tfarhida pour toute question concernant votre établissement et les prochaines étapes.
               </p>
 
               <a
@@ -1016,7 +955,7 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
                 fontSize: '0.95rem',
               }}
             >
-              <span>Finaliser & Activer mon Espace</span>
+              <span>Voir le récapitulatif</span>
               <ArrowRight size={16} />
             </button>
           </div>
@@ -1045,10 +984,10 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
             </div>
 
             <h3 style={{ fontSize: '1.45rem', fontWeight: 900, color: 'var(--color-navy)', letterSpacing: '-0.02em', marginBottom: '6px' }}>
-              Félicitations, vous êtes Partenaire !
+              Votre compte partenaire est créé
             </h3>
             <p style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', marginBottom: '18px' }}>
-              Votre compte professionnel a été créé avec succès sur le réseau Tfarhida.
+              L’adresse email est vérifiée. Connectez-vous à ActivityTN pour accéder aux fonctions partenaires disponibles dans l’application.
             </p>
 
             {/* Récapitulatif Badge Haute Précision */}
@@ -1068,7 +1007,7 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
                 <span style={{ color: 'var(--text-muted)' }}>Identifiant Partenaire :</span>
                 <strong style={{ color: 'var(--color-primary)', fontFamily: 'monospace', fontWeight: 900 }}>
-                  {partnerId || 'TF-84920'}
+                  {verifiedPartner?.id || ''}
                 </strong>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
@@ -1103,7 +1042,7 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
                 fontSize: '0.95rem',
               }}
             >
-              <span>Terminer & Accéder à mon Espace</span>
+              <span>Terminer</span>
               <Sparkles size={16} />
             </button>
           </div>
