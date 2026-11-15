@@ -1,7 +1,9 @@
 import React, { useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import type { DemoActivity } from '../../data/demoActivities';
 import { X, Star, MapPin, Zap, MessageCircle, Phone, Snowflake, Lightbulb } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
+import { FavoriteButton } from './FavoriteButton';
 
 interface ActivityModalProps {
   activity: DemoActivity | null;
@@ -31,8 +33,11 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({ activity, onClose 
 
   if (!activity) return null;
 
-  const phoneTarget = activity.phone || '+21674000000';
-  const whatsappTarget = (activity.whatsapp || activity.phone || '21620000000').replace(/[^0-9]/g, '');
+  const phoneTarget = activity.phone;
+  const whatsappTarget = (activity.whatsapp || '').replace(/[^0-9]/g, '');
+  const promotionExpiry = activity.promotion?.validUntil ? Date.parse(activity.promotion.validUntil) : Number.NaN;
+  const hasActivePromotion = Boolean(activity.promotion?.isPromo && activity.promotion.discountPercent > 0 &&
+    (!activity.promotion.validUntil || Number.isNaN(promotionExpiry) || promotionExpiry >= Date.now()));
 
   return (
     <div
@@ -66,6 +71,18 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({ activity, onClose 
         }}
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Bouton Favori */}
+        <FavoriteButton
+          activityId={activity.id}
+          style={{
+            position: 'absolute',
+            top: '14px',
+            left: isRTL ? 'auto' : '14px',
+            right: isRTL ? '14px' : 'auto',
+            zIndex: 10,
+          }}
+        />
+
         {/* Bouton Fermer */}
         <button
           onClick={onClose}
@@ -112,6 +129,13 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({ activity, onClose 
           >
             {activity.categoryLabel}
           </div>
+
+          {hasActivePromotion && (
+            <div className="activity-promotion-badge activity-promotion-badge--details">
+              <span>-{activity.promotion?.discountPercent}%</span>
+              <span>{activity.promotion?.promoLabel || t('explorer.promotion')}</span>
+            </div>
+          )}
         </div>
 
         {/* Contenu */}
@@ -122,13 +146,17 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({ activity, onClose 
               <span>{activity.locationName || activity.city}</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <Star size={18} color="#F59E0B" fill="#F59E0B" />
-              <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--color-navy)' }}>
-                {activity.rating}
-              </span>
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                ({activity.reviewCount} {t('modal.certifiedReviews')})
-              </span>
+              {activity.reviewCount > 0 ? (
+                <>
+                  <Star size={18} color="#F59E0B" fill="#F59E0B" />
+                  <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--color-navy)' }}>
+                    {activity.rating.toFixed(1)}
+                  </span>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                    ({activity.reviewCount} {t('modal.certifiedReviews')})
+                  </span>
+                </>
+              ) : <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{t('explorer.newActivity')}</span>}
             </div>
           </div>
 
@@ -202,7 +230,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({ activity, onClose 
 
           {/* Boutons d'Action Directe */}
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-            <a
+            {whatsappTarget && <a
               href={`https://wa.me/${whatsappTarget}?text=${encodeURIComponent(`Bonjour, je souhaite réserver via Tfarhida : ${activity.name}`)}`}
               target="_blank"
               rel="noopener noreferrer"
@@ -211,17 +239,20 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({ activity, onClose 
             >
               <MessageCircle size={18} />
               <span>{t('modal.bookWhatsapp')}</span>
-            </a>
+            </a>}
 
-            <a
+            {phoneTarget && <a
               href={`tel:${phoneTarget}`}
               className="btn btn-secondary"
               style={{ flex: '1 1 120px', padding: '12px 18px' }}
             >
               <Phone size={18} />
               <span>{t('modal.call')}</span>
-            </a>
+            </a>}
           </div>
+          <Link to={`/activites/${encodeURIComponent(activity.id)}`} onClick={onClose} className="btn btn-secondary" style={{ display: 'inline-flex', marginTop: '12px', minHeight: '44px', alignItems: 'center' }}>
+            {t('detail.fullPage')}
+          </Link>
         </div>
       </div>
     </div>

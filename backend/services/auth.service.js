@@ -320,11 +320,12 @@ export const getUserProfile = async (userId) => {
 /**
  * Mise à jour du profil
  */
-export const updateUserProfile = async (userId, { name, bio, avatar, establishmentName }, userRole) => {
+export const updateUserProfile = async (userId, { name, bio, avatar, city, establishmentName }, userRole) => {
   const fieldsToUpdate = {};
   if (name) fieldsToUpdate.name = name;
   if (bio !== undefined) fieldsToUpdate.bio = bio;
   if (avatar) fieldsToUpdate.avatar = avatar;
+  if (typeof city === "string") fieldsToUpdate.city = city.trim().slice(0, 100);
   if (establishmentName !== undefined && userRole === "partner") {
     fieldsToUpdate.establishmentName = establishmentName;
   }
@@ -615,5 +616,157 @@ export const verifyPartnerOtp = async ({ email, otp, password }) => {
     accessToken: session.accessToken,
     refreshToken: session.refreshToken,
     user: formatUserResponse(newUser),
+  };
+};
+
+/**
+ * Envoi du code OTP de réinitialisation de mot de passe
+ */
+export const sendPasswordResetOtp = async ({ email }) => {
+  if (typeof email !== "string" || !email.trim()) {
+    const error = new Error("L'adresse email est obligatoire.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const normalizedEmail = email.trim().toLowerCase();
+  const user = await User.findOne({ email: normalizedEmail });
+  let generatedOtp = null;
+
+  if (user && user.isActive) {
+    const { randomInt } = await import("crypto");
+    const rawOtp = randomInt(100000, 1000000).toString();
+    generatedOtp = rawOtp;
+    const salt = await bcrypt.genSalt(10);
+    const otpHash = await bcrypt.hash(rawOtp, salt);
+
+    await OtpVerification.deleteMany({ email: normalizedEmail });
+    await OtpVerification.create({
+      email: normalizedEmail,
+      otpHash,
+      partnerData: { type: "password_reset", userId: user._id.toString() },
+    });
+
+    const { sendPasswordResetOtpEmail } = await import("./mail.service.js");
+    await sendPasswordResetOtpEmail({ email: user.email, name: user.name, otpCode: rawOtp }).catch((err) => {
+      console.warn("[Password Reset] Email warning:", err.message);
+    });
+  } else {
+    // Protection contre les attaques temporelles (Timing Attacks) :
+    // Effectuer une charge de hachage identique pour neutraliser la déduction par mesure de latence
+    const salt = await bcrypt.genSalt(10);
+    await bcrypt.hash("000000", salt);
+  }
+
+  const isDev = process.env.NODE_ENV !== "production" && process.env.NODE_ENV !== "prod";
+
+  // Toujours renvoyer un statut positif pour éviter le dénombrement des comptes
+  return {
+    success: true,
+    message: "Si un compte est associé à cette adresse, vous recevrez un code à 6 chiffres.",
+    email: normalizedEmail,
+    ...(isDev && generatedOtp ? { devOtp: generatedOtp } : {}),
+  };
+};
+
+/**
+ * Étape intermédiaire : Vérification du code OTP avant redirection vers la saisie du nouveau mot de passe
+ */
+export const verifyPasswordResetOtp = async ({ email, otp }) => {
+  if (typeof email !== "string" || !email.trim() || typeof otp !== "string" || !/^\d{6}$/.test(otp)) {
+    const error = new Error("Un email et un code de vérification à 6 chiffres sont obligatoires.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const normalizedEmail = email.trim().toLowerCase();
+
+  const record = await OtpVerification.findOne({ email: normalizedEmail }).sort({ createdAt: -1 });
+  if (!record) {
+    const error = new Error("Code de vérification expiré ou introuvable. Veuillez redemander un nouveau code.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (record.attempts >= 5) {
+    console.warn(`[Security Alert] Dépassement des tentatives OTP (${record.attempts}/5) pour ${normalizedEmail}. Code révoqué.`);
+    await OtpVerification.deleteMany({ email: normalizedEmail });
+    const error = new Error("Trop de tentatives erronées. Veuillez redemander un nouveau code.");
+    error.statusCode = 429;
+    throw error;
+  }
+
+  const isValid = await bcrypt.compare(otp, record.otpHash);
+  if (!isValid) {
+    record.attempts += 1;
+    await record.save();
+    const error = new Error("Code de vérification incorrect. Veuillez vérifier vos emails.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  return {
+    success: true,
+    message: "Code validé avec succès. Vous pouvez maintenant définir votre nouveau mot de passe.",
+  };
+};
+
+/**
+ * Réinitialisation effective du mot de passe avec le code OTP
+ */
+export const resetPasswordWithOtp = async ({ email, otp, newPassword }) => {
+  if (typeof email !== "string" || !email.trim() || typeof otp !== "string" || !/^\d{6}$/.test(otp)) {
+    const error = new Error("Un email et un code à 6 chiffres sont obligatoires.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (typeof newPassword !== "string" || newPassword.length < 12 || newPassword.length > 128) {
+    const error = new Error("Le nouveau mot de passe doit comporter entre 12 et 128 caractères.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const record = await OtpVerification.findOne({ email: normalizedEmail }).sort({ createdAt: -1 });
+  if (!record) {
+    const error = new Error("Code de vérification expiré ou introuvable. Veuillez demander un nouveau code.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  if (record.attempts >= 5) {
+    console.warn(`[Security Alert] Dépassement des tentatives erronées de reset (${record.attempts}/5) pour ${normalizedEmail}.`);
+    await OtpVerification.deleteMany({ email: normalizedEmail });
+    const error = new Error("Trop de tentatives erronées. Veuillez redemander un nouveau code.");
+    error.statusCode = 429;
+    throw error;
+  }
+
+  const isValid = await bcrypt.compare(otp, record.otpHash);
+  if (!isValid) {
+    record.attempts += 1;
+    await record.save();
+    const error = new Error("Code de vérification incorrect. Veuillez vérifier vos emails.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const user = await User.findOne({ email: normalizedEmail }).select("+password +refreshTokens +activeAccessSessionIds");
+  if (!user) {
+    const error = new Error("Utilisateur introuvable.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  user.password = newPassword;
+  user.refreshTokens = [];
+  user.activeAccessSessionIds = [];
+  await user.save();
+  await OtpVerification.deleteMany({ email: normalizedEmail });
+
+  console.log(`[Security Audit] Réinitialisation de mot de passe réussie pour ${normalizedEmail} (ID: ${user._id}). Toutes les sessions révoquées.`);
+
+  return {
+    success: true,
+    message: "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter.",
   };
 };

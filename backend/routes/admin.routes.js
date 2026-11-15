@@ -7,6 +7,7 @@ import {
   changeUserRole,
   getActivitiesForModeration,
   setActivityApproval,
+  verifyActivityCoordinates,
   toggleHighlight,
   removeActivity,
   getDiagnostics,
@@ -40,6 +41,7 @@ router.patch("/partners/:id/subscription", managePartnerSubscription);
 // Modération des Activités
 router.get("/activities", getActivitiesForModeration);
 router.patch("/activities/:id/approve", setActivityApproval);
+router.patch("/activities/:id/location", verifyActivityCoordinates);
 router.patch("/activities/:id/highlight", toggleHighlight);
 router.delete("/activities/:id", removeActivity);
 router.get("/reviews", getReviewsForAdmin);

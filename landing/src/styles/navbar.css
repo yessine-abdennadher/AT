@@ -175,6 +175,11 @@
   gap: 32px;
 }
 
+.navbar-account{display:flex;align-items:center;gap:.25rem}
+.nav-login-btn{min-height:44px;padding:.65rem 1rem;white-space:nowrap}
+@media(max-width:68em){.navbar-links{gap:1rem}.navbar-links>a:nth-of-type(n+3){display:none}}
+@media(max-width:48em){.navbar-account,.nav-login-btn{display:none}}
+
 .navbar-link {
   font-size: 0.925rem;
   font-weight: 600;

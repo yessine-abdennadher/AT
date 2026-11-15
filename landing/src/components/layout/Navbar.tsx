@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ChevronDown, Sun, Moon, Globe, Menu, X, Building2, ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ChevronDown, Sun, Moon, Globe, Menu, X, Building2, ArrowLeft, ArrowRight, Check, Heart, UserRound, LogOut, MapPinned, Sparkles, ShieldCheck } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useTheme } from '../../context/ThemeContext';
 import { useLanguage, type Language } from '../../context/LanguageContext';
+import { useAuth } from '../../context/AuthContext';
 
 interface NavbarProps {
   isPartnerView?: boolean;
@@ -9,12 +11,15 @@ interface NavbarProps {
   onOpenApp?: () => void;
   onOpenProModal?: () => void;
   onSelectCity?: (city: string) => void;
+  onOpenAuth?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   isPartnerView = false,
   onToggleView,
+  onOpenApp,
   onOpenProModal,
+  onOpenAuth,
 }) => {
   const { toggleTheme, isDark } = useTheme();
   const { language, setLanguage, t, isRTL } = useLanguage();
@@ -23,6 +28,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const langMenuRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -51,6 +58,10 @@ export const Navbar: React.FC<NavbarProps> = ({
   // Sur le Hero Vidéo : Transparent cinématographique uniquement en Mode Sombre (la vidéo traverse la navbar).
   // En Mode Clair : Navbar en blanc satiné dépoli pour une netteté et un contraste impeccables.
   const isHeroActive = !isPartnerView && !isScrolled && isDark;
+
+  // L'accès Espace Établissements est visible pour les visiteurs non connectés ou les professionnels/admins,
+  // mais masqué pour les comptes clients standards (role: 'user') afin d'éviter la confusion de rôles.
+  const canShowPartnerSwitch = !user || user.role === 'partner' || user.role === 'admin';
 
   return (
     <header className={`site-header ${isHeroActive ? 'on-hero' : 'scrolled'}`}>
@@ -98,25 +109,36 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* 2. Liens Centraux Desktop (Adaptés selon la vue Client vs Partenaire) */}
         {!isPartnerView ? (
           <nav className="navbar-links">
-            <a href="#explorer" className="navbar-link">
+            <a href="/#explorer" className="navbar-link" onClick={(event) => { if (location.pathname === '/') { event.preventDefault(); onOpenApp?.(); } }}>
               {t('nav.explore')}
             </a>
 
-            <a href="#piliers" className="navbar-link">
+            <Link to="/carte" className="navbar-link"><MapPinned size={15} />{t('nav.map')}</Link>
+            {user && (
+              <Link to="/recommandations" className="navbar-link"><Sparkles size={15} />{t('nav.recommendations')}</Link>
+            )}
+            {user?.role === 'admin' && <Link to="/admin" className="navbar-link"><ShieldCheck size={15} />{t('admin.navLink')}</Link>}
+
+
+            <a href="/#piliers" className="navbar-link" onClick={(event) => { if (location.pathname === '/') { event.preventDefault(); document.getElementById('piliers')?.scrollIntoView({ behavior: 'smooth' }); } }}>
               {t('nav.advantages')}
             </a>
 
-            <button
-              type="button"
-              onClick={() => onToggleView('partner')}
-              className="navbar-link navbar-link-partner"
-            >
-              <Building2 size={16} />
-              <span>{t('partnerPortal.switchPartner')}</span>
-            </button>
+            {canShowPartnerSwitch && (
+              <button
+                type="button"
+                onClick={() => onToggleView('partner')}
+                className="navbar-link navbar-link-partner"
+              >
+                <Building2 size={16} />
+                <span>{t('partnerPortal.switchPartner')}</span>
+              </button>
+            )}
           </nav>
         ) : (
           <nav className="navbar-links">
+            {user?.role === 'partner' && <Link to="/partenaire/espace" className="navbar-link"><Building2 size={15} />{t('partnerDashboard.navLink')}</Link>}
+            {user?.role === 'admin' && <Link to="/admin" className="navbar-link"><ShieldCheck size={15} />{t('admin.navLink')}</Link>}
             <a href="#tarifs" className="navbar-link">
               {t('nav.pricing')}
             </a>
@@ -200,6 +222,18 @@ export const Navbar: React.FC<NavbarProps> = ({
               <span>{t('nav.registerSteps')}</span>
             </button>
           )}
+
+          {user ? (
+            <div className="navbar-account">
+              <button type="button" className="nav-pill-btn" aria-label={t('nav.account')} onClick={() => navigate('/profil')}>
+                <UserRound size={16} /><span>{user.name.split(' ')[0]}</span>
+              </button>
+              <button type="button" className="theme-toggle-btn" aria-label={t('nav.favorites')} title={t('nav.favorites')} onClick={() => navigate('/favoris')}><Heart size={17} /></button>
+              <button type="button" className="theme-toggle-btn" aria-label={t('auth.logout')} title={t('auth.logout')} onClick={() => void signOut()}><LogOut size={17} /></button>
+            </div>
+          ) : (
+            <button type="button" className="btn btn-primary nav-login-btn" onClick={onOpenAuth}>{t('auth.login')}</button>
+          )}
           
 
           {/* Bouton Menu Mobile */}
@@ -219,34 +253,52 @@ export const Navbar: React.FC<NavbarProps> = ({
         {!isPartnerView ? (
           <>
             <a
-              href="#explorer"
+              href="/#explorer"
               className="navbar-link"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.explore')}
             </a>
+            <Link to="/carte" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>{t('nav.map')}</Link>
+            {user && (
+              <Link to="/recommandations" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>{t('nav.recommendations')}</Link>
+            )}
+            <Link to="/assistant" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>{t('nav.assistant')}</Link>
+            {user ? (
+              <>
+                <Link to="/favoris" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>{t('nav.favorites')}</Link>
+                <Link to="/profil" className="navbar-link" onClick={() => setMobileMenuOpen(false)}>{t('nav.profile')}</Link>
+                {user.role === 'admin' && <Link to="/admin" className="navbar-link" onClick={() => setMobileMenuOpen(false)}><ShieldCheck size={15} />{t('admin.navLink')}</Link>}
+                <button type="button" className="navbar-link" onClick={() => { setMobileMenuOpen(false); void signOut(); }}>{t('auth.logout')}</button>
+              </>
+            ) : (
+              <button type="button" className="navbar-link" onClick={() => { setMobileMenuOpen(false); onOpenAuth?.(); }}>{t('auth.login')}</button>
+            )}
             <a
-              href="#piliers"
+              href="/#piliers"
               className="navbar-link"
               onClick={() => setMobileMenuOpen(false)}
             >
               {t('nav.advantages')}
             </a>
-            <button
-              type="button"
-              onClick={() => {
-                setMobileMenuOpen(false);
-                onToggleView('partner');
-              }}
-              className="navbar-link"
-              style={{ textAlign: isRTL ? 'right' : 'left', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)', fontWeight: 700 }}
-            >
-              <Building2 size={16} color="var(--color-primary)" />
-              <span>{t('partnerPortal.switchPartner')}</span>
-            </button>
+            {canShowPartnerSwitch && (
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onToggleView('partner');
+                }}
+                className="navbar-link"
+                style={{ textAlign: isRTL ? 'right' : 'left', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-primary)', fontWeight: 700 }}
+              >
+                <Building2 size={16} color="var(--color-primary)" />
+                <span>{t('partnerPortal.switchPartner')}</span>
+              </button>
+            )}
           </>
         ) : (
           <>
+            {user?.role === 'partner' && <Link to="/partenaire/espace" className="navbar-link" onClick={() => setMobileMenuOpen(false)}><Building2 size={15} />{t('partnerDashboard.navLink')}</Link>}
             <a
               href="#tarifs"
               className="navbar-link"

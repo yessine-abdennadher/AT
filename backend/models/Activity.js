@@ -115,9 +115,10 @@ const activitySchema = new mongoose.Schema(
       default: "",
     },
     coordinates: {
-      latitude: { type: Number, default: 34.7406 },
-      longitude: { type: Number, default: 10.7603 },
+      latitude: { type: Number, min: -90, max: 90 },
+      longitude: { type: Number, min: -180, max: 180 },
     },
+    coordinatesVerified: { type: Boolean, default: false },
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -214,6 +215,35 @@ const activitySchema = new mongoose.Schema(
       targetItem: { type: String, default: "" },
       promoLabel: { type: String, default: "" },
       validUntil: { type: String, default: "" },
+    },
+    menu: {
+      pdfUrl: { type: String, default: "" },
+      images: [{ type: String }],
+      currency: { type: String, default: "DT" },
+      sections: [
+        {
+          id: { type: String },
+          title: { type: String, required: true },
+          titleAr: { type: String },
+          icon: { type: String, default: "utensils" },
+          items: [
+            {
+              id: { type: String },
+              name: { type: String, required: true },
+              nameAr: { type: String },
+              description: { type: String, default: "" },
+              descriptionAr: { type: String, default: "" },
+              price: { type: Number, required: true },
+              originalPrice: { type: Number },
+              isPopular: { type: Boolean, default: false },
+              isSpecialty: { type: Boolean, default: false },
+              isSignature: { type: Boolean, default: false },
+              badge: { type: String, default: "" },
+              imageUrl: { type: String, default: "" },
+            },
+          ],
+        },
+      ],
     },
   },
   { timestamps: true, strict: false }

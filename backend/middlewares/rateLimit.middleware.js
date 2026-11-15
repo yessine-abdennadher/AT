@@ -47,6 +47,13 @@ export const authLimiter = createRateLimiter({
   message: "Trop de tentatives de connexion ou d'inscription. Veuillez patienter 15 minutes.",
 });
 
+export const otpVerifyLimiter = createRateLimiter({
+  scope: "otp-verify",
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: "Trop de tentatives de validation de code. Veuillez patienter 15 minutes.",
+});
+
 export const uploadLimiter = createRateLimiter({
   scope: "image-upload",
   windowMs: 15 * 60 * 1000,

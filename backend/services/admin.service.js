@@ -372,6 +372,28 @@ export const toggleActivityHighlight = async (activityId, field, actorId, reques
   return activity;
 };
 
+export const verifyActivityCoordinates = async (activityId, coordinates, actorId, request) => {
+  const latitude = Number(coordinates?.latitude);
+  const longitude = Number(coordinates?.longitude);
+  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < 30 || latitude > 38 || longitude < 7 || longitude > 12) {
+    const error = new Error("Coordonnées tunisiennes valides obligatoires pour vérifier le lieu.");
+    error.statusCode = 400;
+    throw error;
+  }
+  const activity = await Activity.findById(activityId);
+  if (!activity) {
+    const error = new Error("Activité introuvable.");
+    error.statusCode = 404;
+    throw error;
+  }
+  const previousValue = { coordinates: activity.coordinates, coordinatesVerified: activity.coordinatesVerified };
+  activity.coordinates = { latitude, longitude };
+  activity.coordinatesVerified = true;
+  await activity.save();
+  await writeSecurityAudit({ actorId, targetId: activity._id, targetType: "activity", action: "activity.coordinates.verified", previousValue, newValue: { coordinates: activity.coordinates, coordinatesVerified: true }, request });
+  return activity;
+};
+
 /**
  * Suppression administrative définitive d'une activité
  */

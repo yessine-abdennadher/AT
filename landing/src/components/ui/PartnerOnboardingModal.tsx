@@ -128,7 +128,7 @@ export const PartnerOnboardingModal: React.FC<PartnerOnboardingModalProps> = ({
     setErrorMsg('');
 
     try {
-      const res = await sendPartnerOtp({
+      await sendPartnerOtp({
         managerName: formData.managerName,
         email: formData.email,
         establishmentName: formData.establishmentName,

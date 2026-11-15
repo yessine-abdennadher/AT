@@ -7,7 +7,7 @@ const adminSecurityAuditSchema = new mongoose.Schema(
     targetType: { type: String, enum: ["user", "activity", "review"], required: true, index: true },
     action: {
       type: String,
-      enum: ["user.status.changed", "user.role.changed", "partner.tier.changed", "partner.subscription.changed", "activity.highlight.changed", "activity.deleted", "review.status.changed"],
+      enum: ["user.status.changed", "user.role.changed", "partner.tier.changed", "partner.subscription.changed", "activity.highlight.changed", "activity.coordinates.verified", "activity.deleted", "review.status.changed"],
       required: true,
       index: true,
     },

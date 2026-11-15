@@ -17,7 +17,8 @@ export const getStableSurpriseScore = (id) => {
 export const buildRecommendationQuery = (filters = {}) => {
   const query = { isApproved: true };
   if (typeof filters.city === "string" && filters.city.trim()) {
-    query.city = { $regex: escapeRegex(filters.city), $options: "i" };
+    const cityRegex = new RegExp(escapeRegex(filters.city), "i");
+    query.$and = [{ $or: ["city", "cityFr", "cityAr", "cityEn", "translations.fr.city", "translations.ar.city", "translations.en.city"].map((field) => ({ [field]: cityRegex })) }];
   }
   const possibleMatches = [];
   if (filters.category) possibleMatches.push({ category: filters.category });
@@ -51,7 +52,7 @@ export const buildRecommendationQuery = (filters = {}) => {
       ],
     });
   }
-  if (possibleMatches.length) query.$and = [{ $or: possibleMatches }];
+  if (possibleMatches.length) query.$and = [...(query.$and || []), { $or: possibleMatches }];
   return query;
 };
 
@@ -59,7 +60,7 @@ export const buildRecommendationQuery = (filters = {}) => {
 export const getRecommendations = async (filters = {}, sortBy = "rating", pagination = {}) => {
   const { page, limit, candidateLimit } = getRecommendationWindow(pagination);
   const activities = await Activity.find(buildRecommendationQuery(filters))
-    .populate("createdBy", "name role establishmentName")
+    .populate("createdBy", "name role establishmentName partnerTier subscriptionStatus")
     .sort({ rating: -1, _id: 1 })
     .limit(candidateLimit)
     .lean();
@@ -94,9 +95,26 @@ export const getRecommendations = async (filters = {}, sortBy = "rating", pagina
       }
       if (filters.hasPromo && activity.promotion?.isPromo) score += 8;
       if (filters.isEvening && (activity.events?.length || activity.promotion?.isPromo)) score += 6;
-      return { activity, score };
+
+      const passesRelevance = score > 0 || Object.keys(filters).length === 0 || Boolean(filters.city);
+
+      // Boost Abonnement Partenaire (Premium / Pro) appliqué uniquement aux candidats pertinents
+      if (passesRelevance) {
+        const ownerTier = activity.createdBy?.partnerTier || activity.partnerTier || "standard";
+        const subStatus = activity.createdBy?.subscriptionStatus;
+        const isTierActive = !subStatus || subStatus === "active" || activity.createdBy?.role === "admin";
+        const effectiveTier = isTierActive ? ownerTier : "standard";
+
+        if (effectiveTier === "premium" || activity.isFeatured) {
+          score += 5;
+        } else if (effectiveTier === "pro") {
+          score += 2.5;
+        }
+      }
+
+      return { activity, score, passesRelevance };
     })
-    .filter(({ score }) => score > 0 || Object.keys(filters).length === 0 || Boolean(filters.city))
+    .filter(({ passesRelevance }) => passesRelevance)
     .sort((a, b) => {
       let order;
       if (sortBy === "price") order = (a.activity.price ?? 0) - (b.activity.price ?? 0);

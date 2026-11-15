@@ -3,7 +3,12 @@ import { HeroSection } from '../components/sections/HeroSection';
 import { ActivityExplorer } from '../components/sections/ActivityExplorer';
 import { BentoPillars } from '../components/sections/BentoPillars';
 import { MobileAppShowcase } from '../components/sections/MobileAppShowcase';
+import { UserDiscoveryHero, type DiscoveryMood } from '../components/sections/UserDiscoveryHero';
+import { PersonalizedRecommendationsRail } from '../components/sections/PersonalizedRecommendationsRail';
+import { PartnerPromosRail } from '../components/sections/PartnerPromosRail';
+import { PartnerEventsRail } from '../components/sections/PartnerEventsRail';
 import type { DemoActivity } from '../data/demoActivities';
+import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { Building2, ArrowRight } from 'lucide-react';
 
@@ -18,9 +23,63 @@ export const ClientHomeView: React.FC<ClientHomeViewProps> = ({
   onSelectActivity,
   onSwitchToPartner,
 }) => {
+  const { user } = useAuth();
   const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeMood, setActiveMood] = useState<DiscoveryMood>('all');
 
+  const handleMoodSelect = (mood: DiscoveryMood) => {
+    setActiveMood(mood);
+    if (mood === 'all') {
+      setSearchQuery('');
+    } else if (mood === 'openNow') {
+      setSearchQuery('ouvert');
+    } else if (mood === 'family') {
+      setSearchQuery('famille');
+    } else if (mood === 'tonight') {
+      setSearchQuery('soir');
+    } else if (mood === 'cafe') {
+      setSearchQuery('cafe');
+    } else if (mood === 'food') {
+      setSearchQuery('restaurant');
+    } else if (mood === 'fun') {
+      setSearchQuery('jeux');
+    }
+  };
+
+  // 1. Vue Utilisateur Connecté : Espace Découverte Personnel
+  if (user) {
+    return (
+      <>
+        {/* En-tête Héro Convivial avec Salutation Personnalisée et Filtres d'Ambiance */}
+        <UserDiscoveryHero
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          activeMood={activeMood}
+          onSelectMood={handleMoodSelect}
+        />
+
+        {/* 1. Section Bons Plans & Réductions Exclusives (Partenaires Pro) */}
+        <PartnerPromosRail onSelectActivity={onSelectActivity} />
+
+        {/* 2. Section Événements & Soirées à venir (Partenaires Premium) */}
+        <PartnerEventsRail onSelectActivity={onSelectActivity} />
+
+        {/* 3. Rail de Recommandations Personnalisées IA « Pour vous » */}
+        <PersonalizedRecommendationsRail onSelectActivity={onSelectActivity} />
+
+        {/* 4. Titre & Explorateur Complet des Sorties */}
+        <div className="discovery-explorer-heading">
+          <h2>{t('discovery.allOutingsTitle')}</h2>
+          <p>{t('discovery.allOutingsSubtitle')}</p>
+        </div>
+
+  
+      </>
+    );
+  }
+
+  // 2. Vue Visiteur Non Connecté : Landing Page Vitrine Complète
   return (
     <>
       {/* 1. Accroche Principale Grand Public */}

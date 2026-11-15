@@ -33,6 +33,7 @@
   /* Surfaces & Backgrounds alignées avec App Mobile Tfarhida */
   --bg-main: #F0F7FF;
   --bg-secondary: #E0F2FE;
+  --bg-surface: #FFFFFF;
   --bg-card: #FFFFFF;
   --bg-card-hover: #FFFFFF;
   --bg-card-subtle: #F8FAFC;
@@ -97,6 +98,7 @@
   /* Surfaces & Backgrounds Dark */
   --bg-main: #060B24;
   --bg-secondary: #0A1232;
+  --bg-surface: #0F172A;
   --bg-card: #0F172A;
   --bg-card-hover: #151D3B;
   --bg-card-subtle: #1E293B;

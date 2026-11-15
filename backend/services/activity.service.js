@@ -4,19 +4,31 @@ import { escapeRegex } from "./activity.utils.js";
 
 const buildPublicActivityFilter = ({ type, city, category, search } = {}) => {
   const filter = { isApproved: true };
+  const andFilters = [];
   if (type) filter.type = type;
-  if (city) filter.city = { $regex: escapeRegex(city), $options: "i" };
+  if (city) {
+    const cityRegex = new RegExp(escapeRegex(city), "i");
+    andFilters.push({ $or: ["city", "cityFr", "cityAr", "cityEn", "translations.fr.city", "translations.ar.city", "translations.en.city"].map((field) => ({ [field]: cityRegex })) });
+  }
   if (category) filter.category = category;
   if (search && search.trim()) {
     const searchRegex = new RegExp(escapeRegex(search), "i");
-    filter.$or = [
+    andFilters.push({ $or: [
       { name: searchRegex },
+      { nameFr: searchRegex },
+      { nameAr: searchRegex },
+      { nameEn: searchRegex },
       { description: searchRegex },
+      { descriptionFr: searchRegex },
+      { descriptionAr: searchRegex },
+      { descriptionEn: searchRegex },
       { locationName: searchRegex },
+      { locationNameFr: searchRegex },
       { address: searchRegex },
       { tags: { $in: [searchRegex] } },
-    ];
+    ] });
   }
+  if (andFilters.length) filter.$and = andFilters;
   return filter;
 };
 
@@ -30,13 +42,15 @@ const buildActivityCreationData = (data, userId, userRole) => ({
   // Every new activity enters moderation; approval is only changed by the dedicated admin flow.
   isApproved: false,
   createdBy: userId,
+  coordinatesVerified: false,
 });
 
 const buildActivityUpdateData = (data) => {
-  const { isApproved: _ignoredApproval, createdBy: _ignoredOwner, ...safeData } = data;
+  const { isApproved: _ignoredApproval, createdBy: _ignoredOwner, coordinatesVerified: _ignoredCoordinateVerification, ...safeData } = data;
   if (!safeData.imageUrl && safeData.image) {
     safeData.imageUrl = safeData.image;
   }
+  if (safeData.coordinates) safeData.coordinatesVerified = false;
   return safeData;
 };
 
@@ -49,8 +63,8 @@ export const getAllActivities = async ({ type, city, category, search, page = 1,
   const [total, activities, electricityAlertActive] = await Promise.all([
     Activity.countDocuments(filter),
     Activity.find(filter)
-      .populate("createdBy", "name role establishmentName")
-      .sort({ createdAt: -1 })
+      .populate("createdBy", "name role establishmentName partnerTier subscriptionStatus")
+      .sort({ isFeatured: -1, createdAt: -1 })
       .skip(skip)
       .limit(limitNum),
     getElectricityAlertStatus(),
@@ -68,7 +82,7 @@ export const getAllActivities = async ({ type, city, category, search, page = 1,
 };
 
 export const getActivityById = async (id) => {
-  const activity = await Activity.findOne(buildPublicActivityQuery(id)).populate("createdBy", "name role establishmentName");
+  const activity = await Activity.findOne(buildPublicActivityQuery(id)).populate("createdBy", "name role establishmentName partnerTier subscriptionStatus");
   if (!activity) {
     const error = new Error("Activité introuvable.");
     error.statusCode = 404;

@@ -110,6 +110,7 @@ export const logoutUser = async (req, res, next) => {
     clearBrowserSession(res);
     res.json({ success: true, message: "Déconnexion réussie." });
   } catch (error) {
+    clearBrowserSession(res);
     next(error);
   }
 };
@@ -212,6 +213,42 @@ export const verifyPartnerOtp = async (req, res, next) => {
       ...(!browserSession ? { token: result.accessToken, accessToken: result.accessToken, refreshToken: result.refreshToken } : {}),
       user: result.user,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Demande d'envoi de code de réinitialisation de mot de passe
+// @route   POST /api/auth/forgot-password
+// @access  Public
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const result = await authService.sendPasswordResetOtp(req.body);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Vérification intermédiaire du code OTP avant changement de mot de passe
+// @route   POST /api/auth/verify-reset-otp
+// @access  Public
+export const verifyResetOtp = async (req, res, next) => {
+  try {
+    const result = await authService.verifyPasswordResetOtp(req.body);
+    res.status(200).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Validation du code et mise à jour du mot de passe
+// @route   POST /api/auth/reset-password
+// @access  Public
+export const resetPassword = async (req, res, next) => {
+  try {
+    const result = await authService.resetPasswordWithOtp(req.body);
+    res.status(200).json(result);
   } catch (error) {
     next(error);
   }

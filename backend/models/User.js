@@ -46,6 +46,8 @@ const userSchema = new mongoose.Schema(
     city: {
       type: String,
       default: "صفاقس", // Sfax par défaut
+      trim: true,
+      maxlength: 100,
     },
     role: {
       type: String,

@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import type { DemoActivity } from '../../data/demoActivities';
-import { DEMO_ACTIVITIES } from '../../data/demoActivities';
-import { fetchLiveActivities } from '../../services/activityApi';
+import { fetchActivityExplorerData, type ExplorerOption } from '../../services/activityApi';
 import { useLanguage } from '../../context/LanguageContext';
+import '../../styles/activity-explorer.css';
+import { FavoriteButton } from '../ui/FavoriteButton';
 import {
   Star,
   MessageCircle,
@@ -18,7 +20,22 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  Search,
+  Utensils,
+  Dumbbell,
+  Tag,
+  Phone,
 } from 'lucide-react';
+
+type ActivityCategoryFilter = 'all' | 'fun' | 'restaurant' | 'cafe' | 'sport' | 'outdoor' | 'creative';
+
+const isPromotionActive = (activity: DemoActivity): boolean => {
+  const promotion = activity.promotion;
+  if (!promotion?.isPromo || promotion.discountPercent <= 0) return false;
+  if (!promotion.validUntil) return true;
+  const expiry = Date.parse(promotion.validUntil);
+  return Number.isNaN(expiry) || expiry >= Date.now();
+};
 
 interface ActivityExplorerProps {
   onSelectActivity?: (activity: DemoActivity) => void;
@@ -31,11 +48,27 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
   searchQuery = '',
   onResetSearch,
 }) => {
-  const { t, isRTL } = useLanguage();
-  const [activities, setActivities] = useState<DemoActivity[]>(DEMO_ACTIVITIES);
+  const { t, isRTL, language } = useLanguage();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activities, setActivities] = useState<DemoActivity[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<ExplorerOption[]>([]);
+  const [cities, setCities] = useState<ExplorerOption[]>([]);
+  const [totalActivities, setTotalActivities] = useState(0);
   const [loading, setLoading] = useState<boolean>(true);
-  const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [loadError, setLoadError] = useState(false);
+  const [reloadVersion, setReloadVersion] = useState(0);
+  const [activeCategory, setActiveCategory] = useState<ActivityCategoryFilter>((searchParams.get('category') as ActivityCategoryFilter) || 'all');
+  const [selectedCity, setSelectedCity] = useState(searchParams.get('city') || 'all');
+  const [localSearch, setLocalSearch] = useState(searchParams.get('search') || '');
+  const [loadedPage, setLoadedPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const requestVersion = useRef(0);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (searchQuery) setLocalSearch(searchQuery);
+  }, [searchQuery]);
 
   const handleScroll = (direction: 'left' | 'right') => {
     if (scrollContainerRef.current) {
@@ -46,35 +79,76 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
   };
 
   useEffect(() => {
-    fetchLiveActivities()
-      .then((res) => {
-        setActivities(res.activities);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+    const next = new URLSearchParams(searchParams);
+    activeCategory === 'all' ? next.delete('category') : next.set('category', activeCategory);
+    selectedCity === 'all' ? next.delete('city') : next.set('city', selectedCity);
+    localSearch.trim() ? next.set('search', localSearch.trim()) : next.delete('search');
+    setSearchParams(next, { replace: true });
+  }, [activeCategory, selectedCity, localSearch]);
+
+  const filters = () => ({
+    ...(selectedCity !== 'all' ? { city: selectedCity } : {}),
+    ...(activeCategory === 'restaurant' || activeCategory === 'cafe' ? { type: activeCategory } : {}),
+    ...(activeCategory !== 'all' && activeCategory !== 'restaurant' && activeCategory !== 'cafe' ? { category: activeCategory } : {}),
+    ...(localSearch.trim() ? { search: localSearch.trim() } : {}),
+  });
+
+  useEffect(() => {
+    let alive = true;
+    const requestId = ++requestVersion.current;
+    const timer = window.setTimeout(() => {
+      setLoading(true);
+      setLoadingMore(false);
+      setLoadError(false);
+      setActivities([]);
+      fetchActivityExplorerData(language, { ...filters(), page: 1, limit: 20 })
+        .then((data) => {
+          if (!alive || requestId !== requestVersion.current) return;
+          setActivities(data.activities);
+          setAvailableCategories(data.categories);
+          setCities(data.cities);
+          setTotalActivities(data.total);
+          setLoadedPage(data.page);
+          setHasMore(data.hasMore);
+        })
+        .catch(() => { if (alive && requestId === requestVersion.current) setLoadError(true); })
+        .finally(() => { if (alive && requestId === requestVersion.current) setLoading(false); });
+    }, localSearch.trim() ? 250 : 0);
+    return () => { alive = false; window.clearTimeout(timer); };
+  }, [language, reloadVersion, activeCategory, selectedCity, localSearch]);
+
+  const loadMore = async () => {
+    if (loadingMore || !hasMore) return;
+    const requestId = requestVersion.current;
+    setLoadingMore(true);
+    try {
+      const data = await fetchActivityExplorerData(language, { ...filters(), page: loadedPage + 1, limit: 20 });
+      if (requestId !== requestVersion.current) return;
+      setActivities((current) => [...current, ...data.activities]);
+      setLoadedPage(data.page);
+      setHasMore(data.hasMore);
+    } catch { if (requestId === requestVersion.current) setLoadError(true); }
+    finally { if (requestId === requestVersion.current) setLoadingMore(false); }
+  };
 
   // Catégories inspirées du Store Apple
-  const categories = [
+  const availableSlugs = new Set(availableCategories.map((category) => category.value));
+  const hasFood = availableSlugs.has('food') || activities.some((activity) => activity.category === 'food');
+  const categories: { key: ActivityCategoryFilter; label: string; icon: typeof Compass }[] = [
     { key: 'all', label: t('explorer.catAll'), icon: Compass },
-    { key: 'food', label: t('explorer.catFood'), icon: Coffee },
-    { key: 'fun', label: t('explorer.catFun'), icon: Gamepad2 },
-    { key: 'outdoor', label: t('explorer.catOutdoor'), icon: Waves },
-    { key: 'creative', label: t('explorer.catCreative'), icon: Sparkles },
+    ...(availableSlugs.has('fun') || activities.some((activity) => activity.category === 'fun')
+      ? [{ key: 'fun' as const, label: t('explorer.catFun'), icon: Gamepad2 }] : []),
+    ...(hasFood ? [
+      { key: 'restaurant' as const, label: t('explorer.catRestaurant'), icon: Utensils },
+      { key: 'cafe' as const, label: t('explorer.catCafe'), icon: Coffee },
+    ] : []),
+    ...(availableSlugs.has('sport') || activities.some((activity) => activity.category === 'sport')
+      ? [{ key: 'sport' as const, label: t('explorer.catSport'), icon: Dumbbell }] : []),
+    ...(availableSlugs.has('outdoor') ? [{ key: 'outdoor' as const, label: t('explorer.catOutdoor'), icon: Waves }] : []),
+    ...(availableSlugs.has('creative') ? [{ key: 'creative' as const, label: t('explorer.catCreative'), icon: Sparkles }] : []),
   ];
 
-  const filtered = activities.filter((act) => {
-    const matchCat = activeCategory === 'all' || act.category === activeCategory;
-    const cleanSearch = (searchQuery || '').trim().toLowerCase();
-    const matchSearch =
-      !cleanSearch ||
-      act.name.toLowerCase().includes(cleanSearch) ||
-      (act.nameAr && act.nameAr.includes(cleanSearch)) ||
-      (act.locationName && act.locationName.toLowerCase().includes(cleanSearch)) ||
-      act.tags.some((tag) => tag.toLowerCase().includes(cleanSearch));
-    return matchCat && matchSearch;
-  });
+  const filtered = activities;
 
   const ArrowIcon = isRTL ? ArrowLeft : ArrowRight;
 
@@ -108,6 +182,32 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
           >
             Adresses vérifiées sur le terrain, contact direct avec les gérants et statut en temps réel.
           </p>
+        </div>
+
+        <div className="activity-explorer-filters">
+          <label className="activity-explorer-search">
+            <Search size={18} aria-hidden="true" />
+            <span className="sr-only">{t('explorer.searchPlaceholder')}</span>
+            <input
+              type="search"
+              value={localSearch}
+              onChange={(event) => setLocalSearch(event.target.value)}
+              placeholder={t('explorer.searchPlaceholder')}
+              aria-label={t('explorer.searchPlaceholder')}
+            />
+          </label>
+          <label className="activity-explorer-city">
+            <MapPin size={17} aria-hidden="true" />
+            <span className="sr-only">{t('explorer.cityFilter')}</span>
+            <select
+              value={selectedCity}
+              onChange={(event) => setSelectedCity(event.target.value)}
+              aria-label={t('explorer.cityFilter')}
+            >
+              <option value="all">{t('explorer.allCities')}</option>
+              {cities.map((city) => <option key={city.value} value={city.value}>{city.label}</option>)}
+            </select>
+          </label>
         </div>
 
         {/* ── Segmented Control iOS Apple Signature Gradient ── */}
@@ -193,7 +293,17 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
         )}
 
         {/* État vide si aucun résultat pour ce filtre */}
-        {!loading && filtered.length === 0 && (
+        {!loading && loadError && (
+          <div className="activity-explorer-error" role="alert">
+            <h3>{t('explorer.offlineTitle')}</h3>
+            <p>{t('explorer.offlineSubtitle')}</p>
+            <button type="button" className="btn btn-secondary" onClick={() => setReloadVersion((version) => version + 1)}>
+              {t('explorer.retry')}
+            </button>
+          </div>
+        )}
+
+        {!loading && !loadError && filtered.length === 0 && (
           <div
             style={{
               textAlign: 'center',
@@ -215,6 +325,8 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
             <button
               onClick={() => {
                 setActiveCategory('all');
+                setSelectedCity('all');
+                setLocalSearch('');
                 if (onResetSearch) onResetSearch();
               }}
               className="btn btn-secondary"
@@ -237,7 +349,7 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
             }}
           >
             <span style={{ fontSize: '0.9rem', color: 'var(--text-muted)', fontWeight: 700 }}>
-              {filtered.length} adresses sélectionnées
+              {filtered.length} / {totalActivities} adresses
             </span>
 
             <div style={{ display: 'flex', gap: '10px' }}>
@@ -311,7 +423,16 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
               <div
                 key={activity.id}
                 className="activity-card-item"
+                role="button"
+                tabIndex={0}
+                aria-label={`${t('detail.open')}: ${activity.name}`}
                 onClick={() => onSelectActivity && onSelectActivity(activity)}
+                onKeyDown={(event) => {
+                  if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault();
+                    onSelectActivity?.(activity);
+                  }
+                }}
                 style={{
                   backgroundColor: 'var(--bg-card)',
                   borderRadius: '26px',
@@ -336,7 +457,7 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
               >
                 {/* ── Média Immersif Apple (Photo avec dégradé d'ombre) ── */}
                 <div style={{ position: 'relative', width: '100%', height: '230px', overflow: 'hidden' }}>
-                  <img
+                  {activity.imageUrl && <img
                     src={activity.imageUrl}
                     alt={activity.name}
                     style={{
@@ -347,7 +468,7 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.06)')}
                     onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-                  />
+                  />}
 
                   {/* Voile sombre cinématographique en bas de photo */}
                   <div
@@ -358,6 +479,9 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
                       pointerEvents: 'none',
                     }}
                   />
+
+                  {/* Bouton Cœur Favori Interactif (Top-Right Apple Glass) */}
+                  <FavoriteButton activityId={activity.id} />
 
                   {/* Badge Statut Live (Flou Gaussien Apple Glass) */}
                   {activity.lightingActive && (
@@ -378,6 +502,7 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
                         gap: '5px',
                         backdropFilter: 'blur(12px)',
                         boxShadow: '0 4px 12px rgba(16, 185, 129, 0.35)',
+                        zIndex: 3,
                       }}
                     >
                       <Zap size={12} fill="#FFFFFF" color="#FFFFFF" />
@@ -385,13 +510,20 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
                     </div>
                   )}
 
-                  {/* Note Avis Certifiés Flottante */}
+                  {isPromotionActive(activity) && (
+                    <div className="activity-promotion-badge" style={{ zIndex: 3 }}>
+                      <Tag size={13} aria-hidden="true" />
+                      <span>-{activity.promotion?.discountPercent}%</span>
+                    </div>
+                  )}
+
+                  {/* Note Avis Certifiés Flottante (Bas-Gauche) */}
                   <div
                     style={{
                       position: 'absolute',
-                      top: '12px',
-                      right: '12px',
-                      backgroundColor: 'rgba(6, 11, 36, 0.65)',
+                      bottom: '12px',
+                      left: '12px',
+                      backgroundColor: 'rgba(6, 11, 36, 0.75)',
                       backdropFilter: 'blur(10px)',
                       color: '#FFFFFF',
                       padding: '4px 10px',
@@ -402,13 +534,15 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
                       alignItems: 'center',
                       gap: '4px',
                       border: '1px solid rgba(255, 255, 255, 0.15)',
+                      zIndex: 3,
                     }}
                   >
-                    <Star size={12} color="#F59E0B" fill="#F59E0B" />
-                    <span>{activity.rating}</span>
+                    {activity.reviewCount > 0 ? (
+                      <><Star size={12} color="#F59E0B" fill="#F59E0B" /><span>{activity.rating.toFixed(1)} · {activity.reviewCount}</span></>
+                    ) : <span>{t('explorer.newActivity')}</span>}
                   </div>
 
-                  {/* Pastille Prix Apple Liquid Glass */}
+                  {/* Pastille Prix Apple Liquid Glass (Bas-Droite) */}
                   <div
                     style={{
                       position: 'absolute',
@@ -422,6 +556,7 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
                       fontWeight: 900,
                       boxShadow: '0 4px 14px rgba(0, 0, 0, 0.15)',
                       backdropFilter: 'blur(8px)',
+                      zIndex: 3,
                     }}
                   >
                     {activity.price === 0 ? 'Gratuit' : `${activity.price} DT`}
@@ -481,8 +616,8 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
                     }}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <a
-                      href={`https://wa.me/${(activity.whatsapp || activity.phone || '21620000000').replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Bonjour, je vous contacte depuis Tfarhida pour réserver : ${activity.name}`)}`}
+                    {activity.whatsapp && <a
+                      href={`https://wa.me/${activity.whatsapp.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(`Bonjour, je vous contacte depuis Tfarhida pour réserver : ${activity.name}`)}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       style={{
@@ -506,7 +641,9 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
                         <MessageCircle size={11} color="#FFFFFF" />
                       </div>
                       <span>WhatsApp Direct</span>
-                    </a>
+                    </a>}
+
+                    {activity.phone && <a className="activity-phone-link" href={`tel:${activity.phone}`} aria-label={`${t('detail.call')}: ${activity.name}`}><Phone size={16} />{t('detail.call')}</a>}
 
                     <button
                       type="button"
@@ -533,6 +670,13 @@ export const ActivityExplorer: React.FC<ActivityExplorerProps> = ({
                 </div>
               </div>
             ))}
+          </div>
+        )}
+        {!loading && !loadError && hasMore && (
+          <div style={{ display: 'flex', justifyContent: 'center', padding: '1rem' }}>
+            <button type="button" className="btn btn-secondary" onClick={() => void loadMore()} disabled={loadingMore}>
+              {loadingMore ? t('explorer.loadingMore') : t('explorer.loadMore')}
+            </button>
           </div>
         )}
       </div>

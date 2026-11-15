@@ -126,3 +126,61 @@ export async function sendAdminLoginOtpEmail({ email, otpCode }) {
   }
 }
 
+export async function sendPasswordResetOtpEmail({ email, name = "Membre Tfarhida", otpCode }) {
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey || apiKey === "re_test_dummy_key") {
+    console.log(`[Dev Mail] Code de réinitialisation pour ${email}: ${otpCode}`);
+    return { success: true, delivered: false, dev: true };
+  }
+
+  const escapeHtml = (val) => String(val || "").replace(/[&<>"']/g, (c) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[c]);
+
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html lang="fr">
+    <head><meta charset="utf-8"><title>Réinitialisation du mot de passe Tfarhida</title></head>
+    <body style="font-family: -apple-system, sans-serif; background: #F0F7FF; padding: 24px; color: #0F172A;">
+      <div style="max-width: 540px; margin: 0 auto; background: #FFF; border-radius: 18px; padding: 32px; border: 1px solid #BAE6FD;">
+        <h2 style="color: #0284C7; margin-top: 0;">Tfarhida · تفرهيدة</h2>
+        <p>Bonjour <strong>${escapeHtml(name)}</strong>,</p>
+        <p>Vous avez demandé la réinitialisation de votre mot de passe Tfarhida. Voici votre code de sécurité à 6 chiffres :</p>
+        <div style="background: #F0F7FF; border: 2px dashed #0284C7; border-radius: 14px; padding: 20px; text-align: center; margin: 24px 0;">
+          <span style="font-size: 36px; font-weight: 900; letter-spacing: 8px; color: #0284C7; font-family: monospace;">${otpCode}</span><br>
+          <span style="display: inline-block; margin-top: 8px; font-size: 12px; color: #059669; font-weight: 700;">⏱️ Valable 10 minutes</span>
+        </div>
+        <p style="font-size: 13px; color: #64748B;">Si vous n'êtes pas à l'origine de cette demande, vous pouvez ignorer cet email.</p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({
+      from: process.env.RESEND_FROM || "Tfarhida <onboarding@resend.dev>",
+      to: [email],
+      subject: `🔑 Réinitialisation de votre mot de passe Tfarhida : ${otpCode}`,
+      html: htmlContent,
+    }),
+    signal: AbortSignal.timeout(8000),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => ({}));
+    console.warn(`[Mail Service] Resend error (${response.status}):`, errorBody.message || errorBody);
+    if (process.env.NODE_ENV !== "production") {
+      console.log(`\n======================================================`);
+      console.log(`[DEV OTP] Réinitialisation pour ${email} -> CODE: ${otpCode}`);
+      console.log(`(Bloqué par Resend Sandbox car l'adresse n'est pas le compte propriétaire Resend)`);
+      console.log(`======================================================\n`);
+    }
+    const error = new Error("Impossible d'envoyer l'email de réinitialisation.");
+    error.statusCode = 503;
+    throw error;
+  }
+  return { success: true, delivered: true };
+}
+

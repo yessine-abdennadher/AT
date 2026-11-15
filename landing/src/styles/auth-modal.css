@@ -1,0 +1,652 @@
+/* ==========================================================================
+   Tfarhida — AuthModal Component Styles
+   Design System Branding & High-End UX/UI
+   ========================================================================== */
+
+/* 1. Backdrop Sombre & Flou Immersif */
+.auth-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(2, 8, 23, 0.72);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: authFadeIn 240ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes authFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 2. Dialogue / Card Glassmorphism (Zéro scrollbar parasite) */
+.auth-dialog {
+  position: relative;
+  width: min(100%, 30rem);
+  max-height: min(92vh, 46rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Masquage total de la scrollbar sous tous les navigateurs */
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  padding: clamp(1.5rem, 5vw, 2.25rem);
+  border-radius: 1.5rem;
+  border: 1px solid var(--border-strong);
+  background: var(--bg-card);
+  color: var(--text-primary);
+  box-shadow: 0 24px 70px -12px rgba(2, 8, 23, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  animation: authSlideUp 260ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.auth-dialog::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+[data-theme="dark"] .auth-dialog {
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid rgba(56, 189, 248, 0.22);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.7), 0 0 35px rgba(2, 132, 199, 0.15);
+}
+
+@keyframes authSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 3. Bouton Fermer Accessible */
+.auth-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 50%;
+  background: var(--bg-main);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 180ms ease;
+  z-index: 10;
+}
+
+[dir="rtl"] .auth-close {
+  right: auto;
+  left: 1rem;
+}
+
+.auth-close:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  transform: rotate(90deg);
+  border-color: var(--color-primary);
+}
+
+/* 4. En-tête de Marque */
+.auth-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.auth-logo-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  margin-bottom: 0.75rem;
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(0, 210, 255, 0.15) 0%, rgba(37, 99, 235, 0.22) 100%);
+  border: 1px solid rgba(0, 210, 255, 0.35);
+  box-shadow: 0 0 25px rgba(0, 210, 255, 0.25);
+  padding: 6px;
+}
+
+.auth-real-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.auth-sparkle-icon {
+  color: var(--color-cyan-glow);
+}
+
+.auth-eyebrow {
+  margin: 0 0 0.35rem 0;
+  color: var(--color-primary);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.auth-dialog h2 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-primary);
+  font-size: clamp(1.4rem, 4.5vw, 1.85rem);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.auth-subtitle {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+/* 5. Onglets Segmentés (Pills) */
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+  padding: 0.35rem;
+  border-radius: 999px;
+  background: var(--bg-main);
+  border: 1px solid var(--border-subtle);
+}
+
+.auth-tabs button {
+  min-height: 42px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.auth-tabs button:hover:not([aria-selected="true"]) {
+  color: var(--text-primary);
+}
+
+.auth-tabs button[aria-selected="true"] {
+  background: var(--color-primary);
+  color: #FFFFFF;
+  box-shadow: 0 2px 8px rgba(2, 132, 199, 0.35);
+}
+
+/* 6. Bouton Social Google 1-Clic */
+.auth-social-btn {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  min-height: 46px;
+  padding: 0.65rem 1rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.85rem;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 180ms ease;
+}
+
+.auth-social-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--color-primary);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
+}
+
+/* 7. Séparateur avec Liseré Dégradé */
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.15rem 0;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border-subtle);
+}
+
+.auth-divider span {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: lowercase;
+}
+
+/* 8. Champs de Formulaire & Inputs avec Icônes */
+.auth-form {
+  display: grid;
+  gap: 1.05rem;
+}
+
+.auth-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.auth-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.auth-label {
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.auth-forgot-link {
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  transition: color 150ms ease;
+}
+
+.auth-forgot-link:hover {
+  text-decoration: underline;
+  color: var(--color-primary-hover);
+}
+
+.auth-input-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.auth-input-icon {
+  position: absolute;
+  left: 0.95rem;
+  color: var(--text-muted);
+  pointer-events: none;
+  transition: color 150ms ease;
+}
+
+[dir="rtl"] .auth-input-icon {
+  left: auto;
+  right: 0.95rem;
+}
+
+.auth-input {
+  width: 100%;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 0.75rem 1rem 0.75rem 2.75rem;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.85rem;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.95rem;
+  transition: all 180ms ease;
+}
+
+[dir="rtl"] .auth-input {
+  padding: 0.75rem 2.75rem 0.75rem 1rem;
+}
+
+.auth-input-password {
+  padding-right: 2.85rem;
+}
+
+[dir="rtl"] .auth-input-password {
+  padding-right: 2.75rem;
+  padding-left: 2.85rem;
+}
+
+.auth-input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  background: var(--bg-card);
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18);
+}
+
+.auth-input-box:focus-within .auth-input-icon {
+  color: var(--color-primary);
+}
+
+.auth-toggle-pwd {
+  position: absolute;
+  right: 0.75rem;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 150ms ease;
+}
+
+[dir="rtl"] .auth-toggle-pwd {
+  right: auto;
+  left: 0.75rem;
+}
+
+.auth-toggle-pwd:hover {
+  color: var(--text-primary);
+}
+
+/* 9. Jauge de Force du Mot de Passe */
+.auth-password-strength {
+  display: grid;
+  gap: 0.35rem;
+  margin-top: 0.2rem;
+}
+
+.auth-strength-track {
+  width: 100%;
+  height: 5px;
+  background: var(--border-subtle);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.auth-strength-bar {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 240ms ease, background-color 240ms ease;
+}
+
+.auth-strength-bar.weak {
+  background: #EF4444;
+}
+
+.auth-strength-bar.medium {
+  background: #F59E0B;
+}
+
+.auth-strength-bar.secure {
+  background: #10B981;
+}
+
+.auth-strength-text {
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* 10. Boîte d'Avantages Membre (Register) */
+.auth-benefits-box {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.85rem;
+  background: rgba(2, 132, 199, 0.08);
+  border: 1px solid rgba(2, 132, 199, 0.18);
+}
+
+.auth-benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.auth-benefit-check {
+  color: #10B981;
+  flex-shrink: 0;
+}
+
+/* 11. Boîtes d'Erreur & d'Information */
+.auth-error-box {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #DC2626;
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+[data-theme="dark"] .auth-error-box {
+  color: #F87171;
+  background: rgba(239, 68, 68, 0.18);
+}
+
+.auth-info-box {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.75rem;
+  background: rgba(56, 189, 248, 0.12);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: var(--color-primary);
+  font-size: 0.84rem;
+  font-weight: 600;
+}
+
+/* 12. Bouton de Soumission Principal */
+.auth-submit-btn {
+  width: 100%;
+  min-height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 1.4rem;
+  border: 0;
+  border-radius: 0.85rem;
+  background: var(--color-primary-gradient);
+  color: #FFFFFF;
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.35);
+  transition: all 200ms ease;
+  margin-top: 0.25rem;
+}
+
+.auth-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 210, 255, 0.45);
+}
+
+.auth-submit-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.auth-submit-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.auth-btn-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-btn-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.auth-spin {
+  animation: authSpin 900ms linear infinite;
+}
+
+@keyframes authSpin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 12b. Écran de Succès Festif (Transition fluide) */
+.auth-success-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+  background: var(--bg-card);
+  border-radius: 1.5rem;
+  padding: 2rem;
+  animation: authFadeIn 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+[data-theme="dark"] .auth-success-overlay {
+  background: rgba(15, 23, 42, 0.96);
+}
+
+.auth-success-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  background: rgba(16, 185, 129, 0.16);
+  border: 2px solid rgba(16, 185, 129, 0.45);
+  box-shadow: 0 0 28px rgba(16, 185, 129, 0.32);
+  animation: authSuccessPop 380ms cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+.auth-success-check {
+  color: #10B981;
+}
+
+@keyframes authSuccessPop {
+  0% {
+    transform: scale(0.4);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.auth-success-overlay h3 {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.auth-success-overlay p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.auth-field-animated {
+  animation: authFieldEnter 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes authFieldEnter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 13. Pied de Modal Alterné */
+.auth-footer {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-subtle);
+  text-align: center;
+}
+
+.auth-footer-text {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
+.auth-link-btn {
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 800;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  transition: color 150ms ease;
+}
+
+.auth-link-btn:hover {
+  text-decoration: underline;
+  color: var(--color-primary-hover);
+}
+
+.auth-whatsapp-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  color: #10B981;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: opacity 150ms ease;
+  margin-top: 0.2rem;
+}
+
+.auth-whatsapp-link:hover {
+  text-decoration: underline;
+  opacity: 0.85;
+}
+
+/* 14. Accessibilité : Préférence de Réduction de Mouvement */
+@media (prefers-reduced-motion: reduce) {
+  .auth-backdrop,
+  .auth-dialog,
+  .auth-spin,
+  .auth-submit-btn {
+    animation: none !important;
+    transition: none !important;
+  }
+}

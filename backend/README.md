@@ -25,15 +25,17 @@ La façade évite une migration simultanée des contrôleurs; chaque domaine peu
 
 - `GET /api/activities` : liste publique, filtres `type`, `city`, `category`.
 - `GET /api/activities/:id` : détail public.
-- `POST /api/activities` : admin uniquement.
-- `PUT /api/activities/:id` : admin uniquement.
-- `DELETE /api/activities/:id` : admin uniquement.
+- `POST /api/activities` : admin ou partenaire authentifié; nouvelle activité soumise à modération.
+- `PUT /api/activities/:id` : admin ou partenaire propriétaire.
+- `DELETE /api/activities/:id` : admin ou partenaire propriétaire.
+- `PATCH /api/admin/activities/:id/location` : administrateur uniquement; enregistre et audite les coordonnées vérifiées d'un lieu.
 
 ### Modération des activités
 
 - Les listes, recommandations, détails et avis publics ne retournent que les activités avec `isApproved: true`.
 - Toute nouvelle activité reste en attente (`isApproved: false`), quel que soit le rôle et même si la requête tente d'envoyer `isApproved: true`.
 - Seule la route dédiée d'administration peut approuver une activité; la mise à jour générique ignore `isApproved` et `createdBy`.
+- Les coordonnées nouvelles ne reçoivent plus de point Sfax par défaut. Le booléen `coordinatesVerified` est à `false`; seuls les administrateurs peuvent les vérifier, et toute modification ordinaire des coordonnées invalide cette vérification.
 
 ### Modération des avis
 
@@ -41,7 +43,7 @@ La façade évite une migration simultanée des contrôleurs; chaque domaine peu
 - `GET /api/admin/reviews?status=pending` liste les avis à traiter (pagination). `PATCH /api/admin/reviews/:id/status` accepte `approved` ou `rejected` pour un administrateur authentifié et enregistre le modérateur et l'heure.
 - Les avis historiques sans champ `status` restent visibles pour compatibilité et apparaissent dans le filtre admin `approved`; ils peuvent être rejetés manuellement. Une vérification de ces anciens avis reste nécessaire avant ouverture publique.
 
-Les routes protégées attendent `Authorization: Bearer <token>`.
+Les routes protégées acceptent un Bearer token pour le client mobile ou les cookies HttpOnly `activitytn_access` pour le client web.
 
 ## Sécurité et exploitation
 

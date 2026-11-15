@@ -9,8 +9,9 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useLanguage } from '../../context/LanguageContext';
-import { fetchSearchSuggestions, type SearchSuggestion } from '../../services/activityApi';
-import { DEMO_ACTIVITIES, type DemoActivity } from '../../data/demoActivities';
+import { fetchActivityById, fetchSearchSuggestions, type SearchSuggestion } from '../../services/activityApi';
+import type { DemoActivity } from '../../data/demoActivities';
+import { AnimatedGlowRecommendationButton } from '../ui/AnimatedGlowRecommendationButton';
 import heroVideo from '../../assets/1030.mp4';
 import heroPoster from '../../assets/hero-video-poster.jpg';
 
@@ -84,36 +85,14 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
     }
   };
 
-  const handleSelectSuggestion = (suggestion: SearchSuggestion) => {
+  const handleSelectSuggestion = async (suggestion: SearchSuggestion) => {
     setSearchQuery(suggestion.name);
     setIsOpen(false);
     triggerConfetti(suggestion.name);
 
     if (onSelectActivity) {
-      const matched = DEMO_ACTIVITIES.find((a) => a.id === suggestion.id);
-      if (matched) {
-        onSelectActivity(matched);
-      } else {
-        onSelectActivity({
-          id: suggestion.id,
-          name: suggestion.name,
-          nameAr: suggestion.nameAr,
-          city: suggestion.city,
-          locationName: suggestion.locationName,
-          category: (['fun', 'food', 'outdoor', 'creative'].includes(suggestion.category)
-            ? suggestion.category
-            : 'fun') as any,
-          categoryLabel: 'Sortie Tfarhida',
-          price: suggestion.price,
-          rating: suggestion.rating,
-          reviewCount: 42,
-          imageUrl: suggestion.imageUrl,
-          lightingActive: suggestion.powerBackupMode,
-          directContact: true,
-          highlight: suggestion.name,
-          tags: ['Tfarhida', 'Vérifié'],
-        });
-      }
+      try { onSelectActivity(await fetchActivityById(suggestion.id)); }
+      catch { onSearch?.(suggestion.name); }
     }
   };
 
@@ -385,11 +364,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
                         >
                           {/* Miniature + Titre + Ville */}
                           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 0, flex: 1 }}>
-                            <img
+                            {item.imageUrl && <img
                               src={item.imageUrl}
                               alt={item.name}
                               style={{ width: '42px', height: '42px', borderRadius: '10px', objectFit: 'cover', flexShrink: 0 }}
-                            />
+                            />}
                             <div style={{ minWidth: 0, flex: 1 }}>
                               <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--color-navy)', lineHeight: 1.2 }}>
                                 {isRTL && item.nameAr ? item.nameAr : item.name}
@@ -403,15 +382,15 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
 
                           {/* Note + Prix */}
                           <div style={{ textAlign: isRTL ? 'left' : 'right', flexShrink: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: isRTL ? 'flex-start' : 'flex-end' }}>
+                            {item.rating > 0 && <div style={{ display: 'flex', alignItems: 'center', gap: '4px', justifyContent: isRTL ? 'flex-start' : 'flex-end' }}>
                               <Star size={11} fill="#F59E0B" color="#F59E0B" />
                               <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--color-navy)' }}>
                                 {item.rating.toFixed(1)}
                               </span>
-                            </div>
-                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary)' }}>
+                            </div>}
+                            {item.price > 0 && <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-primary)' }}>
                               {item.price > 0 ? `${item.price} DT` : t('explorer.freeAccess')}
-                            </span>
+                            </span>}
                           </div>
                         </div>
                       ))}
@@ -474,11 +453,9 @@ export const HeroSection: React.FC<HeroSectionProps> = ({
               }}
             />
 
-         
-
-        
-
-   
+            <div style={{ position: 'relative', zIndex: 1, width: '100%', maxWidth: '480px' }}>
+              <AnimatedGlowRecommendationButton />
+            </div>
           </div>
         </div>
       </div>

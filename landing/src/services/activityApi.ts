@@ -1,15 +1,21 @@
 import type { DemoActivity } from '../data/demoActivities';
-import { DEMO_ACTIVITIES } from '../data/demoActivities';
+import { apiRequest } from './apiClient';
 
 export interface BackendActivity {
   _id: string;
+  id?: string;
   name: string;
   nameAr?: string;
   nameFr?: string;
   nameEn?: string;
   category: string;
+  type?: DemoActivity['type'];
   city: string;
+  cityFr?: string;
+  cityAr?: string;
+  cityEn?: string;
   locationName?: string;
+  locationNameFr?: string;
   address?: string;
   price: number;
   currency?: string;
@@ -26,12 +32,29 @@ export interface BackendActivity {
   description?: string;
   descriptionAr?: string;
   descriptionFr?: string;
+  descriptionEn?: string;
+  locationNameAr?: string;
+  locationNameEn?: string;
   highlight?: string;
+  badgeFr?: string;
+  promotion?: DemoActivity['promotion'];
+  events?: DemoActivity['events'];
   tags?: string[];
   suitableFor?: string[];
+  coordinates?: { latitude?: number; longitude?: number };
+  coordinatesVerified?: boolean;
+  isApproved?: boolean;
+  isFeatured?: boolean;
+  partnerTier?: 'standard' | 'pro' | 'premium';
+  menu?: DemoActivity['menu'];
+  createdBy?: {
+    partnerTier?: 'standard' | 'pro' | 'premium';
+    subscriptionStatus?: string;
+    role?: string;
+  };
 }
 
-export function mapBackendToActivity(item: BackendActivity): DemoActivity {
+export function mapBackendToActivity(item: BackendActivity, language = 'fr'): DemoActivity {
   const categoryLabels: Record<string, string> = {
     fun: 'Divertissement & Jeux',
     food: 'Cafés & Restos',
@@ -40,76 +63,144 @@ export function mapBackendToActivity(item: BackendActivity): DemoActivity {
     sport: 'Sport & Fitness',
   };
 
+  const ownerTier = item.createdBy?.partnerTier || item.partnerTier || 'standard';
+  const subStatus = item.createdBy?.subscriptionStatus;
+  const isSubActive = !subStatus || subStatus === 'active' || item.createdBy?.role === 'admin';
+  const effectiveTier = isSubActive ? ownerTier : 'standard';
+
   return {
-    id: item._id,
-    name: item.nameFr || item.name,
+    id: item._id || item.id || '',
+    name: language === 'ar' ? item.nameAr || item.name : language === 'en' ? item.nameEn || item.name : item.nameFr || item.name,
     nameAr: item.nameAr || '',
-    city: item.city || 'Sfax',
-    locationName: item.locationName || item.address || item.city,
-    category: (['outdoor', 'creative', 'food', 'fun'].includes(item.category)
+    city: language === 'ar' ? item.cityAr || item.city : language === 'en' ? item.cityEn || item.city : item.cityFr || item.city || '',
+    locationName: language === 'ar' ? item.locationNameAr || item.locationName || item.address : language === 'en' ? item.locationNameEn || item.locationName || item.address : item.locationNameFr || item.locationName || item.address || item.cityFr || item.city,
+    category: (['outdoor', 'creative', 'food', 'fun', 'sport', 'couple', 'friends'].includes(item.category)
       ? item.category
       : 'fun') as DemoActivity['category'],
+    type: item.type,
     categoryLabel: categoryLabels[item.category] || 'Sortie & Loisir',
     price: typeof item.price === 'number' ? item.price : 0,
-    rating: typeof item.rating === 'number' && item.rating > 0 ? item.rating : 4.8,
-    reviewCount: typeof item.reviewsCount === 'number' && item.reviewsCount > 0 ? item.reviewsCount : 24,
-    imageUrl:
-      item.imageUrl ||
-      item.image ||
-      'https://images.unsplash.com/photo-1519567241046-7f570eee3ce6?auto=format&fit=crop&w=800&q=80',
+    rating: typeof item.rating === 'number' ? item.rating : 0,
+    reviewCount: typeof item.reviewsCount === 'number' ? item.reviewsCount : 0,
+    imageUrl: item.imageUrl || item.image || '',
     lightingActive: Boolean(item.hasPowerBackup || item.powerBackupMode),
     hasAirConditioning: Boolean(item.hasAirConditioning),
-    directContact: true,
-    highlight:
-      item.highlight ||
-      item.descriptionFr ||
-      item.description ||
-      'Expérience authentique vérifiée à découvrir.',
-    description: item.descriptionFr || item.description || '',
-    tags: Array.isArray(item.tags) && item.tags.length > 0 ? item.tags : ['Tfarhida', 'Vérifié'],
+    directContact: Boolean(item.phone || item.whatsapp),
+    phone: item.phone,
+    whatsapp: item.whatsapp,
+    highlight: item.highlight || (language === 'ar' ? item.descriptionAr : language === 'en' ? item.descriptionEn : item.descriptionFr) || item.description || item.badgeFr || '',
+    description: (language === 'ar' ? item.descriptionAr : language === 'en' ? item.descriptionEn : item.descriptionFr) || item.description || '',
+    tags: Array.isArray(item.tags) ? item.tags : [],
+    promotion: item.promotion,
+    events: item.events,
+    coordinates: item.coordinates,
+    coordinatesVerified: item.coordinatesVerified === true,
+    partnerTier: effectiveTier,
+    isFeatured: Boolean(item.isFeatured),
+    menu: item.menu,
   };
 }
 
-export async function fetchLiveActivities(): Promise<{
+export interface ExplorerOption {
+  value: string;
+  label: string;
+}
+
+interface BackendTaxonomyItem {
+  slug: string;
+  name?: string;
+  nameFr?: string;
+  nameAr?: string;
+  nameEn?: string;
+  isActive?: boolean;
+}
+
+function localizedOptions(items: BackendTaxonomyItem[], language: string): ExplorerOption[] {
+  return items
+    .filter((item) => item.isActive !== false)
+    .map((item) => ({
+      value: item.slug,
+      label: language === 'ar' ? item.nameAr || item.name || item.slug
+        : language === 'en' ? item.nameEn || item.name || item.slug
+          : item.nameFr || item.name || item.slug,
+    }));
+}
+
+export interface ActivityExplorerFilters {
+  city?: string;
+  category?: string;
+  type?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
+export async function fetchActivityExplorerData(language = 'fr', filters: ActivityExplorerFilters = {}): Promise<{
   activities: DemoActivity[];
-  isLive: boolean;
   total: number;
+  page: number;
+  totalPages: number;
+  hasMore: boolean;
+  categories: ExplorerOption[];
+  cities: ExplorerOption[];
 }> {
-  const endpoints = ['/api/activities', 'http://127.0.0.1:5000/api/activities'];
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
+  try {
+    const params = new URLSearchParams({ page: String(filters.page || 1), limit: String(filters.limit || 20) });
+    if (filters.city) params.set('city', filters.city);
+    if (filters.category) params.set('category', filters.category);
+    if (filters.type) params.set('type', filters.type);
+    if (filters.search?.trim()) params.set('search', filters.search.trim());
+    const [activityResult, categoryResult, cityResult] = await Promise.allSettled([
+      apiRequest<{ activities?: BackendActivity[]; total?: number; page?: number; totalPages?: number; hasMore?: boolean }>(`/activities?${params}`, { signal: controller.signal }),
+      apiRequest<{ categories?: BackendTaxonomyItem[] }>('/categories', { signal: controller.signal }),
+      apiRequest<{ cities?: BackendTaxonomyItem[] }>('/cities?activeOnly=true', { signal: controller.signal }),
+    ]);
+    if (activityResult.status === 'rejected') throw activityResult.reason;
 
-  for (const url of endpoints) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const payload = activityResult.value;
+    if (!Array.isArray(payload.activities)) throw new Error('La réponse activités de l’API est invalide.');
+    const activities = payload.activities.map((activity) => mapBackendToActivity(activity, language));
+    const categories = categoryResult.status === 'fulfilled'
+      ? localizedOptions(categoryResult.value.categories || [], language)
+      : [];
+    const cities = cityResult.status === 'fulfilled'
+      ? (cityResult.value.cities || []).filter((city) => city.isActive !== false).map((city) => ({
+        value: city.nameFr || city.name || city.slug,
+        label: language === 'ar' ? city.nameAr || city.name || city.slug
+          : language === 'en' ? city.nameEn || city.name || city.slug
+            : city.nameFr || city.name || city.slug,
+      }))
+      : [];
 
-      const response = await fetch(url, {
-        headers: { Accept: 'application/json' },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data && Array.isArray(data.activities) && data.activities.length > 0) {
-          return {
-            activities: data.activities.map(mapBackendToActivity),
-            isLive: true,
-            total: data.total || data.activities.length,
-          };
-        }
-      }
-    } catch {
-      // En cas d'erreur de connexion, essayer le prochain endpoint
-    }
+    return {
+      activities,
+      total: payload.total ?? activities.length,
+      page: payload.page ?? filters.page ?? 1,
+      totalPages: payload.totalPages ?? 1,
+      hasMore: payload.hasMore ?? false,
+      categories: categories.length ? categories : Array.from(new Set(activities.map((activity) => activity.category)))
+        .map((value) => ({ value, label: value })),
+      cities: cities.length ? cities : Array.from(new Set(activities.map((activity) => activity.city).filter(Boolean)))
+        .map((value) => ({ value, label: value })),
+    };
+  } finally {
+    clearTimeout(timeoutId);
   }
+}
 
-  // Fallback sécurisé avec les données seedées
-  return {
-    activities: DEMO_ACTIVITIES,
-    isLive: false,
-    total: DEMO_ACTIVITIES.length,
-  };
+export async function fetchAllMapActivities(language = 'fr'): Promise<DemoActivity[]> {
+  const collected: DemoActivity[] = [];
+  let page = 1;
+  let hasMore = true;
+  while (hasMore && page <= 10) {
+    const result = await fetchActivityExplorerData(language, { page, limit: 100 });
+    collected.push(...result.activities);
+    hasMore = result.hasMore;
+    page = result.page + 1;
+  }
+  return collected;
 }
 
 export interface SearchSuggestion {
@@ -125,85 +216,60 @@ export interface SearchSuggestion {
   powerBackupMode: boolean;
   isPremium: boolean;
   partnerTier?: string;
+  type?: DemoActivity['type'];
+}
+
+export async function fetchActivityById(activityId: string): Promise<DemoActivity> {
+  const payload = await apiRequest<{ activity: BackendActivity }>(`/activities/${encodeURIComponent(activityId)}`);
+  return mapBackendToActivity(payload.activity);
+}
+
+export interface PublicReview {
+  _id: string;
+  rating: number;
+  comment: string;
+  user?: { name?: string };
+  userName?: string;
+  userAvatar?: string;
+  createdAt?: string;
+  reactions?: Array<{ user?: string; type?: string }>;
+}
+
+export async function fetchActivityReviews(activityId: string) {
+  return apiRequest<{ reviews: PublicReview[]; averageRating: number; reviewsCount: number; count: number }>(`/activities/${encodeURIComponent(activityId)}/reviews`);
+}
+
+export async function createActivityReview(activityId: string, rating: number, comment: string) {
+  return apiRequest<{ pending: boolean; averageRating: number; reviewsCount: number }>(`/activities/${encodeURIComponent(activityId)}/reviews`, {
+    method: 'POST', body: JSON.stringify({ rating, comment }),
+  });
 }
 
 export async function fetchSearchSuggestions(query: string = ''): Promise<{
   suggestions: SearchSuggestion[];
   isLive: boolean;
 }> {
-  const endpoints = [
-    `/api/activities/suggestions?q=${encodeURIComponent(query)}&limit=6`,
-    `http://127.0.0.1:5000/api/activities/suggestions?q=${encodeURIComponent(query)}&limit=6`,
-  ];
-
-  for (const url of endpoints) {
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 2500);
-
-      const response = await fetch(url, {
-        headers: { Accept: 'application/json' },
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data && Array.isArray(data.suggestions) && data.suggestions.length > 0) {
-          return {
-            suggestions: data.suggestions.map((s: any) => ({
-              id: s._id || s.id,
-              name: s.name,
-              nameAr: s.nameAr || '',
-              city: s.city || 'Sfax',
-              locationName: s.locationName || s.city,
-              category: s.category || 'fun',
-              price: typeof s.price === 'number' ? s.price : 0,
-              rating: typeof s.rating === 'number' && s.rating > 0 ? s.rating : 4.8,
-              imageUrl: s.imageUrl || 'https://images.unsplash.com/photo-1544984243-ec57ea16fe25?auto=format&fit=crop&w=400&q=80',
-              powerBackupMode: Boolean(s.powerBackupMode),
-              isPremium: Boolean(s.isPremium),
-              partnerTier: s.partnerTier || 'standard',
-            })),
-            isLive: true,
-          };
-        }
-      }
-    } catch {
-      // Continue to next endpoint
-    }
+  try {
+    const result = await apiRequest<{ suggestions?: Array<Partial<SearchSuggestion> & { _id?: string }> }>(`/activities/suggestions?q=${encodeURIComponent(query)}&limit=6`);
+    return {
+      suggestions: (result.suggestions || []).map((item) => ({
+        id: item._id || item.id || '',
+        name: item.name || '',
+        nameAr: item.nameAr,
+        city: item.city || '',
+        locationName: item.locationName,
+        category: item.category || '',
+        price: typeof item.price === 'number' ? item.price : 0,
+        rating: typeof item.rating === 'number' ? item.rating : 0,
+        imageUrl: item.imageUrl || '',
+        powerBackupMode: Boolean(item.powerBackupMode),
+        isPremium: Boolean(item.isPremium),
+        partnerTier: item.partnerTier,
+        type: item.type,
+      })),
+      isLive: true,
+    };
+  } catch {
+    return { suggestions: [], isLive: false };
   }
-
-  // Fallback intelligent avec priorisation des établissements Premium
-  const cleanQ = query.trim().toLowerCase();
-  let filtered = DEMO_ACTIVITIES;
-  if (cleanQ) {
-    filtered = DEMO_ACTIVITIES.filter(
-      (a) =>
-        a.name.toLowerCase().includes(cleanQ) ||
-        (a.nameAr && a.nameAr.includes(cleanQ)) ||
-        a.category.toLowerCase().includes(cleanQ) ||
-        a.city.toLowerCase().includes(cleanQ) ||
-        a.tags.some((t) => t.toLowerCase().includes(cleanQ))
-    );
-  }
-
-  return {
-    suggestions: filtered.slice(0, 6).map((a, index) => ({
-      id: a.id,
-      name: a.name,
-      nameAr: a.nameAr,
-      city: a.city,
-      locationName: a.locationName,
-      category: a.category,
-      price: a.price,
-      rating: a.rating,
-      imageUrl: a.imageUrl,
-      powerBackupMode: a.lightingActive,
-      isPremium: index < 2 || a.id.includes('mall') || a.id.includes('dar'),
-      partnerTier: index < 2 ? 'premium' : 'standard',
-    })),
-    isLive: false,
-  };
 }

@@ -123,6 +123,15 @@ export const setActivityApproval = async (req, res, next) => {
   }
 };
 
+export const verifyActivityCoordinates = async (req, res, next) => {
+  try {
+    const activity = await adminService.verifyActivityCoordinates(req.params.id, req.body?.coordinates, req.user._id, req);
+    res.json({ success: true, message: "Coordonnées du lieu vérifiées.", activity });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Mettre en avant (Featured) ou Populaire
 // @route   PATCH /api/admin/activities/:id/highlight
 // @access  Private (Admin)
